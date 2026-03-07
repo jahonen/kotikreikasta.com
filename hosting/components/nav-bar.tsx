@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import logo from '../assets/kotikreikasta.png';
+import logo from '../assets/kotikreikasta_com.png';
 
 interface NavBarProps {}
 
@@ -20,7 +20,7 @@ export default function NavBar(_props: NavBarProps) {
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <Link href="/">
-        <Image src={logo} alt="Kotikreikasta" height={28} className="logo-mono" />
+        <Image src={logo} alt="Kotikreikasta.com" height={28} className="logo-mono" />
       </Link>
       <ul className="nav-links">
         <li><a href="#listings">Kohteet</a></li>
