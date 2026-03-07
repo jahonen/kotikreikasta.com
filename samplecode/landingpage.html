@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KreikkaKoti – Löydä kotisi auringon maasta</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --aegean: #1a3a5c;
+    --aegean-deep: #0e2238;
+    --gold: #c9a96e;
+    --gold-light: #e8d5a3;
+    --sand: #f5ede0;
+    --sand-dark: #e8d9c4;
+    --white: #fdfaf6;
+    --text: #2c1f14;
+    --text-muted: #7a6a57;
+    --olive: #5c6b3a;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    background: var(--white);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: transparent;
+    transition: background 0.4s, backdrop-filter 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(10, 20, 35, 0.88);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--white);
+  }
+  .nav-logo span { color: var(--gold); font-style: italic; }
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    background: var(--gold);
+    color: var(--aegean-deep) !important;
+    padding: 0.55rem 1.4rem;
+    font-weight: 600 !important;
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 700px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1800&q=85');
+    background-size: cover;
+    background-position: center 30%;
+    transform: scale(1.05);
+    animation: slowzoom 18s ease-out forwards;
+  }
+  @keyframes slowzoom {
+    from { transform: scale(1.05); }
+    to   { transform: scale(1.0); }
+  }
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      rgba(10, 20, 35, 0.72) 0%,
+      rgba(10, 20, 35, 0.35) 55%,
+      rgba(10, 20, 35, 0.15) 100%
+    );
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 4rem;
+    max-width: 780px;
+    animation: fadeup 1.2s 0.3s both;
+  }
+  @keyframes fadeup {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+  }
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 6vw, 5.2rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 1rem;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+  .hero-sub {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.7;
+    max-width: 520px;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--aegean-deep);
+    padding: 0.9rem 2.2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+  .btn-outline {
+    display: inline-block;
+    border: 1px solid rgba(255,255,255,0.5);
+    color: var(--white);
+    padding: 0.9rem 2.2rem;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--gold); background: rgba(201,169,110,0.1); }
+
+  .hero-stats {
+    position: absolute;
+    bottom: 3rem;
+    right: 4rem;
+    display: flex;
+    gap: 3rem;
+    z-index: 2;
+    animation: fadeup 1.2s 0.7s both;
+  }
+  .stat {
+    text-align: right;
+    border-right: 1px solid var(--gold);
+    padding-right: 1.5rem;
+  }
+  .stat:last-child { border: none; padding: 0; }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 0.3rem;
+  }
+
+  /* ─── SECTION BASICS ─── */
+  section { position: relative; }
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--aegean-deep);
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* ─── WHY GREECE ─── */
+  .why-greece {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 85vh;
+  }
+  .why-img {
+    position: relative;
+    overflow: hidden;
+  }
+  .why-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 8s ease;
+  }
+  .why-img:hover img { transform: scale(1.04); }
+  .why-content {
+    background: var(--aegean-deep);
+    padding: 6rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .why-content .section-title { color: var(--white); }
+  .why-content .section-title em { color: var(--gold-light); }
+  .why-lead {
+    color: rgba(255,255,255,0.65);
+    font-size: 1rem;
+    line-height: 1.75;
+    margin-top: 1.5rem;
+    font-weight: 300;
+    max-width: 440px;
+  }
+  .why-pillars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+  .pillar {
+    border-top: 1px solid rgba(201,169,110,0.3);
+    padding-top: 1.2rem;
+  }
+  .pillar-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+  .pillar-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gold-light);
+    margin-bottom: 0.4rem;
+  }
+  .pillar-text {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+  }
+
+  /* ─── LISTINGS ─── */
+  .listings-section {
+    padding: 8rem 4rem;
+    background: var(--sand);
+  }
+  .listings-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 3.5rem;
+  }
+  .listings-filter {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .filter-btn {
+    background: none;
+    border: 1px solid var(--sand-dark);
+    padding: 0.45rem 1.1rem;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--aegean);
+    border-color: var(--aegean);
+    color: var(--white);
+  }
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  .listing-card {
+    background: var(--white);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+  }
+  .listing-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(10,20,35,0.15);
+  }
+  .listing-img {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+  }
+  .listing-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .listing-card:hover .listing-img img { transform: scale(1.06); }
+  .listing-badge {
+    position: absolute;
+    top: 1rem; left: 1rem;
+    background: var(--gold);
+    color: var(--aegean-deep);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.8rem;
+  }
+  .listing-concierge {
+    position: absolute;
+    bottom: 1rem; left: 1rem;
+    background: rgba(10,20,35,0.82);
+    backdrop-filter: blur(6px);
+    color: var(--gold-light);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .listing-body { padding: 1.5rem; }
+  .listing-location {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .listing-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--aegean-deep);
+    margin-bottom: 0.8rem;
+    line-height: 1.3;
+  }
+  .listing-specs {
+    display: flex;
+    gap: 1.2rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 1.2rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--sand-dark);
+  }
+  .spec { display: flex; align-items: center; gap: 0.3rem; }
+  .listing-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--aegean);
+  }
+  .listing-price span { font-size: 0.8rem; color: var(--text-muted); font-family: 'Jost', sans-serif; }
+
+  /* ─── PROCESS ─── */
+  .process-section {
+    padding: 8rem 4rem;
+    background: var(--white);
+  }
+  .process-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .process-header { text-align: center; margin-bottom: 5rem; }
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    position: relative;
+  }
+  .process-steps::before {
+    content: '';
+    position: absolute;
+    top: 2rem;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(to right, var(--gold), var(--sand-dark), var(--gold));
+  }
+  .process-step {
+    text-align: center;
+    padding: 0 1rem;
+    position: relative;
+  }
+  .step-num {
+    width: 4rem; height: 4rem;
+    border-radius: 50%;
+    border: 1px solid var(--gold);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: var(--gold);
+    position: relative;
+    z-index: 1;
+  }
+  .step-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--aegean-deep);
+    margin-bottom: 0.6rem;
+  }
+  .step-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ─── CONCIERGE ─── */
+  .concierge-section {
+    background: var(--aegean);
+    padding: 8rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .concierge-section::before {
+    content: '';
+    position: absolute;
+    top: -8rem; right: -8rem;
+    width: 40rem; height: 40rem;
+    border-radius: 50%;
+    border: 1px solid rgba(201,169,110,0.15);
+  }
+  .concierge-section::after {
+    content: '';
+    position: absolute;
+    bottom: -6rem; left: 8rem;
+    width: 28rem; height: 28rem;
+    border-radius: 50%;
+    border: 1px solid rgba(201,169,110,0.1);
+  }
+  .concierge-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 6rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .concierge-left .section-title { color: var(--white); }
+  .concierge-left .section-title em { color: var(--gold-light); }
+  .concierge-desc {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.95rem;
+    line-height: 1.75;
+    margin-top: 1.5rem;
+    font-weight: 300;
+  }
+  .concierge-quote {
+    margin-top: 2.5rem;
+    border-left: 2px solid var(--gold);
+    padding-left: 1.5rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--gold-light);
+    line-height: 1.6;
+  }
+  .concierge-quote cite {
+    display: block;
+    font-style: normal;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.4);
+    margin-top: 0.7rem;
+    text-transform: uppercase;
+  }
+  .concierge-services {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(201,169,110,0.2);
+  }
+  .service-item {
+    background: rgba(14, 34, 56, 0.7);
+    backdrop-filter: blur(4px);
+    padding: 2rem;
+    transition: background 0.2s;
+  }
+  .service-item:hover { background: rgba(14, 34, 56, 0.95); }
+  .service-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
+  }
+  .service-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gold-light);
+    margin-bottom: 0.4rem;
+  }
+  .service-desc {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  /* ─── REGIONS ─── */
+  .regions-section {
+    padding: 8rem 4rem;
+    background: var(--sand);
+  }
+  .regions-header { margin-bottom: 3.5rem; }
+  .regions-scroll {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+  .region-card {
+    position: relative;
+    height: 380px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .region-card:first-child { grid-row: span 1; height: 380px; }
+  .region-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .region-card:hover .region-img { transform: scale(1.06); }
+  .region-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,20,35,0.85) 0%, rgba(10,20,35,0.1) 60%);
+    transition: background 0.3s;
+  }
+  .region-card:hover .region-overlay {
+    background: linear-gradient(to top, rgba(10,20,35,0.9) 0%, rgba(10,20,35,0.3) 60%);
+  }
+  .region-info {
+    position: absolute;
+    bottom: 1.5rem; left: 1.5rem; right: 1.5rem;
+  }
+  .region-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 0.3rem;
+  }
+  .region-sub {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .region-count {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 0.8rem;
+  }
+
+  /* ─── TESTIMONIALS ─── */
+  .testimonials-section {
+    padding: 8rem 4rem;
+    background: var(--white);
+  }
+  .testimonials-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 2rem;
+    margin-top: 3.5rem;
+  }
+  .testimonial {
+    padding: 2.5rem;
+    background: var(--sand);
+    border-top: 2px solid var(--gold);
+  }
+  .testimonial.featured {
+    background: var(--aegean-deep);
+    border-top-color: var(--gold);
+    grid-row: span 1;
+  }
+  .testimonial-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .testimonial.featured .testimonial-text { color: rgba(255,255,255,0.82); }
+  .testimonial-author {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .testimonial.featured .testimonial-author { color: var(--gold); }
+  .testimonial-location {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin-top: 0.2rem;
+  }
+  .testimonial.featured .testimonial-location { color: rgba(255,255,255,0.4); }
+  .stars {
+    color: var(--gold);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.15em;
+  }
+
+  /* ─── FAQ ─── */
+  .faq-section {
+    padding: 8rem 4rem;
+    background: var(--sand);
+  }
+  .faq-inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .faq-header { text-align: center; margin-bottom: 4rem; }
+  .faq-item {
+    border-bottom: 1px solid var(--sand-dark);
+    padding: 1.5rem 0;
+  }
+  .faq-q {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--aegean-deep);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  .faq-toggle {
+    width: 1.8rem; height: 1.8rem;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .faq-item:hover .faq-toggle { background: var(--gold); color: var(--white); }
+  .faq-a {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.75;
+    margin-top: 1rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .faq-item.open .faq-a { max-height: 200px; }
+
+  /* ─── CTA BAND ─── */
+  .cta-band {
+    position: relative;
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .cta-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+  }
+  .cta-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 20, 35, 0.75);
+  }
+  .cta-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 4rem;
+  }
+  .cta-content .section-label { color: var(--gold); justify-content: center; display: block; }
+  .cta-content h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 300;
+    color: var(--white);
+    margin: 1rem 0 1.5rem;
+    line-height: 1.2;
+  }
+  .cta-content h2 em { color: var(--gold-light); font-style: italic; }
+  .cta-content p {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--aegean-deep);
+    padding: 5rem 4rem 2.5rem;
+  }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 4rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .footer-brand .nav-logo { display: block; margin-bottom: 1rem; }
+  .footer-tagline {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+  .footer-col h4 {
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 0.6rem; }
+  .footer-col a {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 0.83rem;
+    transition: color 0.2s;
+  }
+  .footer-col a:hover { color: var(--gold-light); }
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+  }
+  .footer-copy {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.3);
+  }
+  .footer-legal {
+    display: flex;
+    gap: 2rem;
+  }
+  .footer-legal a {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.3);
+    text-decoration: none;
+  }
+  .footer-legal a:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">Kreikka<span>Koti</span></div>
+  <ul class="nav-links">
+    <li><a href="#listings">Kohteet</a></li>
+    <li><a href="#regions">Alueet</a></li>
+    <li><a href="#process">Ostoprosessi</a></li>
+    <li><a href="#concierge">Konsierge</a></li>
+    <li><a href="#contact" class="nav-cta">Varaa neuvottelu</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Suomenkielinen kiinteistöpalvelu Kreikassa</p>
+    <h1>Unohda talvi –<br>löydä <em>kreikkalainen koti</em><br>joka odottaa sinua</h1>
+    <p class="hero-sub">Turvallinen, huoleton ja asiantunteva palvelu suomen kielellä – mukaan lukien vuoden mittainen konsierge-palvelu ensimmäiselle vuodelle.</p>
+    <div class="hero-btns">
+      <a href="#listings" class="btn-primary">Tutki kohteita</a>
+      <a href="#process" class="btn-outline">Miten se toimii</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">240+</div>
+      <div class="stat-label">Kohdetta</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">12</div>
+      <div class="stat-label">Vuotta kokem.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">98%</div>
+      <div class="stat-label">Tyytyväisyys</div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY GREECE -->
+<section class="why-greece">
+  <div class="why-img">
+    <img src="https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=900&q=80" alt="Greek lifestyle">
+  </div>
+  <div class="why-content">
+    <p class="section-label">Miksi Kreikka?</p>
+    <h2 class="section-title">Euroopan aurinkoisin<br><em>elämäntapa</em></h2>
+    <p class="why-lead">Kreikka tarjoaa ainutlaatuisen yhdistelmän edullisia hintoja, erinomaista elämänlaatua ja EU:n Golden Visa -ohjelman kautta saavutettavissa olevan oleskeluluvan.</p>
+    <div class="why-pillars">
+      <div class="pillar">
+        <div class="pillar-icon">☀️</div>
+        <div class="pillar-title">Ilmasto</div>
+        <div class="pillar-text">300+ aurinkopäivää vuodessa. Leudommat talvet kuin missään muualla EU:ssa.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🏛️</div>
+        <div class="pillar-title">Golden Visa</div>
+        <div class="pillar-text">250 000 €:n sijoituksella EU-oleskelulupa koko perheelle.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">💶</div>
+        <div class="pillar-title">Hintataso</div>
+        <div class="pillar-text">Kiinteistöjen hinnat 40–60% alhaisemmat kuin Suomessa vastaavissa kohteissa.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🩺</div>
+        <div class="pillar-title">Terveydenhuolto</div>
+        <div class="pillar-text">Toimiva julkinen terveydenhuolto ja kattava yksityinen sektori.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LISTINGS -->
+<section class="listings-section" id="listings">
+  <div class="listings-header">
+    <div>
+      <p class="section-label">Valikoituja kohteita</p>
+      <h2 class="section-title">Löydä oma <em>paratiisisi</em></h2>
+    </div>
+    <div class="listings-filter">
+      <button class="filter-btn active">Kaikki</button>
+      <button class="filter-btn">Huvila</button>
+      <button class="filter-btn">Huoneisto</button>
+      <button class="filter-btn">Perinteinen</button>
+    </div>
+  </div>
+  <div class="listings-grid">
+    <!-- Card 1 -->
+    <div class="listing-card">
+      <div class="listing-img">
+        <img src="https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?w=600&q=80" alt="Peloponnese villa">
+        <div class="listing-badge">Uusi</div>
+        <div class="listing-concierge">⭐ Sisältää konsierge-palvelun</div>
+      </div>
+      <div class="listing-body">
+        <div class="listing-location">📍 Peloponnesos, Nafplio</div>
+        <div class="listing-name">Kivinen huvila merinäköalalla</div>
+        <div class="listing-specs">
+          <span class="spec">🛏 4 makuuh.</span>
+          <span class="spec">🚿 3 kylpyh.</span>
+          <span class="spec">📐 210 m²</span>
+        </div>
+        <div class="listing-price">€ 285 000 <span>alv. 0%</span></div>
+      </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="listing-card">
+      <div class="listing-img">
+        <img src="https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=600&q=80" alt="Cyclades apartment">
+        <div class="listing-badge">Suosittu</div>
+        <div class="listing-concierge">⭐ Sisältää konsierge-palvelun</div>
+      </div>
+      <div class="listing-body">
+        <div class="listing-location">📍 Kreeta, Hania</div>
+        <div class="listing-name">Venetsialainen kaupunkihuoneisto</div>
+        <div class="listing-specs">
+          <span class="spec">🛏 2 makuuh.</span>
+          <span class="spec">🚿 1 kylpyh.</span>
+          <span class="spec">📐 95 m²</span>
+        </div>
+        <div class="listing-price">€ 165 000 <span>alv. 0%</span></div>
+      </div>
+    </div>
+    <!-- Card 3 -->
+    <div class="listing-card">
+      <div class="listing-img">
+        <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=600&q=80" alt="Ionian sea view">
+        <div class="listing-badge">Golden Visa</div>
+        <div class="listing-concierge">⭐ Sisältää konsierge-palvelun</div>
+      </div>
+      <div class="listing-body">
+        <div class="listing-location">📍 Pelion, Volos</div>
+        <div class="listing-name">Perinteinen kivitalo vuorimaastossa</div>
+        <div class="listing-specs">
+          <span class="spec">🛏 3 makuuh.</span>
+          <span class="spec">🚿 2 kylpyh.</span>
+          <span class="spec">📐 145 m²</span>
+        </div>
+        <div class="listing-price">€ 195 000 <span>alv. 0%</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process-section" id="process">
+  <div class="process-inner">
+    <div class="process-header">
+      <p class="section-label">Ostoprosessi</p>
+      <h2 class="section-title">Viisi askelta <em>unelmaasi</em></h2>
+    </div>
+    <div class="process-steps">
+      <div class="process-step">
+        <div class="step-num">1</div>
+        <div class="step-title">Ilmainen neuvottelu</div>
+        <div class="step-desc">Kartoitamme tavoitteesi, budjettisi ja toivotun sijainnin.</div>
+      </div>
+      <div class="process-step">
+        <div class="step-num">2</div>
+        <div class="step-title">Verokortti (AFM)</div>
+        <div class="step-desc">Hankimme kreikkalaisen veronumeron puolestasi ennen ostoa.</div>
+      </div>
+      <div class="process-step">
+        <div class="step-num">3</div>
+        <div class="step-title">Due diligence</div>
+        <div class="step-desc">Juridiset tarkistukset, kiinteistörekisteri ja notaaripalvelut.</div>
+      </div>
+      <div class="process-step">
+        <div class="step-num">4</div>
+        <div class="step-title">Kaupanteko</div>
+        <div class="step-desc">Kauppakirja, notaari ja omistusoikeuden siirto – kaikki suomeksi.</div>
+      </div>
+      <div class="process-step">
+        <div class="step-num">5</div>
+        <div class="step-title">Konsierge alkaa</div>
+        <div class="step-desc">Vuoden tuki arjen järjestelyihin uudessa kodissasi.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONCIERGE -->
+<section class="concierge-section" id="concierge">
+  <div class="concierge-inner">
+    <div class="concierge-left">
+      <p class="section-label">Konsierge-palvelu</p>
+      <h2 class="section-title">Kattava tuki<br><em>ensimmäiselle</em><br>vuodelle</h2>
+      <p class="concierge-desc">Kreikassa asuminen on ihanaa – mutta byrokratia ja palveluiden löytäminen voi olla haastavaa. Konsierge-palvelumme huolehtii siitä, että et jää koskaan yksin ongelmiesi kanssa.</p>
+      <blockquote class="concierge-quote">
+        "Konsierge-palvelun ansiosta sain luotettavan putkimiehen samana päivänä, kun hanat vuosivat. En olisi selviytynyt ilman apuanne!"
+        <cite>— Minna K., Helsinki → Nafplio 2023</cite>
+      </blockquote>
+    </div>
+    <div class="concierge-right">
+      <div class="concierge-services">
+        <div class="service-item">
+          <div class="service-icon">🔧</div>
+          <div class="service-name">Remontit & korjaukset</div>
+          <div class="service-desc">Luotettavat sähkömiehet, putkimiehet ja rakennusliikkeet.</div>
+        </div>
+        <div class="service-item">
+          <div class="service-icon">🏛️</div>
+          <div class="service-name">Byrokratia-apu</div>
+          <div class="service-desc">Oleskeluluvat, verokortit, pankkitilit – hoidamme paperit.</div>
+        </div>
+        <div class="service-item">
+          <div class="service-icon">🏡</div>
+          <div class="service-name">Kiinteistönhoito</div>
+          <div class="service-desc">Siivous, puutarhanhoito ja kiinteistön valvonta poissaolosi aikana.</div>
+        </div>
+        <div class="service-item">
+          <div class="service-icon">🌐</div>
+          <div class="service-name">Tulkkaus & asiointi</div>
+          <div class="service-desc">Käännämme asiakirjat ja hoidamme asiointisi kreikaksi.</div>
+        </div>
+        <div class="service-item">
+          <div class="service-icon">🏥</div>
+          <div class="service-name">Terveydenhuolto</div>
+          <div class="service-desc">Lääkäri- ja hammaslääkärisuositukset sekä ajanvaraukset.</div>
+        </div>
+        <div class="service-item">
+          <div class="service-icon">🚗</div>
+          <div class="service-name">Arjen palvelut</div>
+          <div class="service-desc">Autonvuokraus, vakuutukset ja muut käytännön järjestelyt.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REGIONS -->
+<section class="regions-section" id="regions">
+  <div class="regions-header">
+    <p class="section-label">Alueopas</p>
+    <h2 class="section-title">Löydä <em>oikea alue</em> sinulle</h2>
+  </div>
+  <div class="regions-scroll">
+    <div class="region-card">
+      <img class="region-img" src="https://images.unsplash.com/photo-1548142813-c348350df52b?w=600&q=80" alt="Peloponnese">
+      <div class="region-overlay"></div>
+      <div class="region-info">
+        <div class="region-name">Peloponnesos</div>
+        <div class="region-sub">Manner-Kreikka</div>
+        <div class="region-count">47 kohdetta saatavilla</div>
+      </div>
+    </div>
+    <div class="region-card">
+      <img class="region-img" src="https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=600&q=80" alt="Crete">
+      <div class="region-overlay"></div>
+      <div class="region-info">
+        <div class="region-name">Kreeta</div>
+        <div class="region-sub">Saari-Kreikka</div>
+        <div class="region-count">63 kohdetta saatavilla</div>
+      </div>
+    </div>
+    <div class="region-card">
+      <img class="region-img" src="https://images.unsplash.com/photo-1555993539-1732b0258235?w=600&q=80" alt="Cyclades">
+      <div class="region-overlay"></div>
+      <div class="region-info">
+        <div class="region-name">Kykladit</div>
+        <div class="region-sub">Egeanmeri</div>
+        <div class="region-count">38 kohdetta saatavilla</div>
+      </div>
+    </div>
+    <div class="region-card">
+      <img class="region-img" src="https://images.unsplash.com/photo-1504512485720-7d83a16ee930?w=600&q=80" alt="Halkidiki">
+      <div class="region-overlay"></div>
+      <div class="region-info">
+        <div class="region-name">Halkidiki</div>
+        <div class="region-sub">Pohjois-Kreikka</div>
+        <div class="region-count">29 kohdetta saatavilla</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section">
+  <div class="testimonials-inner">
+    <p class="section-label">Asiakaskokemuksia</p>
+    <h2 class="section-title">Mitä asiakkaamme <em>kertovat</em></h2>
+    <div class="testimonials-grid">
+      <div class="testimonial featured">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-text">"Ostoprosessi Kreikassa tuntui aluksi ylivoimaiselta – kieli, byrokratia ja vieraiden lakien labyrintti. KreikkaKoti muutti kaiken. He hoitivat kaiken veronumerosta notaariin, ja konsierge-palvelu on ollut pelastus ensimmäisen vuoden aikana."</div>
+        <div class="testimonial-author">Jari & Sari Mäkinen</div>
+        <div class="testimonial-location">Tampere → Nafplio, 2022</div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-text">"Löysimme unelmiemme huvilan kolmessa viikossa. Suomenkielinen palvelu teki ostamisesta täysin stressitöntä."</div>
+        <div class="testimonial-author">Pirjo H.</div>
+        <div class="testimonial-location">Oulu → Hania, Kreeta</div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-text">"Golden Visa -prosessi sujui ongelmitta. Suosittelen lämpimästi kaikille, jotka harkitsevat sijoittamista Kreikkaan."</div>
+        <div class="testimonial-author">Mikko & Anna P.</div>
+        <div class="testimonial-location">Helsinki → Kykladit</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="faq-inner">
+    <div class="faq-header">
+      <p class="section-label">Usein kysyttyä</p>
+      <h2 class="section-title">Vastauksia <em>kysymyksiisi</em></h2>
+    </div>
+    <div class="faq-item open">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        Miten ostoprosessi etenee Kreikassa?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Ostoprosessi alkaa AFM-veronumeron hankkimisesta, jonka jälkeen seuraa kohteen due diligence, kauppakirjan laadinta ja notaariasiointi. Koko prosessi kestää tyypillisesti 4–8 viikkoa, ja hoidamme kaiken suomen kielellä puolestasi.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        Mitkä ovat verovelvollisuuteni Kreikassa?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Kreikassa kiinteistön ostosta maksetaan siirtovero (3,09%), joka on ainut merkittävä hankintavero. Vuosittainen kiinteistövero (ENFIA) on tyypillisesti 200–800 € riippuen kohteen sijainnista ja arvosta.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        Mitä konsierge-palvelu kattaa?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Vuoden konsierge-palvelu sisältää luotettavien paikallisten palveluntarjoajien löytämisen (sähkömiehet, putkimiehet, siivous), byrokratia-avun, tulkkauspalvelut sekä terveydenhuollon ohjauksen.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        Voinko hakea Golden Visa -oleskelulupaa?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Kyllä. 250 000 €:n kiinteistösijoitus oikeuttaa hakemaan Golden Visa -oleskelulupaa, joka kattaa sinut, puolisosi ja alaikäiset lapsesi. Hoidamme hakuprosessin yhteistyökumppanijuristimme kanssa.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        Voinko vuokrata kiinteistöni Airbnb:ssä?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Kyllä, lyhytaikainen vuokraustoiminta on laillista ja yleistä. Hoidamme vuokrausluvan rekisteröinnin sekä halutessasi myös kokonaisvaltaisen vuokrauksenhallinnan puolestasi.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="cta-band" id="contact">
+  <div class="cta-bg"></div>
+  <div class="cta-overlay"></div>
+  <div class="cta-content">
+    <span class="section-label">Aloita tänään</span>
+    <h2>Varaa <em>ilmainen</em> neuvontapuhelu</h2>
+    <p>30 minuuttia suomen kielellä – kartoitetaan tavoitteesi ja löydetään oikea kohde sinulle.</p>
+    <a href="#" class="btn-primary">Tilaa ilmainen neuvontapuhelu</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="nav-logo">Kreikka<span>Koti</span></div>
+      <p class="footer-tagline">Suomalaisten luotettu kiinteistökumppani Kreikassa vuodesta 2012. Toimistot Ateenassa, Nafpliossa ja Haniassa.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Kohteet</h4>
+      <ul>
+        <li><a href="#">Huvilat</a></li>
+        <li><a href="#">Huoneistot</a></li>
+        <li><a href="#">Perinteiset kodit</a></li>
+        <li><a href="#">Golden Visa -kohteet</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Palvelut</h4>
+      <ul>
+        <li><a href="#">Ostoneuvonta</a></li>
+        <li><a href="#">Konsierge-palvelu</a></li>
+        <li><a href="#">Vuokrauksen hallinta</a></li>
+        <li><a href="#">Golden Visa</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Yhtiö</h4>
+      <ul>
+        <li><a href="#">Meistä</a></li>
+        <li><a href="#">Blogi</a></li>
+        <li><a href="#">Usein kysyttyä</a></li>
+        <li><a href="#">Yhteystiedot</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2025 KreikkaKoti Oy. Kaikki oikeudet pidätetään.</p>
+    <div class="footer-legal">
+      <a href="#">Tietosuoja</a>
+      <a href="#">Käyttöehdot</a>
+      <a href="#">Evästeet</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Sticky nav
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // FAQ toggle
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      const item = q.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Intersection observer for subtle fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.listing-card, .process-step, .service-item, .region-card, .testimonial').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>

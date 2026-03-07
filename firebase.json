@@ -1,0 +1,19 @@
+{
+  "hosting": [
+    {
+      "source": "hosting",
+      "site": "kotikreikasta",
+      "frameworksBackend": {
+        "region": "europe-west1"
+      },
+      "headers": [
+        {
+          "source": "/assets/**",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=3600" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs
+*.log
+
+# Env files
+.env
+.env.*
+*.local
+hosting/.env*
+
+# Node
+node_modules/
+hosting/node_modules/
+
+# Next.js
+.next/
+hosting/.next/
+.turbo/
+hosting/.turbo/
+.next-cache/
+
+# Build outputs
+out/
+dist/
+coverage/
+.cache/
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Misc
+*.swp
+*.swo
