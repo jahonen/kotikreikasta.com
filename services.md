@@ -78,3 +78,8 @@
 ### Notes
 - Pidä kaikki Bluesky‑tunnukset yksinomaan GSM:ssä. Älä koskaan commitoi arvoja tai tulosta niitä lokiin.
 - Sisällön kieli on suomi brändilinjan mukaisesti. Asiakkaalle näkyvä generointi käyttää QUALITY‑mallia.
+
+## Third‑party UI libraries
+- react-icons@4.12.0 (locked)
+  - Purpose: Provide brand‑accurate social media icons (Facebook, Threads, X, Instagram). Bluesky uses a vetted inline SVG until an official icon is available in the library.
+  - Scope: UI only. No runtime network calls.

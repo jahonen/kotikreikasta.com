@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SiFacebook, SiThreads, SiX, SiInstagram } from 'react-icons/si';
 
 export default function Footer() {
   return (
@@ -44,9 +45,8 @@ export default function Footer() {
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M14.5 4.5c1.9 1.7 3.7 3.2 5 3.4 1.2.2 2-.7 2-.7s-.2 2-1.4 3.2c-1.1 1.2-3.2 1.4-4.9.8 2 1.4 3 3.3 2.6 5.1-.4 1.9-2.1 3.4-4.7 3.4-1.6 0-2.7-.6-3.1-1.2-.4.6-1.5 1.2-3.1 1.2-2.6 0-4.3-1.5-4.7-3.4-.4-1.8.6-3.7 2.6-5.1-1.7.6-3.8.4-4.9-.8C.7 8.2.5 6.2.5 6.2s.8.9 2 .7c1.3-.2 3.1-1.7 5-3.4 1.7-1.5 2.5-2.3 3.5-2.3s1.8.8 3.5 2.3z" fill="currentColor"/>
+              <path d="M5.202 2.857C7.954 4.922 10.913 9.11 12 11.358c1.087-2.247 4.046-6.436 6.798-8.501C20.783 1.366 24 .213 24 3.883c0 .732-.42 6.156-.667 7.037-.856 3.061-3.978 3.842-6.755 3.37 4.854.826 6.089 3.562 3.422 6.299-5.065 5.196-7.28-1.304-7.847-2.97-.104-.305-.152-.448-.153-.327 0-.121-.05.022-.153.327-.568 1.666-2.782 8.166-7.847 2.97-2.667-2.737-1.432-5.473 3.422-6.3-2.777.473-5.899-.308-6.755-3.369C.42 10.04 0 4.615 0 3.883c0-3.67 3.217-2.517 5.202-1.026" fill="currentColor"/>
             </svg>
-            <span>Bluesky</span>
           </a>
           <a
             href="https://www.facebook.com/kotikreikasta"
@@ -56,12 +56,39 @@ export default function Footer() {
             title="Facebook – Kotikreikasta"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path fill="currentColor" d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06C2 17.08 5.66 21.21 10.44 22v-7.02H7.9v-2.92h2.54V9.84c0-2.5 1.49-3.88 3.77-3.88 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.92h-2.34V22C18.34 21.21 22 17.08 22 12.06Z"/>
-            </svg>
-            <span>Facebook</span>
+            <SiFacebook size={20} aria-hidden="true" />
           </a>
-          <Link href="/privacy">Tietosuoja</Link>
+          <a
+            href="https://www.threads.com/@kotikreikasta"
+            target="_none"
+            rel="noopener noreferrer"
+            aria-label="Threads – Kotikreikasta"
+            title="Threads – Kotikreikasta"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}
+          >
+            <SiThreads size={20} aria-hidden="true" />
+          </a>
+          <a
+            href="https://x.com/kotikreikasta"
+            target="_none"
+            rel="noopener noreferrer"
+            aria-label="X (Twitter) – Kotikreikasta"
+            title="X (Twitter) – Kotikreikasta"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}
+          >
+            <SiX size={20} aria-hidden="true" />
+          </a>
+          <a
+            href="https://www.instagram.com/kotikreikasta/"
+            target="_none"
+            rel="noopener noreferrer"
+            aria-label="Instagram – Kotikreikasta"
+            title="Instagram – Kotikreikasta"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}
+          >
+            <SiInstagram size={20} aria-hidden="true" />
+          </a>
+          <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Tietosuoja</Link>
         </div>
       </div>
     </footer>

@@ -9,8 +9,12 @@ export default function AnalyticsInit() {
     let mounted = true;
     isSupported()
       .then((supported) => {
-        if (supported && mounted) {
-          getAnalytics(app);
+        if (supported && mounted && app) {
+          try {
+            getAnalytics(app);
+          } catch {
+            // ignore analytics init errors silently
+          }
         }
       })
       .catch(() => {
