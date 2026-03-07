@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../styles/main.scss";
 import AnalyticsInit from "../components/AnalyticsInit";
+import CookieConsent from "../components/CookieConsent";
 
 export const metadata: Metadata = {
   title: "Kotikreikasta.com",
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body>
         <AnalyticsInit />
         {children}
+        <CookieConsent />
       </body>
     </html>
   );

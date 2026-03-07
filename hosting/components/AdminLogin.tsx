@@ -17,6 +17,8 @@ export default function AdminLogin({ onSignedIn }: AdminLoginProps) {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      // Prefer kotikreikasta.com accounts in the account chooser
+      provider.setCustomParameters({ hd: 'kotikreikasta.com', prompt: 'select_account' });
       await signInWithPopup(auth, provider);
       onSignedIn?.();
     } catch (e) {
