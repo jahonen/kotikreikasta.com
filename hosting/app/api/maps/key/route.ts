@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
@@ -13,7 +14,7 @@ export async function GET() {
     const client = new SecretManagerServiceClient();
     const name = `projects/${projectId}/secrets/MAPS_JS_BROWSER_KEY/versions/latest`;
     const [version] = await client.accessSecretVersion({ name });
-    const key = version.payload?.data?.toString('utf8');
+    const key = (version as any).payload?.data?.toString() ?? (version as any).payload?.data;
 
     if (!key) {
       return NextResponse.json({ error: 'Key not found' }, { status: 404 });
