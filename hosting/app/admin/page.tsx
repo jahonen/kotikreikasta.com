@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [notAllowed, setNotAllowed] = useState(false);
   const authRef = useRef<Auth | null>(null);
+  const [installNonce, setInstallNonce] = useState(0);
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
@@ -19,8 +20,13 @@ export default function AdminPage() {
       if (!mounted) return;
       authRef.current = auth;
       if (!auth) {
-        setLoading(false);
-        return;
+        // Retry shortly; Firebase init.json may not yet be available on first tick
+        setTimeout(() => {
+          if (mounted) {
+            setInstallNonce((v) => v + 1);
+          }
+        }, 300);
+        return; // keep loading until we retry
       }
       unsub = onAuthStateChanged(auth, async (u) => {
         setUser(u);
@@ -38,14 +44,22 @@ export default function AdminPage() {
       mounted = false;
       unsub?.();
     };
-  }, []);
+  }, [installNonce]);
 
   if (loading) {
     return <main style={{ padding: '2rem' }}>Ladataan…</main>;
   }
 
   if (!user) {
-    return <AdminLogin onSignedIn={() => setLoading(true)} />;
+    return (
+      <AdminLogin
+        onSignedIn={() => {
+          // Re-run listener installation and show loading until auth state arrives
+          setLoading(true);
+          setInstallNonce((v) => v + 1);
+        }}
+      />
+    );
   }
 
   return (
