@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() { return request.auth != null; }
+    function isKotikreikastaAdmin() {
+      return isSignedIn() && request.auth.token.email != null &&
+             request.auth.token.email.matches('.*@kotikreikasta\\.com$');
+    }
+
+    // Publicly readable published media (served on site)
+    match /media/public/{allPaths=**} {
+      allow read: if true;
+      allow write: if isKotikreikastaAdmin();
+    }
+
+    // Private/admin-only media area (backups, drafts)
+    match /media/admin/{allPaths=**} {
+      allow read, write: if isKotikreikastaAdmin();
+    }
+
+    // Default deny for everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

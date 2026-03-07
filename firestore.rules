@@ -2,8 +2,49 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Listings: public read when published; admin can manage
+    match /listings/{doc} {
+      allow read: if resource.data.status == "published" || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Blog posts: public read when published; admin can manage
+    match /blog_posts/{doc} {
+      allow read: if resource.data.status == "published" || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Publication queue: admin-only
+    match /publication_queue/{doc} {
+      allow read, write: if isAdmin();
+    }
+
+    // Newsletter subscriptions: anyone can create; admin can read/manage
+    match /newsletterSubscriptions/{doc} {
+      allow create: if request.resource.data.email is string && request.resource.data.consent == true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Inquiries: anyone can create; admin can read/manage
+    match /inquiries/{doc} {
+      allow create: if request.resource.data.message is string;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Referral logs: public create (from redirect or forms); admin manage
+    match /user_referrals/{doc} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Roles: admin managed
+    match /roles/{uid} {
+      allow read, write: if isAdmin();
     }
   }
 }
