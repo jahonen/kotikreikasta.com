@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { app } from '../lib/firebase-client';
+import { getFirebaseApp } from '../lib/firebase-client';
 
 export default function AnalyticsInit() {
   useEffect(() => {
@@ -11,12 +11,15 @@ export default function AnalyticsInit() {
     const tryInit = async () => {
       try {
         const supported = await isSupported();
-        if (!mounted || !supported || !app) return;
+        if (!mounted || !supported) return;
         // Respect cookie consent: only initialize when accepted
         const consent = typeof window !== 'undefined' ? localStorage.getItem('cookieConsent') : null;
         if (consent === 'accepted') {
           try {
-            getAnalytics(app);
+            const app = await getFirebaseApp();
+            if (app) {
+              getAnalytics(app);
+            }
           } catch {
             // ignore analytics init errors silently
           }

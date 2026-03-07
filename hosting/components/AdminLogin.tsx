@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '../lib/firebase-client';
+import { getAuthClient } from '../lib/firebase-client';
 
 interface AdminLoginProps {
   onSignedIn?: () => void;
@@ -19,6 +19,11 @@ export default function AdminLogin({ onSignedIn }: AdminLoginProps) {
       const provider = new GoogleAuthProvider();
       // Prefer kotikreikasta.com accounts in the account chooser
       provider.setCustomParameters({ hd: 'kotikreikasta.com', prompt: 'select_account' });
+      const auth = await getAuthClient();
+      if (!auth) {
+        setError('Palvelu ei ole saatavilla juuri nyt. Yritä hetken kuluttua.');
+        return;
+      }
       await signInWithPopup(auth, provider);
       onSignedIn?.();
     } catch (e) {

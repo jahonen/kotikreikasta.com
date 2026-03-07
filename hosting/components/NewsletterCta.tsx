@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase-client';
+import { getDbClient } from '../lib/firebase-client';
 
 interface NewsletterCtaProps {}
 
@@ -21,6 +21,12 @@ export default function NewsletterCta(_props: NewsletterCtaProps) {
     }
     try {
       setStatus('submitting');
+      const db = await getDbClient();
+      if (!db) {
+        setStatus('error');
+        setError('Palvelu ei ole saatavilla juuri nyt. Yritä uudelleen myöhemmin.');
+        return;
+      }
       await addDoc(collection(db, 'newsletterSubscriptions'), {
         email,
         consent: true,

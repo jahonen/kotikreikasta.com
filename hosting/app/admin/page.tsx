@@ -1,26 +1,43 @@
 'use client';
 
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { useEffect, useState } from 'react';
-import { auth } from '../../lib/firebase-client';
+import { onAuthStateChanged, signOut, type User, type Auth } from 'firebase/auth';
+import { useEffect, useRef, useState } from 'react';
+import { getAuthClient } from '../../lib/firebase-client';
 import AdminLogin from '../../components/AdminLogin';
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [notAllowed, setNotAllowed] = useState(false);
+  const authRef = useRef<Auth | null>(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      const allowed = !!u?.email && u.email.endsWith('@kotikreikasta.com');
-      if (!allowed && u) {
-        setNotAllowed(true);
-        await signOut(auth);
+    let unsub: (() => void) | undefined;
+    let mounted = true;
+    (async () => {
+      const auth = await getAuthClient();
+      if (!mounted) return;
+      authRef.current = auth;
+      if (!auth) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    });
-    return () => unsub();
+      unsub = onAuthStateChanged(auth, async (u) => {
+        setUser(u);
+        const allowed = !!u?.email && u.email.endsWith('@kotikreikasta.com');
+        if (!allowed && u) {
+          setNotAllowed(true);
+          try {
+            await signOut(auth);
+          } catch {}
+        }
+        setLoading(false);
+      });
+    })();
+    return () => {
+      mounted = false;
+      unsub?.();
+    };
   }, []);
 
   if (loading) {
@@ -35,7 +52,7 @@ export default function AdminPage() {
     <main className="container" style={{ padding: '2rem 1rem' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 className="section-title">Ylläpito</h1>
-        <button className="btn-primary" onClick={() => signOut(auth)}>Kirjaudu ulos</button>
+        <button className="btn-primary" onClick={() => authRef.current && signOut(authRef.current)}>Kirjaudu ulos</button>
       </header>
 
       <section style={{ marginTop: '2rem' }}>
