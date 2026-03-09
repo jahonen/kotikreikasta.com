@@ -1,6 +1,7 @@
 'use client';
 import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAuth as _getAuth, type Auth } from "firebase/auth";
 
 // Client-side lazy initialization supporting Firebase Hosting injected config
@@ -54,4 +55,9 @@ export async function getDbClient(): Promise<Firestore | null> {
 export async function getAuthClient(): Promise<Auth | null> {
   const app = await getFirebaseApp();
   return app ? _getAuth(app) : null;
+}
+
+export async function getStorageClient(): Promise<FirebaseStorage | null> {
+  const app = await getFirebaseApp();
+  return app ? getStorage(app) : null;
 }

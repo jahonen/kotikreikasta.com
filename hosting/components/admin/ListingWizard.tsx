@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { getDbClient } from '../../lib/firebase-client';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import Cropper from 'react-easy-crop';
+import { getDbClient, getStorageClient } from '../../lib/firebase-client';
 import { slugify } from '../../lib/utils/slugify';
 import MapPicker from './MapPicker';
 import PointsOfInterestPicker, { type PoiItem } from './PointsOfInterestPicker';
@@ -67,8 +69,93 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   const [description, setDescription] = useState('');
 
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
-  const [galleryUrls, setGalleryUrls] = useState('');
+  const [gallery, setGallery] = useState<string[]>([]);
   const [streetViewUrl, setStreetViewUrl] = useState('');
+
+  // Cropping state for featured image
+  const [featuredSrc, setFeaturedSrc] = useState<string>('');
+  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
+  const onCropComplete = (_: any, croppedPixels: any) => {
+    setCroppedAreaPixels(croppedPixels);
+  };
+
+  async function getCroppedBlob(imageSrc: string, crop: { x: number; y: number; width: number; height: number }): Promise<Blob> {
+    return new Promise<Blob>((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.floor(crop.width));
+        canvas.height = Math.max(1, Math.floor(crop.height));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas not supported'));
+        ctx.drawImage(
+          image,
+          Math.floor(crop.x),
+          Math.floor(crop.y),
+          Math.floor(crop.width),
+          Math.floor(crop.height),
+          0,
+          0,
+          Math.floor(crop.width),
+          Math.floor(crop.height)
+        );
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to create blob'));
+        }, 'image/jpeg', 0.9);
+      };
+      image.onerror = (e) => reject(e);
+      image.src = imageSrc;
+    });
+  }
+
+  const onFeaturedFileChange = async (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFeaturedSrc(String(reader.result || ''));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onUploadFeatured = async () => {
+    try {
+      const storage = await getStorageClient();
+      if (!storage) throw new Error('Storage ei ole käytettävissä');
+      if (!featuredSrc || !croppedAreaPixels) throw new Error('Valitse kuva ja rajaa se ennen latausta');
+      const blob = await getCroppedBlob(featuredSrc, croppedAreaPixels);
+      const path = `listings/featured-${Date.now()}.jpg`;
+      const r = ref(storage, path);
+      await uploadBytes(r, blob);
+      const url = await getDownloadURL(r);
+      setFeaturedImageUrl(url);
+    } catch (e) {
+      // no-op UI errors for now
+    }
+  };
+
+  const onAddGalleryFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    try {
+      const storage = await getStorageClient();
+      if (!storage) return;
+      const uploads: Promise<string>[] = [];
+      Array.from(files).forEach((file) => {
+        const r = ref(storage, `listings/gallery-${Date.now()}-${file.name}`);
+        uploads.push(
+          uploadBytes(r, file).then(() => getDownloadURL(r))
+        );
+      });
+      const urls = await Promise.all(uploads);
+      setGallery((prev) => [...prev, ...urls]);
+    } catch {
+      // ignore
+    }
+  };
 
   const [rentalPotential, setRentalPotential] = useState('');
   const [goldenVisaEligible, setGoldenVisaEligible] = useState(false);
@@ -148,11 +235,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
       const db = await getDbClient();
       if (!db) throw new Error('Palvelu ei ole käytettävissä.');
       const stubBase = slugify(name || 'kohde');
-      const media = galleryUrls
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((url) => ({ url }));
+      const galleryArr = (gallery || []).filter(Boolean).map((url) => ({ url }));
       const payload: any = {
         title: name,
         type,
@@ -193,7 +276,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         description: description || undefined,
         media: {
           featured: featuredImageUrl ? { url: featuredImageUrl } : undefined,
-          gallery: media.length ? media : undefined,
+          gallery: galleryArr.length ? galleryArr : undefined,
           streetViewUrl: streetViewUrl || undefined,
         },
         extras: {
@@ -425,8 +508,44 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
 
           {step === 4 && (
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <input className="input" placeholder="Nostokuvan URL" value={featuredImageUrl} onChange={(e) => setFeaturedImageUrl(e.target.value)} />
-              <input className="input" placeholder="Gallerian kuvat (URL, pilkulla erotettuna)" value={galleryUrls} onChange={(e) => setGalleryUrls(e.target.value)} />
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Nostokuva</label>
+                <input type="file" accept="image/*" onChange={(e) => onFeaturedFileChange(e.target.files?.[0] || null)} />
+                {featuredSrc ? (
+                  <div style={{ position: 'relative', width: '100%', height: 280, marginTop: 8, background: '#111' }}>
+                    <Cropper
+                      image={featuredSrc}
+                      crop={crop}
+                      zoom={zoom}
+                      aspect={16 / 9}
+                      onCropChange={setCrop}
+                      onZoomChange={setZoom}
+                      onCropComplete={onCropComplete}
+                    />
+                  </div>
+                ) : null}
+                {featuredSrc ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                    <label style={{ fontSize: 12 }}>Zoom</label>
+                    <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
+                    <button className="btn-primary" type="button" onClick={onUploadFeatured}>Lataa rajattu kuva</button>
+                  </div>
+                ) : null}
+                {featuredImageUrl ? (
+                  <div style={{ marginTop: 8, color: '#555' }}>Tallennettu nostokuva: {featuredImageUrl}</div>
+                ) : null}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Galleria</label>
+                <input type="file" accept="image/*" multiple onChange={(e) => onAddGalleryFiles(e.target.files)} />
+                {gallery.length ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                    {gallery.map((url) => (
+                      <img key={url} src={url} alt="gallery" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 4, border: '1px solid #eee' }} />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
               <input className="input" placeholder="Street View -linkki (valinnainen)" value={streetViewUrl} onChange={(e) => setStreetViewUrl(e.target.value)} />
             </div>
           )}
