@@ -111,3 +111,53 @@
 ### Notes
 - Keep the secret value only in Secret Manager; never hardcode in source.
 - If migrated to Cloud Run in the future, reflect the new endpoint here and deprecate the Next.js route.
+
+## Places Nearby Proxy Service (beta)
+- Lifecycle tag: beta
+- Purpose: Proxy Google Places API (New) `places:searchNearby` requests server-side to avoid exposing a server key and to keep Hosting deploys free from Functions builds.
+- Region: `europe-west1` (Cloud Run)
+
+### Implementation
+- Cloud Run service: `places-nearby` (source in `services/places-nearby`)
+- Runtime: Node.js 18, Express
+- Endpoints
+  - `POST /api/places/nearby` (also `/places/nearby`, `/nearby`) – primary entrypoint used by Hosting rewrite
+  - `GET /healthz` – health check
+  - `GET /` – service root
+- Hosting rewrite (firebase.json)
+  - Maps `/api/places/nearby` → Cloud Run service `places-nearby` in `europe-west1`
+- Request payload (JSON)
+  - `center`: `{ lat: number, lng: number }`
+  - `radius?`: number (meters), clamped to 1–50000, default ~2000
+  - `includedTypes?`: string[] (Places types)
+- Behavior
+  - Calls `https://places.googleapis.com/v1/places:searchNearby`
+  - `languageCode = fi`
+  - Field mask: `places.id,places.displayName,places.primaryType,places.types,places.location`
+  - `maxResultCount = 20` (per Places API (New) limit)
+  - Returns upstream JSON on success
+
+### Secrets (Google Secret Manager)
+- `PLACES_API_SERVER_KEY`
+  - Description: Server key for Places API (New)
+  - Policy: Application restrictions None; API restrictions: restrict to Places API (New)
+- Configuration
+  - Env var on Cloud Run: `GOOGLE_PLACES_API_KEY_SECRET=PLACES_API_SERVER_KEY`
+  - Service account (invocation/runtime): `854585552743-compute@developer.gserviceaccount.com`
+  - Required role: `roles/secretmanager.secretAccessor`
+
+### Interface (required)
+- Inputs
+  - HTTP `POST` body `{ center: { lat, lng }, radius?: number, includedTypes?: string[] }`
+- Outputs
+  - 200 JSON: `{ places: Array<{ id, displayName, primaryType, types, location }> }` (shape per Google)
+  - 4xx/5xx JSON: `{ error: string, details? }` (maps upstream errors; 4xx/5xx may surface as 502 with details from upstream)
+- Side effects
+  - Reads server key from GSM on first use (in-memory cached)
+  - Makes outbound call to Google Places API (New)
+  - Logs start/end/errors (no secrets)
+
+### Operational notes
+- Ensure the server key in GSM is not a browser/referrer-restricted key; otherwise Google returns `PERMISSION_DENIED` with `API_KEY_HTTP_REFERRER_BLOCKED`.
+- Unauthenticated access was temporarily enabled for validation; after verification, restrict invokers to the Firebase Hosting managed service account only.
+

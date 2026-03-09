@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import PointsOfInterestPicker, { type PoiItem } from '../../components/admin/PointsOfInterestPicker';
 import MapPicker from '../../components/admin/MapPicker';
 
 type AddressComponent = { types: string[]; longText?: string; shortText?: string };
@@ -50,6 +51,7 @@ function formatCoords(lat?: number, lng?: number): string {
 
 export default function Page() {
   const [loc, setLoc] = useState<LocationState | null>(null);
+  const [pois, setPois] = useState<PoiItem[]>([]);
 
   const details = useMemo(() => {
     const ac = loc?.addressComponents;
@@ -131,79 +133,15 @@ export default function Page() {
           <div>{details.maa || '—'}</div>
         </div>
 
-        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Sijaintitiedot (taulukko)</h2>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: '8px' }}>Google-kenttä</th>
-              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: '8px' }}>Suomeksi</th>
-              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: '8px' }}>Kreikaksi</th>
-              <th style={{ textAlign: 'left', borderBottom: '1px solid #ddd', padding: '8px' }}>Arvo</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={{ padding: '8px' }}>administrative_area_level_1</td>
-              <td style={{ padding: '8px' }}>Alue/maakunta</td>
-              <td style={{ padding: '8px' }}>Περιφέρεια (Perifereia)</td>
-              <td style={{ padding: '8px' }}>{details.admin1Only || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>administrative_area_level_2</td>
-              <td style={{ padding: '8px' }}>Alueyksikkö</td>
-              <td style={{ padding: '8px' }}>Περιφερειακή ενότητα (Perifereiakí Enótita)</td>
-              <td style={{ padding: '8px' }}>{details.admin2Only || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>administrative_area_level_3</td>
-              <td style={{ padding: '8px' }}>Kunta/kaupunki</td>
-              <td style={{ padding: '8px' }}>Δήμος (Dímos)</td>
-              <td style={{ padding: '8px' }}>{details.admin3Only || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>administrative_area_level_4</td>
-              <td style={{ padding: '8px' }}>Kylä/Lähiö</td>
-              <td style={{ padding: '8px' }}>Χωριό/Συνοικία (Chorió/Synoikía)</td>
-              <td style={{ padding: '8px' }}>{details.admin4Only || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>route</td>
-              <td style={{ padding: '8px' }}>Katu</td>
-              <td style={{ padding: '8px' }}>—</td>
-              <td style={{ padding: '8px' }}>{details.routeOnly || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>street_number</td>
-              <td style={{ padding: '8px' }}>Numero</td>
-              <td style={{ padding: '8px' }}>—</td>
-              <td style={{ padding: '8px' }}>{details.streetNumberOnly || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>postal_code</td>
-              <td style={{ padding: '8px' }}>Postinumero</td>
-              <td style={{ padding: '8px' }}>—</td>
-              <td style={{ padding: '8px' }}>{details.postalCodeOnly || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>country</td>
-              <td style={{ padding: '8px' }}>Maa</td>
-              <td style={{ padding: '8px' }}>—</td>
-              <td style={{ padding: '8px' }}>{details.countryOnly || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>(formatted_address)</td>
-              <td style={{ padding: '8px' }}>Koko osoite</td>
-              <td style={{ padding: '8px' }}>—</td>
-              <td style={{ padding: '8px' }}>{details.kokoOsoite || '—'}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px' }}>(coords)</td>
-              <td style={{ padding: '8px' }}>Koordinaatit</td>
-              <td style={{ padding: '8px' }}>—</td>
-              <td style={{ padding: '8px' }}>{details.coords || '—'}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ marginTop: 8 }}>
+          <PointsOfInterestPicker
+            center={loc ? { lat: loc.lat, lng: loc.lng } : null}
+            onChange={setPois}
+          />
+          {pois.length > 0 ? (
+            <div style={{ marginTop: 8, color: '#555' }}>Valittuja kohteita: {pois.length}</div>
+          ) : null}
+        </div>
       </section>
 
       <section style={{ marginTop: 24 }}>

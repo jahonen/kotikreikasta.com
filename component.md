@@ -59,3 +59,36 @@
 ### Observability
 - Logs start/ready and geocode events via `console.info` (no PII beyond formatted address).
 - Consider adding analytics events on user interactions (search select, drag, click) per project policy.
+
+## PointsOfInterestPicker (beta)
+- Lifecycle tag: beta
+- Description: Hakee lähellä olevat kiinnostavat kohteet (POI) Google Places API (New) -rajapinnan kautta ja näyttää ne valintaruudukossa suomalaisilla tyyppilabeleilla. Käytössä `/maptest`-sivulla ja yhdistettävissä `MapPicker`iin valitun sijainnin perusteella.
+
+### Interface (required)
+- Inputs
+  - `center`: `{ lat: number; lng: number }` – hakualueen keskipiste
+  - `radius?`: number – hakuympyrän säde metreinä (oletus ~2000 m)
+  - `includedTypes?`: string[] – suodatettavat Place-tyypit
+- Outputs
+  - Renderöity UI, joka listaa `places` (nimi, tyyppi, sijainti) ja valintaruudut kohteiden poimintaan
+- Side effects
+  - Tekee `POST`-kutsun taustapalveluun `NEXT_PUBLIC_PLACES_ENDPOINT` (oletus `/api/places/nearby`)
+  - Dedupoi ja peruu päällekkäiset haut `AbortController`illa, jos koordinaatit eivät muutu
+  - Näyttää lataus- ja virhetilat
+
+### Dependencies
+- Places API (New) taustapalvelun kautta
+- Firebase Hosting rewrite → Cloud Run `places-nearby`
+
+### Behavior
+- Muodostaa pyynnön: `{ center: { lat, lng }, radius }`
+- Kartoitus suomenkielisiin tyyppilabeleihin (esim. `restaurant` → `Ravintola`, `pharmacy` → `Apteekki`)
+- Näyttää listan; valitut kohteet välitettävissä yläkomponentille (käyttökohteesta riippuen)
+
+### Testing
+- Vitest-yksikkötestit kattavat:
+  - POI-listan renderöinti mockatulla vastauksella
+  - Pyyntöjen deduplikointi, kun `center`-objektin identiteetti vaihtuu, mutta koordinaatit pysyvät samoina
+
+### Observability
+- Kevyt lokitus kehitystä varten; ei tulosteta PII:tä

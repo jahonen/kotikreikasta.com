@@ -13,6 +13,13 @@
             "serviceId": "maps-key",
             "region": "europe-west1"
           }
+        },
+        {
+          "source": "/api/places/nearby",
+          "run": {
+            "serviceId": "places-nearby",
+            "region": "europe-west1"
+          }
         }
       ],
       "headers": [

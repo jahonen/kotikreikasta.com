@@ -50,7 +50,7 @@ async function loadMapsApi(): Promise<void> {
     if (!data?.key) throw new Error('MAPS key missing');
     const script = document.createElement('script');
     const envMapId = (process as any)?.env?.NEXT_PUBLIC_MAP_ID || (process as any)?.env?.NEXT_PUBLIC_GOOGLE_MAP_ID;
-    const libParam = envMapId ? 'places,marker' : 'places';
+    const libParam = 'places,marker';
     script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
       data.key
     )}&language=fi&v=weekly&loading=async&libraries=${libParam}`;
@@ -176,10 +176,9 @@ export default function MapPicker({
       }, 500);
     } catch {}
 
-    // Prefer AdvancedMarkerElement when mapId is present; fallback to legacy Marker otherwise (avoids warning)
+    // Prefer AdvancedMarkerElement ONLY when a valid mapId is provided (vector map required)
     let marker: any = null;
-    const preferAdvanced = !!mapId;
-    if (preferAdvanced && typeof (google.maps as any).importLibrary === 'function') {
+    if (mapId && typeof (google.maps as any).importLibrary === 'function') {
       try {
         const markerLib: any = await (google.maps as any).importLibrary('marker');
         const Adv: any = markerLib?.AdvancedMarkerElement;
