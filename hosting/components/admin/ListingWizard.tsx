@@ -32,6 +32,16 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   const [island, setIsland] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [formattedAddress, setFormattedAddress] = useState('');
+  // Canonical Google Maps fields for location (used for Firestore storage & display)
+  const [streetAddress, setStreetAddress] = useState('');
+  const [routeOnly, setRouteOnly] = useState('');
+  const [streetNumber, setStreetNumber] = useState('');
+  const [locality, setLocality] = useState('');
+  const [admin1, setAdmin1] = useState('');
+  const [admin2, setAdmin2] = useState('');
+  const [admin3, setAdmin3] = useState('');
+  const [admin4, setAdmin4] = useState('');
+  const [country, setCountry] = useState('');
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [floorArea, setFloorArea] = useState('');
@@ -112,10 +122,17 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         title: name,
         type,
         location: {
-          area: area || undefined,
-          city: city || undefined,
-          island: island || undefined,
-          postalCode: postalCode || undefined,
+          street_address: streetAddress || undefined,
+          route: routeOnly || undefined,
+          street_number: streetNumber || undefined,
+          locality: locality || undefined,
+          administrative_area_level_3: admin3 || undefined,
+          administrative_area_level_2: admin2 || undefined,
+          administrative_area_level_1: admin1 || undefined,
+          administrative_area_level_4: admin4 || undefined,
+          postal_code: postalCode || undefined,
+          country: country || undefined,
+          formatted_address: formattedAddress || undefined,
           coordinates: (lat && lng) ? { lat: Number(lat), lng: Number(lng) } : undefined,
         },
         size: floorArea ? Number(floorArea) : undefined,
@@ -256,32 +273,50 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                       const text = (comp: any) => (comp?.longText || comp?.shortText || '').trim();
                       const norm = (s?: string) => (s || '').trim().toLowerCase();
 
+                      const streetAddr = pick('street_address');
+                      const routeC = pick('route');
+                      const streetNo = pick('street_number', 'streetNumber');
                       const pc = pick('postal_code', 'postalCode');
-                      const loc = pick('locality', 'postal_town', 'postalTown', 'administrative_area_level_3', 'administrativeAreaLevel3');
-                      const adm1 = pick('administrative_area_level_1', 'administrativeAreaLevel1');
-                      const adm2 = pick('administrative_area_level_2', 'administrativeAreaLevel2');
-                      const adm4 = pick('administrative_area_level_4', 'administrativeAreaLevel4');
+                      const loc = pick('locality', 'postal_town', 'postalTown');
+                      const adm1C = pick('administrative_area_level_1', 'administrativeAreaLevel1');
+                      const adm2C = pick('administrative_area_level_2', 'administrativeAreaLevel2');
+                      const adm3C = pick('administrative_area_level_3', 'administrativeAreaLevel3');
+                      const adm4C = pick('administrative_area_level_4', 'administrativeAreaLevel4');
                       const subloc = pick('sublocality_level_1', 'sublocalityLevel1', 'sublocality');
                       const isl = pick('island', 'archipelago');
+                      const countryC = pick('country');
 
+                      const katuosoite = (text(streetAddr) || [text(routeC), text(streetNo)].filter(Boolean).join(' ')).trim();
+                      setStreetAddress(katuosoite);
+                      setRouteOnly(text(routeC));
+                      setStreetNumber(text(streetNo));
                       if (pc) setPostalCode(text(pc));
-                      const municipality = text(loc);
-                      if (municipality) setCity(municipality);
+                      setLocality(text(loc));
+                      setAdmin1(text(adm1C));
+                      setAdmin2(text(adm2C));
+                      setAdmin3(text(adm3C));
+                      setAdmin4(text(adm4C));
+                      setCountry(text(countryC));
 
-                      const regionCandidates = [text(adm1), text(adm2), text(isl), text(adm4), text(subloc)];
+                      // Back-compat: keep broad area/city/island filled for now
+                      const municipality = text(adm3C) || text(loc);
+                      if (municipality) setCity(municipality);
+                      const regionCandidates = [text(adm1C), text(adm2C), text(isl), text(adm4C), text(subloc)];
                       const region = regionCandidates.find((v) => v && norm(v) !== norm(municipality)) || '';
                       if (region) setArea(region);
-
                       if (isl) setIsland(text(isl));
                     }
                   }}
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: 8 }}>
-                  <input className="input" placeholder="Osoite" value={formattedAddress} readOnly />
-                  <input className="input" placeholder="Kaupunki" title="Δήμος (Dímos) – Kunta" value={city} readOnly />
-                  <input className="input" placeholder="Alue" title="Περιφέρεια (Perifereia) – Lääni/Saari" value={area} readOnly />
-                  <input className="input" placeholder="Saari" value={island} readOnly />
+                  <input className="input" placeholder="Katuosoite" value={streetAddress} readOnly />
+                  <input className="input" placeholder="Paikka" title="Τοπική Κοινότητα" value={locality} readOnly />
+                  <input className="input" placeholder="Kunta" title="Δήμος" value={admin3} readOnly />
+                  <input className="input" placeholder="Seutu" title="Περιφερειακή Ενότητα" value={admin2} readOnly />
+                  <input className="input" placeholder="Alue" title="Περιφέρεια" value={admin1} readOnly />
                   <input className="input" placeholder="Postinumero" value={postalCode} readOnly />
+                  <input className="input" placeholder="Maa" value={country} readOnly />
+                  <input className="input" placeholder="Koko osoite (formatted)" value={formattedAddress} readOnly />
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
                     <input className="input" placeholder="Leveysaste (lat)" value={lat} readOnly />
                     <input className="input" placeholder="Pituusaste (lng)" value={lng} readOnly />
