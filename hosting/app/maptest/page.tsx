@@ -117,14 +117,17 @@ export default function Page() {
           <div style={{ fontWeight: 600 }} title="Οδός + Αριθμός">Katuosoite</div>
           <div>{details.katuosoite || '—'}</div>
 
-          <div style={{ fontWeight: 600 }} title="Τοπική Κοινότητα">Kylä/Lähiö</div>
+          <div style={{ fontWeight: 600 }} title="Τοπική Κοινότητα">Paikka</div>
           <div>{details.localityOnly || '—'}</div>
 
           <div style={{ fontWeight: 600 }} title="Δήμος">Kunta</div>
-          <div>{details.kunta || '—'}</div>
+          <div>{details.admin3Only || '—'}</div>
 
-          <div style={{ fontWeight: 600 }} title="Περιφέρεια">Lääni</div>
-          <div>{details.alue || '—'}</div>
+          <div style={{ fontWeight: 600 }} title="Περιφερειακή Ενότητα">Seutu</div>
+          <div>{details.admin2Only || '—'}</div>
+
+          <div style={{ fontWeight: 600 }} title="Περιφέρεια">Alue</div>
+          <div>{details.admin1Only || '—'}</div>
 
           <div style={{ fontWeight: 600 }} title="Ταχυδρομικός Κώδικας">Postinumero</div>
           <div>{details.postinumero || '—'}</div>
