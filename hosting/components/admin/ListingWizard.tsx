@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { getDbClient } from '../../lib/firebase-client';
 import { slugify } from '../../lib/utils/slugify';
 import MapPicker from './MapPicker';
+import PointsOfInterestPicker, { type PoiItem } from './PointsOfInterestPicker';
 
 type Props = {
   open: boolean;
@@ -14,10 +15,11 @@ type Props = {
 
 const STEPS = [
   'Perustiedot',
-  'Sijainti ja palvelut',
-  'Kuvaus',
+  'Sijainti',
+  'Lähellä olevat palvelut',
+  'Varustelu & Kuvaus',
   'Media',
-  'Lisätiedot ja UKK',
+  'Myynti & Kumppanit',
 ];
 
 export default function ListingWizard({ open, onClose, onSaved }: Props) {
@@ -55,6 +57,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   
 
   const [locationNotes, setLocationNotes] = useState('');
+  const [pois, setPois] = useState<PoiItem[]>([]);
 
   const [style, setStyle] = useState('');
   const [amenities, setAmenities] = useState('');
@@ -72,6 +75,20 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   const [fiAgent, setFiAgent] = useState('');
   const [localAgent, setLocalAgent] = useState('');
   const [faq, setFaq] = useState('');
+
+  // Varustelu (checkbox-ryhmät) ja lämmitys (dropdown)
+  const AMENITY_OPTIONS = ['Parveke', 'Puutarha', 'Uima-allas', 'Takka', 'Pysäköinti', 'Hissi', 'Varasto', 'Kellari', 'Merinäköala', 'Vuoristonäköala'];
+  const APPLIANCE_OPTIONS = ['Jääkaappi', 'Pakastin', 'Uuni', 'Mikroaaltouuni', 'Astianpesukone', 'Pyykinpesukone', 'Kuivausrumpu', 'Ilmalämpöpumppu'];
+  const HEATING_OPTIONS = ['Öljylämmitys', 'Keskuslämmitys', 'Vain ilmalämpöpumppu', 'Ei lämmitystä'];
+  const [amenitiesSelected, setAmenitiesSelected] = useState<string[]>([]);
+  const [appliancesSelected, setAppliancesSelected] = useState<string[]>([]);
+  const [heating, setHeating] = useState<string>('');
+
+  // Myyntiedustaja & kumppanit
+  const [adminOptions, setAdminOptions] = useState<{ uid: string; label: string }[]>([]);
+  const [selectedAdminUid, setSelectedAdminUid] = useState<string>('');
+  const [partnerOptions] = useState<{ id: string; label: string }[]>([{ id: '', label: '— Valitse kumppani (tulossa) —' }]);
+  const [selectedPartner, setSelectedPartner] = useState<string>('');
 
   useEffect(() => {
     if (!open) {
@@ -96,6 +113,26 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
       setPricePerSqm('');
     }
   }, [price, floorArea]);
+
+  // Lataa admin-käyttäjien UID-lista rooleista (role == 'admin') sivun avautuessa
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const db = await getDbClient();
+        if (!db) return;
+        const rolesColl = collection(db, 'roles');
+        const qy = query(rolesColl, where('role', '==', 'admin'));
+        const snap = await getDocs(qy);
+        if (!active) return;
+        const opts = snap.docs.map((d) => ({ uid: d.id, label: d.id }));
+        setAdminOptions(opts);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { active = false; };
+  }, [open]);
 
   const canNext = useMemo(() => {
     if (step === 0) return Boolean(name && type && price);
@@ -141,15 +178,14 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         condition: condition || undefined,
         price: price ? Number(price) : undefined,
         pricePerSqm: pricePerSqm ? Number(pricePerSqm) : undefined,
-        taxes: {
-          transferTax: transferTax ? Number(transferTax) : undefined,
-          enfia: enfia ? Number(enfia) : undefined,
-          maintenance: maintenance ? Number(maintenance) : undefined,
-        },
         locationNotes: locationNotes || undefined,
+        nearbyPois: pois && pois.length ? pois : undefined,
         attributes: {
           style: style || undefined,
           amenities: amenities || undefined,
+          amenitiesList: amenitiesSelected && amenitiesSelected.length ? amenitiesSelected : undefined,
+          appliancesList: appliancesSelected && appliancesSelected.length ? appliancesSelected : undefined,
+          heating: heating || undefined,
           outdoor: outdoor || undefined,
           views: views || undefined,
           energy: energy || undefined,
@@ -163,8 +199,8 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         extras: {
           rentalPotential: rentalPotential || undefined,
           goldenVisaEligible: goldenVisaEligible || undefined,
-          fiAgent: fiAgent || undefined,
-          localAgent: localAgent || undefined,
+          fiAgentUid: selectedAdminUid || undefined,
+          partnerId: selectedPartner || undefined,
           faq: faq || undefined,
         },
         urlStub: stubBase,
@@ -246,7 +282,6 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
 
           {step === 1 && (
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <textarea className="input" rows={6} placeholder="Sijainnin ja palveluiden lisätiedot (haetaan myöhemmin Google API:sta)" value={locationNotes} onChange={(e) => setLocationNotes(e.target.value)} />
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Valitse sijainti kartalta</label>
                 <MapPicker
@@ -323,16 +358,72 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
 
           {step === 2 && (
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <input className="input" placeholder="Rakennuksen tyyli" value={style} onChange={(e) => setStyle(e.target.value)} />
-              <input className="input" placeholder="Varustelu (pilkulla erotettuna)" value={amenities} onChange={(e) => setAmenities(e.target.value)} />
-              <input className="input" placeholder="Ulkotilat (pilkulla erotettuna)" value={outdoor} onChange={(e) => setOutdoor(e.target.value)} />
-              <input className="input" placeholder="Näkymät" value={views} onChange={(e) => setViews(e.target.value)} />
-              <input className="input" placeholder="Energiatehokkuus / aurinkopaneelit" value={energy} onChange={(e) => setEnergy(e.target.value)} />
-              <textarea className="input" rows={8} placeholder="Kuvaus" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Lähellä olevat palvelut (POI)</label>
+                <PointsOfInterestPicker
+                  center={lat && lng ? { lat: Number(lat), lng: Number(lng) } : null}
+                  onChange={(list) => setPois(list)}
+                />
+              </div>
             </div>
           )}
 
           {step === 3 && (
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <input className="input" placeholder="Rakennuksen tyyli" value={style} onChange={(e) => setStyle(e.target.value)} />
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Varustelu</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Ominaisuudet</div>
+                    {AMENITY_OPTIONS.map((opt) => (
+                      <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="checkbox"
+                          checked={amenitiesSelected.includes(opt)}
+                          onChange={(e) =>
+                            setAmenitiesSelected((prev) => e.target.checked ? [...prev, opt] : prev.filter((x) => x !== opt))
+                          }
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Kodinkoneet</div>
+                    {APPLIANCE_OPTIONS.map((opt) => (
+                      <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="checkbox"
+                          checked={appliancesSelected.includes(opt)}
+                          onChange={(e) =>
+                            setAppliancesSelected((prev) => e.target.checked ? [...prev, opt] : prev.filter((x) => x !== opt))
+                          }
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <input className="input" placeholder="Ulkotilat (teksti)" value={outdoor} onChange={(e) => setOutdoor(e.target.value)} />
+                <input className="input" placeholder="Näkymät (teksti)" value={views} onChange={(e) => setViews(e.target.value)} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <select className="input" value={heating} onChange={(e) => setHeating(e.target.value)}>
+                  <option value="">Lämmitys</option>
+                  {HEATING_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+                <input className="input" placeholder="Energiatehokkuus / aurinkopaneelit" value={energy} onChange={(e) => setEnergy(e.target.value)} />
+              </div>
+              <textarea className="input" rows={8} placeholder="Kuvaus" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+          )}
+
+          {step === 4 && (
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               <input className="input" placeholder="Nostokuvan URL" value={featuredImageUrl} onChange={(e) => setFeaturedImageUrl(e.target.value)} />
               <input className="input" placeholder="Gallerian kuvat (URL, pilkulla erotettuna)" value={galleryUrls} onChange={(e) => setGalleryUrls(e.target.value)} />
@@ -340,15 +431,27 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               <input className="input" placeholder="Vuokrausmahdollisuudet" value={rentalPotential} onChange={(e) => setRentalPotential(e.target.value)} />
               <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input type="checkbox" checked={goldenVisaEligible} onChange={(e) => setGoldenVisaEligible(e.target.checked)} />
                 Golden Visa -kelpoinen
               </label>
-              <input className="input" placeholder="Suomenkielinen myyntiedustaja" value={fiAgent} onChange={(e) => setFiAgent(e.target.value)} />
-              <input className="input" placeholder="Paikallinen asiamies" value={localAgent} onChange={(e) => setLocalAgent(e.target.value)} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <select className="input" value={selectedAdminUid} onChange={(e) => setSelectedAdminUid(e.target.value)}>
+                  <option value="">Myyntiedustaja (admin-käyttäjä)</option>
+                  {adminOptions.map((o) => (
+                    <option key={o.uid} value={o.uid}>{o.label}</option>
+                  ))}
+                </select>
+                <select className="input" value={selectedPartner} onChange={(e) => setSelectedPartner(e.target.value)}>
+                  <option value="">Kumppani</option>
+                  {partnerOptions.map((p) => (
+                    <option key={p.id} value={p.id}>{p.label}</option>
+                  ))}
+                </select>
+              </div>
               <textarea className="input" rows={6} placeholder="UKK (yksi kysymys/vastaus per rivi)" value={faq} onChange={(e) => setFaq(e.target.value)} />
             </div>
           )}
