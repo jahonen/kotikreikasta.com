@@ -44,7 +44,12 @@ service cloud.firestore {
 
     // Roles: admin managed
     match /roles/{uid} {
-      allow read, write: if isAdmin();
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.auth.token.email.matches('^.+@kotikreikasta\\.com$')
+        && request.resource.data.role == "admin"
+        && !exists(/databases/$(database)/documents/roles/$(uid));
+      allow read, update, delete: if isAdmin();
     }
   }
 }

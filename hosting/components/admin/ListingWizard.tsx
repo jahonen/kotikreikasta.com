@@ -31,6 +31,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   const [city, setCity] = useState('');
   const [island, setIsland] = useState('');
   const [postalCode, setPostalCode] = useState('');
+  const [formattedAddress, setFormattedAddress] = useState('');
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [floorArea, setFloorArea] = useState('');
@@ -71,6 +72,22 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
       setError(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    const parseNum = (s: string) => {
+      if (!s) return NaN;
+      const cleaned = s.replace(/[^0-9,\.\-]/g, '').replace(/,/g, '.');
+      return Number(cleaned);
+    };
+    const p = parseNum(price);
+    const a = parseNum(floorArea);
+    if (isFinite(p) && p > 0 && isFinite(a) && a > 0) {
+      const v = Math.round(p / a);
+      if (!Number.isNaN(v) && Number.isFinite(v)) setPricePerSqm(String(v));
+    } else {
+      setPricePerSqm('');
+    }
+  }, [price, floorArea]);
 
   const canNext = useMemo(() => {
     if (step === 0) return Boolean(name && type && price);
@@ -164,27 +181,50 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         <div style={{ padding: '1rem 1.25rem', maxWidth: 900, margin: '0 auto' }}>
           {step === 0 && (
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <input className="input" placeholder="Kiinteistön nimi" value={name} onChange={(e) => setName(e.target.value)} />
-              <input className="input" placeholder="Kiinteistötyyppi (asunto, huvila, rivitalo, tontti)" value={type} onChange={(e) => setType(e.target.value)} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <input className="input" placeholder="Alue" value={area} onChange={(e) => setArea(e.target.value)} />
-                <input className="input" placeholder="Kaupunki" value={city} onChange={(e) => setCity(e.target.value)} />
-                <input className="input" placeholder="Saari" value={island} onChange={(e) => setIsland(e.target.value)} />
-                <input className="input" placeholder="Postinumero" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
-                <input className="input" placeholder="Leveysaste (lat)" value={lat} onChange={(e) => setLat(e.target.value)} />
-                <input className="input" placeholder="Pituusaste (lng)" value={lng} onChange={(e) => setLng(e.target.value)} />
-              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>*-merkityt kentät ovat pakollisia</div>
+              <input className="input" placeholder="Kiinteistön nimi *" value={name} onChange={(e) => setName(e.target.value)} />
+              <select className="input" value={type} onChange={(e) => setType(e.target.value)}>
+                <option value="">Kiinteistötyyppi *</option>
+                <option value="Kerrostalo">Kerrostalo</option>
+                <option value="Rivitalo">Rivitalo</option>
+                <option value="Paritalo">Paritalo</option>
+                <option value="Omakotitalo">Omakotitalo</option>
+                <option value="Huvila / vapaa-ajan asunto">Huvila / vapaa-ajan asunto</option>
+                <option value="Tontti">Tontti</option>
+                <option value="Erillistalo">Erillistalo</option>
+                <option value="Ateljee / studio">Ateljee / studio</option>
+              </select>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <input className="input" placeholder="Koko (m²)" value={floorArea} onChange={(e) => setFloorArea(e.target.value)} />
                 <input className="input" placeholder="Tontin koko (m²)" value={lotSize} onChange={(e) => setLotSize(e.target.value)} />
-                <input className="input" placeholder="Makuuhuoneet" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} />
-                <input className="input" placeholder="Kylpyhuoneet" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} />
+                <select className="input" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}>
+                  <option value="">Makuuhuoneet (0–10)</option>
+                  {Array.from({ length: 11 }).map((_, i) => (
+                    <option key={i} value={String(i)}>{i}</option>
+                  ))}
+                </select>
+                <select className="input" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)}>
+                  <option value="">Kylpyhuoneet (0–10)</option>
+                  {Array.from({ length: 11 }).map((_, i) => (
+                    <option key={i} value={String(i)}>{i}</option>
+                  ))}
+                </select>
                 <input className="input" placeholder="Rakennusvuosi" value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} />
-                <input className="input" placeholder="Kunto (uusi, remontoitu, alkuperäinen)" value={condition} onChange={(e) => setCondition(e.target.value)} />
+                <select className="input" value={condition} onChange={(e) => setCondition(e.target.value)}>
+                  <option value="">Kunto</option>
+                  <option value="Uusi">Uusi</option>
+                  <option value="Erinomainen">Erinomainen</option>
+                  <option value="Hyvä">Hyvä</option>
+                  <option value="Tyydyttävä">Tyydyttävä</option>
+                  <option value="Välttävä">Välttävä</option>
+                  <option value="Huono">Huono</option>
+                  <option value="Remontoitava / peruskorjattava">Remontoitava / peruskorjattava</option>
+                  <option value="Peruskorjattu">Peruskorjattu</option>
+                </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <input className="input" placeholder="Hinta (€)" value={price} onChange={(e) => setPrice(e.target.value)} />
-                <input className="input" placeholder="Hinta / m² (€)" value={pricePerSqm} onChange={(e) => setPricePerSqm(e.target.value)} />
+                <input className="input" placeholder="Hinta (€) *" value={price} onChange={(e) => setPrice(e.target.value)} />
+                <input className="input" placeholder="Hinta / m² (€) (automaattinen)" value={pricePerSqm} readOnly />
                 <input className="input" placeholder="Siirtovero (€)" value={transferTax} onChange={(e) => setTransferTax(e.target.value)} />
                 <input className="input" placeholder="ENFIA (€/v)" value={enfia} onChange={(e) => setEnfia(e.target.value)} />
                 <input className="input" placeholder="Ylläpitokulut (€/kk)" value={maintenance} onChange={(e) => setMaintenance(e.target.value)} />
@@ -200,14 +240,52 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                 <MapPicker
                   lat={lat ? Number(lat) : undefined}
                   lng={lng ? Number(lng) : undefined}
-                  onChange={({ lat: plat, lng: plng }) => {
+                  onChange={({ lat: plat, lng: plng, formattedAddress: fa, addressComponents }) => {
                     setLat(String(plat));
                     setLng(String(plng));
+                    if (fa) setFormattedAddress(fa);
+                    if (addressComponents && addressComponents.length) {
+                      const toSnakeCaseType = (t: string) => (!t ? t : t.includes('_') ? t.toLowerCase() : t.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, ''));
+                      const toCamelCaseType = (t: string) => (!t ? t : !t.includes('_') ? t : t.replace(/_([a-z])/g, (_: any, c: string) => c.toUpperCase()));
+                      const hasType = (c: any, type: string) => {
+                        const wantSnake = toSnakeCaseType(type);
+                        const wantCamel = toCamelCaseType(type);
+                        return Array.isArray(c?.types) && c.types.some((tt: string) => tt === type || tt === wantSnake || tt === wantCamel);
+                      };
+                      const pick = (...types: string[]) => addressComponents.find((c: any) => types.some((t) => hasType(c, t))) as any;
+                      const text = (comp: any) => (comp?.longText || comp?.shortText || '').trim();
+                      const norm = (s?: string) => (s || '').trim().toLowerCase();
+
+                      const pc = pick('postal_code', 'postalCode');
+                      const loc = pick('locality', 'postal_town', 'postalTown', 'administrative_area_level_3', 'administrativeAreaLevel3');
+                      const adm1 = pick('administrative_area_level_1', 'administrativeAreaLevel1');
+                      const adm2 = pick('administrative_area_level_2', 'administrativeAreaLevel2');
+                      const adm4 = pick('administrative_area_level_4', 'administrativeAreaLevel4');
+                      const subloc = pick('sublocality_level_1', 'sublocalityLevel1', 'sublocality');
+                      const isl = pick('island', 'archipelago');
+
+                      if (pc) setPostalCode(text(pc));
+                      const municipality = text(loc);
+                      if (municipality) setCity(municipality);
+
+                      const regionCandidates = [text(adm1), text(adm2), text(isl), text(adm4), text(subloc)];
+                      const region = regionCandidates.find((v) => v && norm(v) !== norm(municipality)) || '';
+                      if (region) setArea(region);
+
+                      if (isl) setIsland(text(isl));
+                    }
                   }}
                 />
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: 8 }}>
-                  <input className="input" placeholder="Leveysaste (lat)" value={lat} onChange={(e) => setLat(e.target.value)} />
-                  <input className="input" placeholder="Pituusaste (lng)" value={lng} onChange={(e) => setLng(e.target.value)} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: 8 }}>
+                  <input className="input" placeholder="Osoite" value={formattedAddress} readOnly />
+                  <input className="input" placeholder="Kaupunki" title="Δήμος (Dímos) – Kunta" value={city} readOnly />
+                  <input className="input" placeholder="Alue" title="Περιφέρεια (Perifereia) – Lääni/Saari" value={area} readOnly />
+                  <input className="input" placeholder="Saari" value={island} readOnly />
+                  <input className="input" placeholder="Postinumero" value={postalCode} readOnly />
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <input className="input" placeholder="Leveysaste (lat)" value={lat} readOnly />
+                    <input className="input" placeholder="Pituusaste (lng)" value={lng} readOnly />
+                  </div>
                 </div>
               </div>
             </div>

@@ -83,3 +83,31 @@
 - react-icons@4.12.0 (locked)
   - Purpose: Provide brand‑accurate social media icons (Facebook, Threads, X, Instagram). Bluesky uses a vetted inline SVG until an official icon is available in the library.
   - Scope: UI only. No runtime network calls.
+
+## Maps JS Browser Key Service (beta)
+- Lifecycle tag: beta
+- Purpose: Provide the Google Maps JavaScript API browser key to the client securely via a backend endpoint.
+- Region: EU (run in Hosting/Next.js runtime; Secret Manager in EU project scope per policy).
+
+### Implementation
+- Next.js route: `hosting/app/api/maps/key/route.ts`
+  - Uses `@google-cloud/secret-manager` to access secret `MAPS_JS_BROWSER_KEY`.
+  - Returns JSON `{ key: string }`.
+  - Config: `export const dynamic = 'force-dynamic'` and `runtime = 'nodejs'`.
+
+### Interface (required)
+- Inputs
+  - HTTP GET (no params)
+- Outputs
+  - 200 JSON: `{ key: string }`
+  - 500 JSON: error shape on failures (no secret leakage)
+- Side effects
+  - Reads Secret Manager secret at call time (short in-memory cache recommended if needed later).
+  - Logs start/end/errors without exposing secrets.
+
+### Consumers
+- `MapPicker` component loads Google Maps JS by calling `/api/maps/key` and then injecting the Maps script with `language=fi` and required libraries (`places`, plus `marker` if `mapId` exists).
+
+### Notes
+- Keep the secret value only in Secret Manager; never hardcode in source.
+- If migrated to Cloud Run in the future, reflect the new endpoint here and deprecate the Next.js route.

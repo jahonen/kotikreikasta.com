@@ -6,6 +6,15 @@
       "frameworksBackend": {
         "region": "europe-west1"
       },
+      "rewrites": [
+        {
+          "source": "/api/maps/key",
+          "run": {
+            "serviceId": "maps-key",
+            "region": "europe-west1"
+          }
+        }
+      ],
       "headers": [
         {
           "source": "/assets/**",
@@ -16,4 +25,8 @@
       ]
     }
   ]
+  ,
+  "firestore": {
+    "rules": "firestore.rules"
+  }
 }
