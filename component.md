@@ -32,15 +32,16 @@
 
 ### Address field mapping used by downstream UI
 - Greek administrative hierarchy (Greece):
-  - administrative_area_level_1 → Περιφέρεια (Perifereia) – FI: Lääni/Maakunta
-  - administrative_area_level_2 → Περιφερειακή ενότητα (Perifereiakí Enótita) – FI: Alueyksikkö
+  - administrative_area_level_1 → Περιφέρεια (Perifereia) – FI: Alue
+  - administrative_area_level_2 → Περιφερειακή Ενότητα (Perifereiakí Enótita) – FI: Seutu
   - administrative_area_level_3 → Δήμος (Dímos) – FI: Kunta
   - administrative_area_level_4 → Χωριό/Συνοικία (Chorió/Synoikía) – FI: Kylä/Lähiö
 - Finnish UI display on /maptest (with Greek tooltips):
   - Katuosoite ("Οδός + Αριθμός") → `street_address` (fallback: `route` + `street_number`)
-  - Kylä/Lähiö ("Τοπική Κοινότητα") → `locality`
-  - Kunta ("Δήμος") → prefer `administrative_area_level_3`, fallback to `locality`/`postal_town`
-  - Lääni ("Περιφέρεια") → prefer `administrative_area_level_1`, fallback: `administrative_area_level_2` → `island` → `administrative_area_level_4` → `locality`/`sublocality` (avoid duplication with Kunta)
+  - Paikka ("Τοπική Κοινότητα") → `locality`
+  - Kunta ("Δήμος") → `administrative_area_level_3`
+  - Seutu ("Περιφερειακή Ενότητα") → `administrative_area_level_2`
+  - Alue ("Περιφέρεια") → `administrative_area_level_1`
   - Postinumero ("Ταχυδρομικός Κώδικας") → `postal_code`
   - Maa ("Χώρα") → `country`
 
