@@ -52,9 +52,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   const [condition, setCondition] = useState('');
   const [price, setPrice] = useState('');
   const [pricePerSqm, setPricePerSqm] = useState('');
-  const [transferTax, setTransferTax] = useState('');
-  const [enfia, setEnfia] = useState('');
-  const [maintenance, setMaintenance] = useState('');
+  
 
   const [locationNotes, setLocationNotes] = useState('');
 
@@ -242,9 +240,6 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <input className="input" placeholder="Hinta (€) *" value={price} onChange={(e) => setPrice(e.target.value)} />
                 <input className="input" placeholder="Hinta / m² (€) (automaattinen)" value={pricePerSqm} readOnly />
-                <input className="input" placeholder="Siirtovero (€)" value={transferTax} onChange={(e) => setTransferTax(e.target.value)} />
-                <input className="input" placeholder="ENFIA (€/v)" value={enfia} onChange={(e) => setEnfia(e.target.value)} />
-                <input className="input" placeholder="Ylläpitokulut (€/kk)" value={maintenance} onChange={(e) => setMaintenance(e.target.value)} />
               </div>
             </div>
           )}
