@@ -84,16 +84,54 @@
   - Purpose: Provide brand‑accurate social media icons (Facebook, Threads, X, Instagram). Bluesky uses a vetted inline SVG until an official icon is available in the library.
   - Scope: UI only. No runtime network calls.
 
+## Novu Notifications (beta)
+- Lifecycle tag: beta
+- Purpose: Multi-kanavainen ilmoitusalusta (in-app feed, email, Slack, SMS) ylläpitonäkymää varten.
+
+### Dependencies (version-locked)
+- @novu/notification-center@2.0.0 (client, in-app feed/bell)
+- @novu/node@2.6.6 (server SDK for emitting events) – note: upstream deprecates in favor of @novu/api; migration planned.
+
+### Environment
+- NEXT_PUBLIC_NOVU_APPLICATION_IDENTIFIER (public App Identifier; required for client feed)
+- NOVU_API_KEY (server-side; stored in GSM and accessed by Cloud Functions/Run)
+
+### Interface (required)
+- Inputs (events)
+  - `listing.inquiry.created`: { listingId, inquiryId, contact: { name, email }, message }
+  - `social.comment.created`: { source: 'facebook'|'instagram'|'x'|..., postId, commentId, author, text }
+  - `service_request.sla.breached`: { requestId, title, assignedToUid, dueAt }
+- Outputs
+  - In-app feed items per subscriber (Firebase uid as `subscriberId`)
+  - Optional channel deliveries (email/Slack) per workflow configuration
+- Side effects
+  - Reads NOVU_API_KEY from Secret Manager in backend
+  - Logs start/end/errors (no PII beyond necessary routing fields)
+
+### Operational details
+- Subscriber mapping: `subscriberId = Firebase Auth uid`
+- UI integration: Admin topbar shows a bell with unseen badge; falls back gracefully when NOVU_APP_ID/subscriber is missing.
+- Backends: Cloud Functions scheduled job to detect SLA breaches; HTTP-triggered/webhook handlers to emit social comment events as needed.
+
+### Notes
+- Temporary test endpoint `/api/novu/test` is now deprecated and returns HTTP 410. The test button has been removed from Admin UI. Use production emitters/events instead.
+
+### Notes
+- Public App ID is not a secret; API key must be stored only in GSM. Document any provider credentials (Slack webhook, SMTP) in `integration.md`.
+
 ## Maps JS Browser Key Service (beta)
 - Lifecycle tag: beta
 - Purpose: Provide the Google Maps JavaScript API browser key to the client securely via a backend endpoint.
 - Region: EU (run in Hosting/Next.js runtime; Secret Manager in EU project scope per policy).
 
 ### Implementation
-- Next.js route: `hosting/app/api/maps/key/route.ts`
-  - Uses `@google-cloud/secret-manager` to access secret `MAPS_JS_BROWSER_KEY`.
+- Local development: Next.js route `hosting/app/api/maps/key/route.ts`
+  - Reads key from environment: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (or `GOOGLE_MAPS_API_KEY`).
   - Returns JSON `{ key: string }`.
   - Config: `export const dynamic = 'force-dynamic'` and `runtime = 'nodejs'`.
+- Production: Firebase Hosting rewrite `/api/maps/key` → Cloud Function/Run service
+  - Reads browser key from Google Secret Manager at runtime.
+  - Prefer EU region and least-privilege access.
 
 ### Interface (required)
 - Inputs
@@ -102,15 +140,44 @@
   - 200 JSON: `{ key: string }`
   - 500 JSON: error shape on failures (no secret leakage)
 - Side effects
-  - Reads Secret Manager secret at call time (short in-memory cache recommended if needed later).
+  - Local: reads from environment only.
+  - Production: reads Secret Manager secret at call time (short in-memory cache recommended if needed later).
   - Logs start/end/errors without exposing secrets.
 
 ### Consumers
 - `MapPicker` component loads Google Maps JS by calling `/api/maps/key` and then injecting the Maps script with `language=fi` and required libraries (`places`, plus `marker` if `mapId` exists).
 
+### Environment
+- Local: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (preferred) or `GOOGLE_MAPS_API_KEY`
+- Production: secret in GSM (name managed per infra convention)
+
 ### Notes
-- Keep the secret value only in Secret Manager; never hardcode in source.
-- If migrated to Cloud Run in the future, reflect the new endpoint here and deprecate the Next.js route.
+- Do not hardcode keys in source. Keep production key only in Secret Manager.
+- Local route is for dev convenience; production should use the rewrite to the backend service.
+
+## Firebase Session Cookie Service (beta)
+- Lifecycle tag: beta
+- Purpose: Server-authenticated sessions via Firebase Admin session cookies (`__session`).
+
+### Implementation
+- Next.js route: `hosting/app/api/auth/session/route.ts`
+  - Module-scoped, single-package `firebase-admin` import; per-request guard ensures Admin app is initialized.
+  - Uses ADC (gcloud Application Default Credentials) locally; in production relies on Hosting/Cloud Run identity.
+  - Cookie domain omitted to allow Hosting/SSR routing; `SameSite=lax` for POST; secure=false in local dev.
+
+### Interface (required)
+- Inputs
+  - `POST`: JSON `{ idToken: string }` (Firebase ID token)
+  - `GET`: none (reads `__session`)
+  - `DELETE`: none (clears `__session`)
+- Outputs
+  - `POST 200`: `{ ok: true, adminProject?: string }`
+  - `POST 4xx/5xx`: `{ error: string, detail?: string, diagnostics? }`
+  - `GET 200`: `{ ok: boolean, hadCookie: boolean, uid?, email?, error?, detail? }`
+  - `DELETE 200`: `{ ok: true }`
+- Side effects
+  - Sets/Clears `__session` HttpOnly cookie (secure in prod). Logs start/end/errors (no PII).
+  - Admin init guard logs `ADMIN_INIT_ERROR` with non-sensitive details when initialization fails.
 
 ## Places Nearby Proxy Service (beta)
 - Lifecycle tag: beta
@@ -160,4 +227,99 @@
 ### Operational notes
 - Ensure the server key in GSM is not a browser/referrer-restricted key; otherwise Google returns `PERMISSION_DENIED` with `API_KEY_HTTP_REFERRER_BLOCKED`.
 - Unauthenticated access was temporarily enabled for validation; after verification, restrict invokers to the Firebase Hosting managed service account only.
+
+## AI‑Assisted Blog Writing (beta)
+- Lifecycle tag: beta
+- Purpose: Generate Finnish blog drafts and SEO metadata using Vertex AI (Gemini) from a short description and an internal writing guide.
+
+### Implementation
+- Draft API: `hosting/app/api/blogs/draft/route.ts`
+  - Auth: Firebase session cookie (`__session`) or ID token via `x-firebase-auth`/Bearer.
+  - Reads `BLOG_LLM_GUIDE` (GSM) and `GEMINI_COSTOPTIMIZED_MODEL` (GSM, default `gemini-1.5-flash-002`).
+  - Calls Vertex AI (EU region) to generate Markdown; extracts H1 as title.
+  - Persists draft in Firestore `blog_posts` with `{ title, contentMd, urlStub, status: 'draft' }`.
+
+- Publish API: `hosting/app/api/blogs/publish/route.ts`
+  - Auth: same as above; restricts to `@kotikreikasta.com` editors.
+  - Reads `BLOG_LLM_GUIDE` and `GEMINI_QUALITY_MODEL` (GSM, default `gemini-1.5-pro-002`).
+  - Generates SEO JSON: `{ metaTitle, metaDescription, keywords[], ogTitle, ogDescription, imageAlt }`.
+  - Updates the blog document, sets `status: 'queued'`, writes `seo`, sets `publishedAt`, and enqueues to `publication_queue`.
+
+- Admin UI: `hosting/components/admin/BlogEditor.tsx`
+  - Step 1: Editor enters description and creates draft (AI). Receives editable `title` and `contentMd`.
+  - Step 2: Uploads feature image to Firebase Storage under `blog-images/{blogId}/...`.
+  - Step 3: Saves draft or publishes; publish triggers SEO generation and queue write.
+
+### Interface (required)
+- Draft
+  - Input: `POST /api/blogs/draft` `{ description: string }`
+  - Output: `200 { ok: true, id, title, contentMd, urlStub }`
+- Publish
+  - Input: `POST /api/blogs/publish` `{ id, title, contentMd, imageUrl? }`
+  - Output: `200 { ok: true, id, seo }`
+
+### Side effects
+- Reads GSM secrets at call time (short in‑memory cache could be added later).
+- Uses ADC (local) or Cloud Run identity (prod) for Vertex AI.
+- Writes to collections: `blog_posts`, `publication_queue`.
+- Stores images in Firebase Storage under `blog-images/{blogId}/` and references `{ featuredImage: { url, alt } }` in the document.
+
+### Environment
+- Secrets in GSM:
+  - `BLOG_LLM_GUIDE` – editorial style and structure guidance
+  - `GEMINI_COSTOPTIMIZED_MODEL` – e.g. `gemini-1.5-flash-002`
+  - `GEMINI_QUALITY_MODEL` – e.g. `gemini-1.5-pro-002`
+- Server dependency (version-locked): `google-auth-library@^9.14.2`
+
+### Notes
+- Firestore collection name: using `blog_posts` (aligns with current rules). If migrating to `blogs`, update rules, code, and data migration plan.
+- Keep all secrets in GSM for production; do not commit values.
+- Ensure editors are assigned `admin` role (see `roles/{uid}`) to allow client‑side draft saves via rules; server routes bypass rules.
+
+## Publication Queue Processor (alpha)
+- Lifecycle tag: alpha
+- Purpose: Consume `publication_queue` tasks and perform core publication side effects (e.g., mark blog posts as published). Channel-specific distribution (email, Bluesky, etc.) is handled by separate consumers; see sample specs.
+
+### Implementation
+- Location: `functions/src/index.ts` → `processPublicationQueue`
+- Trigger: Firestore `onCreate` for `publication_queue/{id}`
+- Behavior (MVP):
+  - Logs start and payload summary (type, action, blogId).
+  - If `{ type: 'blog_post', action: 'publish' }`:
+    - Loads `blog_posts/{blogId}`; if already `status: 'published'` → mark done and skip.
+    - Otherwise sets `status: 'published'`, updates `updatedAt`, ensures `publishedAt` exists.
+    - Marks queue doc `{ status: 'done' }`.
+  - Unknown type/action → marks `{ status: 'ignored' }`.
+  - Errors → marks `{ status: 'error', error }`.
+
+### Interface (required)
+- Inputs
+  - Firestore doc: `publication_queue/{id}` with fields:
+    - `type`: `'blog_post' | ...`
+    - `action`: `'publish' | ...`
+    - `blogId`: string (when type is `blog_post`)
+    - `seo?`: object (metadata generated at enqueue time)
+    - `createdBy`: uid
+    - `createdAt`: timestamp
+- Outputs
+  - Updates `blog_posts/{blogId}` to `status: 'published'`, sets `publishedAt` if missing, updates `updatedAt`.
+  - Updates the queue document with `{ status: 'done' }` (or `ignored`/`error`).
+- Side effects
+  - None yet. Future: trigger Next.js path/tag revalidation via a signed internal route.
+
+### Reliability roadmap
+- Add idempotency guard/lease (e.g., `processingAt`, `attempts`).
+- Retries with exponential backoff; move to DLQ after N attempts.
+- Optional archival collection for processed items.
+
+### Channel consumers (Milestone 4)
+- Channel-specific publishers are separate services (Cloud Functions/Run) that subscribe to an outbox or read `publication_queue` and post to channels.
+- Sample specs available:
+  - `samplecode/consumer_email.md` (includes requirement for a first‑party tracking pixel and click tracking)
+  - `samplecode/consumer_bsky.md`
+  - `samplecode/consumer_x.md`
+
+### Observability
+- Logs start/end/errors; redact PII and secrets.
+- Queue docs store `status`, optional `note`/`error`, and `updatedAt` for admin visibility.
 

@@ -21,6 +21,25 @@ body { font-family: 'Jost', sans-serif; background: var(--white); color: var(--t
   display: inline-block; background: var(--gold); color: var(--aegean-deep);
   padding: 0.9rem 2.2rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
 }
+
+/* Loading state utilities for primary buttons */
+.btn-primary.is-loading { opacity: 0.9; }
+.btn-primary .btn-label { display: inline-block; vertical-align: middle; }
+.btn-primary .spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  margin-right: 8px;
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,0.25);
+  border-top-color: var(--aegean-deep);
+  animation: kr-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes kr-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .btn-outline {
   display: inline-block; border: 1px solid rgba(255,255,255,0.5); color: var(--white);
   padding: 0.9rem 2.2rem; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;

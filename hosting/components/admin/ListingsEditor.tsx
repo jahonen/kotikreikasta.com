@@ -2,9 +2,10 @@
 
 import { FormEvent, useState } from 'react';
 import { addDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
-import { getDbClient } from '../../lib/firebase-client';
+import { getAuthClient, getDbClient } from '../../lib/firebase-client';
 import { slugify } from '../../lib/utils/slugify';
 import MapPicker from './MapPicker';
+import LoadingButton from '../ui/LoadingButton';
 
 export default function ListingsEditor() {
   const [title, setTitle] = useState('');
@@ -58,7 +59,9 @@ export default function ListingsEditor() {
         finalStub = `${baseStub}-2`;
       }
 
-      await addDoc(coll, {
+      const auth = await getAuthClient();
+      const createdBy = auth?.currentUser?.uid || null;
+      const docRef = await addDoc(coll, {
         title: title.trim(),
         description: description.trim(),
         price: price ? Number(price) : undefined,
@@ -78,9 +81,27 @@ export default function ListingsEditor() {
         },
         urlStub: finalStub,
         status: 'draft',
+        createdBy: createdBy || undefined,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+      // Fire production Novu event (best-effort, non-blocking)
+      try {
+        const token = await auth?.currentUser?.getIdToken?.(true);
+        await fetch('/api/novu/events/listing-created', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'x-firebase-auth': token } : {}),
+          },
+          body: JSON.stringify({
+            listingId: docRef.id,
+            title: title.trim(),
+          }),
+          credentials: 'include',
+        });
+      } catch {}
 
       setMessage('Tallennettu luonnoksena.');
       setTitle('');
@@ -165,7 +186,7 @@ export default function ListingsEditor() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn-primary" disabled={saving}>{saving ? 'Tallennetaan…' : 'Tallenna luonnos'}</button>
+          <LoadingButton className="btn-primary" loading={saving} type="submit">Tallenna luonnos</LoadingButton>
         </div>
         {message && <div style={{ marginTop: '0.25rem' }}>{message}</div>}
       </form>

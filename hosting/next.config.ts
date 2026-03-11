@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Ensure native Node server-only libs are not bundled to avoid multi-copy issues
+  serverExternalPackages: [
+    "firebase-admin",
+    "@google-cloud/secret-manager",
+    "google-auth-library",
+  ],
   async redirects() {
     return [
       {

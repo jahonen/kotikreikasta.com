@@ -42,6 +42,14 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Users: allow each signed-in user to create/read/update their own document; admin can manage all
+    match /users/{uid} {
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow delete: if isAdmin();
+    }
+
     // Roles: admin managed
     match /roles/{uid} {
       allow create: if isSignedIn()
@@ -49,7 +57,12 @@ service cloud.firestore {
         && request.auth.token.email.matches('^.+@kotikreikasta\\.com$')
         && request.resource.data.role == "admin"
         && !exists(/databases/$(database)/documents/roles/$(uid));
-      allow read, update, delete: if isAdmin();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.role == "admin");
+      allow update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 }

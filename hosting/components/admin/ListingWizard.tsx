@@ -221,6 +221,25 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
     return () => { active = false; };
   }, [open]);
 
+  function cleanForFirestore(value: any): any {
+    const isPlainObject = (v: any) => Object.prototype.toString.call(v) === '[object Object]';
+    if (Array.isArray(value)) {
+      const arr = value
+        .map((item) => cleanForFirestore(item))
+        .filter((item) => item !== undefined);
+      return arr;
+    }
+    if (isPlainObject(value)) {
+      const out: any = {};
+      for (const [k, v] of Object.entries(value)) {
+        const cleaned = cleanForFirestore(v);
+        if (cleaned !== undefined) out[k] = cleaned;
+      }
+      return Object.keys(out).length ? out : undefined;
+    }
+    return value === undefined ? undefined : value;
+  }
+
   const canNext = useMemo(() => {
     if (step === 0) return Boolean(name && type && price);
     return true;
@@ -291,10 +310,11 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      const ref = await addDoc(collection(db, 'listings'), payload);
+      const ref = await addDoc(collection(db, 'listings'), cleanForFirestore(payload));
       if (onSaved) onSaved(ref.id);
       onClose();
     } catch (e: any) {
+      console.error(e);
       setError('Tallennus epäonnistui. Tarkista käyttöoikeudet.');
     } finally {
       setSaving(false);

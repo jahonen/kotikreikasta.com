@@ -1,86 +1,285 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
-import { getDbClient } from '../../lib/firebase-client';
-import { slugify } from '../../lib/utils/slugify';
+import { FormEvent, useEffect, useState } from 'react';
+import { collection, doc, getDoc, serverTimestamp, updateDoc, deleteField } from 'firebase/firestore';
+import { getDbClient, getAuthClient, getStorageClient } from '../../lib/firebase-client';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import LoadingButton from '../ui/LoadingButton';
 
-export default function BlogEditor() {
+export default function BlogEditor({ initialId }: { initialId?: string }) {
+  const [description, setDescription] = useState('');
+  const [docId, setDocId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [contentMd, setContentMd] = useState('');
   const [categories, setCategories] = useState(''); // comma-separated
-  const [featuredImage, setFeaturedImage] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [metaTitle, setMetaTitle] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [keywordsCsv, setKeywordsCsv] = useState('');
+  const [ogTitle, setOgTitle] = useState('');
+  const [ogDescription, setOgDescription] = useState('');
+  const [imageAlt, setImageAlt] = useState('');
 
-  const onSubmit = async (e: FormEvent) => {
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!initialId) return;
+      try {
+        const db = await getDbClient();
+        if (!db) return;
+        const snap = await getDoc(doc(collection(db, 'blog_posts'), initialId));
+        if (!snap.exists()) return;
+        if (!active) return;
+        const data: any = snap.data() || {};
+        setDocId(initialId);
+        setTitle(String(data.title || ''));
+        setContentMd(String(data.contentMd || ''));
+        setCategories(Array.isArray(data.categories) ? data.categories.map((c: any) => String(c)).join(', ') : '');
+        setImageUrl(data.featuredImage?.url || '');
+        setImageAlt(data.featuredImage?.alt || '');
+        setMetaTitle(String(data.seo?.metaTitle || ''));
+        setMetaDescription(String(data.seo?.metaDescription || ''));
+        setKeywordsCsv(Array.isArray(data.seo?.keywords) ? data.seo.keywords.map((k: any)=> String(k)).join(', ') : '');
+        setOgTitle(String(data.seo?.ogTitle || ''));
+        setOgDescription(String(data.seo?.ogDescription || ''));
+        setMessage('Luotiin editori olemassa olevalle luonnokselle.');
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, [initialId]);
+
+  const generateDraft = async (e: FormEvent) => {
     e.preventDefault();
     setMessage(null);
-
-    if (!title.trim() || !content.trim()) {
-      setMessage('Täytä otsikko ja sisältö.');
+    if (!description.trim()) {
+      setMessage('Anna artikkelin kuvaus.');
       return;
     }
-
-    const db = await getDbClient();
-    if (!db) {
-      setMessage('Palvelu ei ole saatavilla juuri nyt. Yritä myöhemmin.');
-      return;
-    }
-
-    setSaving(true);
     try {
-      let baseStub = slugify(title).slice(0, 80) || 'artikkeli';
-      let finalStub = baseStub;
+      setGenerating(true);
+      const auth = await getAuthClient();
+      const token = await auth?.currentUser?.getIdToken(true);
+      const res = await fetch('/api/blogs/draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'x-firebase-auth': token } : {}),
+        },
+        body: JSON.stringify({ description }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || data?.detail || 'draft_failed');
+      setDocId(data.id);
+      setTitle(data.title || '');
+      setContentMd(data.contentMd || '');
+      setMessage('Luonnos luotu. Voit muokata sisältöä ja lisätä nostokuvan.');
+    } catch (e: any) {
+      setMessage(`Luonnoksen luonti epäonnistui: ${e?.message || 'virhe'}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
-      const coll = collection(db, 'blog_posts');
-      const q = query(coll, where('urlStub', '==', finalStub));
-      const existing = await getDocs(q);
-      if (!existing.empty) {
-        finalStub = `${baseStub}-2`;
-      }
+  const onUploadImage = async (file: File) => {
+    if (!docId) {
+      setMessage('Luo ensin luonnos.');
+      return;
+    }
+    const storage = await getStorageClient();
+    if (!storage) {
+      setMessage('Tallennuspalvelu ei ole saatavilla.');
+      return;
+    }
+    setImageUploading(true);
+    try {
+      const path = `blog-images/${docId}/${Date.now()}-${file.name}`;
+      const r = ref(storage, path);
+      await uploadBytes(r, file, { contentType: file.type });
+      const url = await getDownloadURL(r);
+      setImageUrl(url);
+      setMessage('Nostokuva ladattu. Muista tallentaa luonnos.');
+    } catch (e: any) {
+      setMessage(`Kuvan lataus epäonnistui: ${e?.message || 'virhe'}`);
+    } finally {
+      setImageUploading(false);
+    }
+  };
 
+  const saveDraft = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const db = await getDbClient();
+      if (!db || !docId) throw new Error('db_unavailable');
       const cats = categories
         .split(',')
         .map((c) => c.trim())
         .filter(Boolean);
-
-      await addDoc(coll, {
-        title: title.trim(),
-        content: content.trim(),
+      const refDoc = doc(collection(db, 'blog_posts'), docId);
+      const kw = keywordsCsv
+        .split(',')
+        .map((k) => k.trim())
+        .filter(Boolean);
+      const patch: any = {
+        title: title.trim() || undefined,
+        contentMd: contentMd.trim() || undefined,
         categories: cats.length ? cats : undefined,
-        featuredImage: featuredImage ? { url: featuredImage } : undefined,
-        urlStub: finalStub,
-        status: 'draft',
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      });
+      };
+      if (imageUrl) {
+        patch['featuredImage'] = { url: imageUrl, ...(imageAlt ? { alt: imageAlt } : {}) };
+      }
+      // SEO field paths
+      patch['seo.metaTitle'] = metaTitle.trim() ? metaTitle.trim() : deleteField();
+      patch['seo.metaDescription'] = metaDescription.trim() ? metaDescription.trim() : deleteField();
+      patch['seo.keywords'] = kw.length ? kw : deleteField();
+      patch['seo.ogTitle'] = ogTitle.trim() ? ogTitle.trim() : deleteField();
+      patch['seo.ogDescription'] = ogDescription.trim() ? ogDescription.trim() : deleteField();
 
-      setMessage('Tallennettu luonnoksena.');
-      setTitle('');
-      setContent('');
-      setCategories('');
-      setFeaturedImage('');
-    } catch (err) {
-      setMessage('Tallennus epäonnistui. Varmista käyttöoikeudet.');
+      // featuredImage.alt path if url present but alt cleared
+      if (imageUrl && !imageAlt.trim()) {
+        patch['featuredImage.alt'] = deleteField();
+      }
+
+      await updateDoc(refDoc, patch);
+      setMessage('Luonnos tallennettu.');
+    } catch (e: any) {
+      setMessage(`Tallennus epäonnistui: ${e?.message || 'virhe'}`);
     } finally {
       setSaving(false);
     }
   };
 
+  const publish = async () => {
+    if (!docId) {
+      setMessage('Luo ensin luonnos.');
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      const auth = await getAuthClient();
+      const token = await auth?.currentUser?.getIdToken(true);
+      const res = await fetch('/api/blogs/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'x-firebase-auth': token } : {}),
+        },
+        body: JSON.stringify({ id: docId, title, contentMd, imageUrl }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || data?.detail || 'publish_failed');
+      setMessage('Artikkeli julkaistu jonoon.');
+    } catch (e: any) {
+      setMessage(`Julkaisu epäonnistui: ${e?.message || 'virhe'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const showCreate = !docId;
+
   return (
     <section id="blog" style={{ marginTop: '2rem' }}>
-      <h3 className="section-title" style={{ fontSize: '1.2rem' }}>Uusi blogikirjoitus</h3>
-      <form onSubmit={onSubmit} className="form-column" style={{ display: 'grid', gap: '0.75rem', maxWidth: 720 }}>
-        <input className="input" placeholder="Otsikko" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <textarea className="input" placeholder="Sisältö" rows={8} value={content} onChange={(e) => setContent(e.target.value)} />
-        <input className="input" placeholder="Kategoriat (pilkulla erotettuna)" value={categories} onChange={(e) => setCategories(e.target.value)} />
-        <input className="input" placeholder="Nostokuvan URL (valinnainen)" value={featuredImage} onChange={(e) => setFeaturedImage(e.target.value)} />
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn-primary" disabled={saving}>{saving ? 'Tallennetaan…' : 'Tallenna luonnos'}</button>
-        </div>
-        {message && <div style={{ marginTop: '0.25rem' }}>{message}</div>}
-      </form>
+      {showCreate && (
+        <>
+          <h3 className="section-title" style={{ fontSize: '1.2rem' }}>Uusi blogikirjoitus</h3>
+          <form onSubmit={generateDraft} className="form-column" style={{ display: 'grid', gap: '0.75rem', maxWidth: 820 }} aria-labelledby="new-post-heading">
+            <div style={{ display: 'grid', gap: 6 }}>
+              <label htmlFor="description" style={{ fontWeight: 600 }}>Kuvaus</label>
+              <textarea id="description" className="input" placeholder="Mitä artikkelissa käsitellään" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <div>
+              <LoadingButton type="submit" className="btn-primary" loading={generating} aria-label="Luo luonnos AI:lla">
+                Luo luonnos AI:lla
+              </LoadingButton>
+            </div>
+          </form>
+        </>
+      )}
+
+      {docId && (
+        <form className="form-column" style={{ display: 'grid', gap: '1rem', maxWidth: 980, marginTop: showCreate ? '1rem' : 0 }} aria-labelledby="edit-post-heading">
+          <h3 id="edit-post-heading" className="section-title" style={{ fontSize: '1.2rem', margin: 0 }}>Muokkaa blogikirjoitusta</h3>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="title" style={{ fontWeight: 600 }}>Otsikko</label>
+            <input id="title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="contentMd" style={{ fontWeight: 600 }}>Markdown-sisältö</label>
+            <textarea id="contentMd" className="input" rows={14} value={contentMd} onChange={(e) => setContentMd(e.target.value)} />
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="categories" style={{ fontWeight: 600 }}>Kategoriat</label>
+            <div id="categories-help" style={{ fontSize: 12, color: 'var(--text-muted)' }}>Erota pilkulla, esim. asunnot, kreikka</div>
+            <input id="categories" aria-describedby="categories-help" className="input" value={categories} onChange={(e) => setCategories(e.target.value)} />
+          </div>
+
+          <fieldset style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12 }}>
+            <legend style={{ padding: '0 6px', fontWeight: 700 }}>Nostokuva</legend>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label htmlFor="featuredImage" style={{ fontWeight: 600 }}>Valitse kuva</label>
+                <input id="featuredImage" type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadImage(f); }} />
+                {imageUploading && <div role="status" aria-live="polite">Ladataan kuvaa…</div>}
+              </div>
+              {imageUrl && (
+                <div>
+                  <img src={imageUrl} alt="nostokuva" style={{ maxWidth: '100%', borderRadius: 8 }} />
+                  <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+                    <label htmlFor="imageAlt" style={{ fontWeight: 600 }}>Kuvan alt-teksti</label>
+                    <input id="imageAlt" className="input" value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </fieldset>
+
+          <fieldset style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12 }}>
+            <legend style={{ padding: '0 6px', fontWeight: 700 }}>Hakukoneoptimoinnin metatiedot</legend>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label htmlFor="metaTitle" style={{ fontWeight: 600 }}>Meta title</label>
+                <input id="metaTitle" className="input" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label htmlFor="metaDescription" style={{ fontWeight: 600 }}>Meta description</label>
+                <textarea id="metaDescription" className="input" rows={3} value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label htmlFor="keywords" style={{ fontWeight: 600 }}>Avainsanat</label>
+                <div id="keywords-help" style={{ fontSize: 12, color: 'var(--text-muted)' }}>Erota pilkulla, esim. "asuminen, matkailu"</div>
+                <input id="keywords" aria-describedby="keywords-help" className="input" value={keywordsCsv} onChange={(e) => setKeywordsCsv(e.target.value)} />
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label htmlFor="ogTitle" style={{ fontWeight: 600 }}>OG title</label>
+                <input id="ogTitle" className="input" value={ogTitle} onChange={(e) => setOgTitle(e.target.value)} />
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label htmlFor="ogDescription" style={{ fontWeight: 600 }}>OG description</label>
+                <textarea id="ogDescription" className="input" rows={3} value={ogDescription} onChange={(e) => setOgDescription(e.target.value)} />
+              </div>
+            </div>
+          </fieldset>
+
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <LoadingButton type="button" className="btn-primary" onClick={saveDraft} loading={saving} aria-label="Tallenna luonnos">Tallenna luonnos</LoadingButton>
+            <LoadingButton type="button" className="btn-primary" onClick={publish} loading={saving} aria-label="Julkaise">Julkaise</LoadingButton>
+          </div>
+        </form>
+      )}
+
+      {message && <div role="status" aria-live="polite" style={{ marginTop: '0.75rem' }}>{message}</div>}
     </section>
   );
 }

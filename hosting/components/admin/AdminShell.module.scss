@@ -1,0 +1,56 @@
+.adminRoot {
+  display: flex;
+  height: 100vh;
+  background: var(--sand);
+  font-family: 'DM Sans', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 240px;
+  background: var(--aegean);
+  display: flex;
+  flex-direction: column;
+  transition: width .25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.collapsed {
+  width: 72px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--sand-dark);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  background: var(--white);
+}
+
+.mobileToggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar { display: none !important; }
+  .mobileOpen { display: flex !important; position: fixed; z-index: 100; height: 100vh; inset: 0 30% 0 0; }
+  .mobileToggle { display: inline-flex; }
+}
