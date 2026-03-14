@@ -1,10 +1,9 @@
 'use client';
-import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
-import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
-import { getAuth as _getAuth, type Auth } from "firebase/auth";
+import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import { getAuth as _getAuth, type Auth } from 'firebase/auth';
 
-// Client-side lazy initialization supporting Firebase Hosting injected config
 const envConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -26,24 +25,18 @@ async function initIfNeeded(): Promise<boolean> {
     appInstance = getApp();
     return true;
   }
-  // Prefer Hosting-injected config when available
+  if (hasEnvConfig) {
+    appInstance = initializeApp(envConfig as any);
+    return true;
+  }
   if (!initPromise) {
     initPromise = fetch('/__/firebase/init.json')
-      .then((r) => {
-        if (!r.ok) throw new Error(`init.json ${r.status}`);
-        return r.json();
-      })
+      .then((r) => r.json())
       .then((cfg) => {
         appInstance = initializeApp(cfg);
         return true;
       })
-      .catch(() => {
-        if (hasEnvConfig) {
-          appInstance = initializeApp(envConfig as any);
-          return true;
-        }
-        return false;
-      });
+      .catch(() => false);
   }
   return initPromise;
 }

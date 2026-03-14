@@ -93,3 +93,32 @@
 
 ### Observability
 - Kevyt lokitus kehitystä varten; ei tulosteta PII:tä
+
+## NavBar (stable)
+- Lifecycle tag: stable
+- Description: Fixed translucent header with site navigation and monochrome logo.
+
+### Interface (required)
+- Inputs
+  - none
+- Outputs
+  - Renders site-wide navigation and brand logo
+- Side effects
+  - Uses an inline SVG mask to render the raster logo (`hosting/assets/kotikreikasta_com.png`) as pure white lines on a transparent background.
+  - The mask inverts the source, turning the white background transparent and the artwork opaque, then fills with `#fff`.
+  - Height fixed to `56px`; width computed proportionally from the source image metadata.
+
+### Behavior
+- Ensures the logo is always a single-color (white) mark suitable for dark headers.
+- Background is transparent (no visible box) regardless of header color or scroll state.
+- Fallback asset `hosting/assets/logo-mono.svg` is available; current implementation uses inline SVG with the PNG as the mask source.
+
+### Dependencies
+- None (uses built-in SVG features; no additional libraries).
+
+### Testing
+- Visual snapshot of the header at default and scrolled states.
+- Cross-browser smoke test for SVG masking (latest Chrome, Safari, Firefox). If a browser fails masking, consider the preprocessed `logo-mono.svg` as a fallback.
+
+### Observability
+- No runtime logging. Consider emitting a lightweight analytics event on primary nav link clicks per policy.

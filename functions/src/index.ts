@@ -45,6 +45,7 @@ export const createUserDocument = functions.region("europe-west1").auth.user().o
 
 // MVP publication queue processor (alpha)
 export const processPublicationQueue = functions
+  .runWith({ serviceAccount: "kotikreikasta@appspot.gserviceaccount.com" })
   .region("europe-west1")
   .firestore.document("publication_queue/{id}")
   .onCreate(async (snap, ctx) => {
@@ -54,10 +55,10 @@ export const processPublicationQueue = functions
 
     functions.logger.info("processPublicationQueue:start", { id, payloadSummary: { type: payload?.type, action: payload?.action, blogId: payload?.blogId } });
 
-    const statusRef = snap.ref;
+    const statusDocRef = db.doc(snap.ref.path);
     const mark = async (fields: Record<string, any>) => {
       try {
-        await statusRef.set({ ...fields, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+        await statusDocRef.set({ ...fields, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
       } catch (e: any) {
         functions.logger.warn("processPublicationQueue:status_update_failed", { id, error: e?.message || String(e) });
       }

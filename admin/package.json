@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "name": "kotikreikasta-admin",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@google-cloud/secret-manager": "^5.6.0",
+    "@novu/node": "2.6.6",
+    "@novu/notification-center": "2.0.0",
+    "@novu/nextjs": "3.14.1",
+    "google-auth-library": "^9.14.2",
+    "firebase-admin": "12.5.0",
+    "firebase": "^10.12.4",
+    "next": "15.1.9",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.10.8",
+    "@types/react": "18.2.47",
+    "@types/react-dom": "18.2.18",
+    "sass": "^1.97.3",
+    "typescript": "^5.3.3"
+  }
+}

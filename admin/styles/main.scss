@@ -1,0 +1,47 @@
+/* Core theme variables */
+:root {
+  --aegean: #1a3a5c;
+  --aegean-deep: #0e2238;
+  --gold: #c9a96e;
+  --gold-light: #e8d5a3;
+  --sand: #f5ede0;
+  --sand-dark: #e8d9c4;
+  --white: #fdfaf6;
+  --text: #2c1f14;
+  --text-muted: #7a6a57;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: 'Jost', sans-serif; background: var(--white); color: var(--text); }
+
+/* Utilities */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+.section-title { font-size: 1rem; letter-spacing: 0.02em; font-weight: 700; }
+.btn-primary {
+  display: inline-block; background: var(--gold); color: var(--aegean-deep);
+  padding: 0.9rem 2.2rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
+}
+
+/* Loading state utilities for primary buttons */
+.btn-primary.is-loading { opacity: 0.9; }
+.btn-primary .btn-label { display: inline-block; vertical-align: middle; }
+.btn-primary .spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  margin-right: 8px;
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,0.25);
+  border-top-color: var(--aegean-deep);
+  animation: kr-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes kr-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Forms */
+.input { appearance: none; border: 1px solid var(--sand-dark); background: #fff; padding: 0.9rem 1rem; border-radius: 4px; font-size: 0.95rem; }
+.input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,110,0.2); }
+.form-row { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }

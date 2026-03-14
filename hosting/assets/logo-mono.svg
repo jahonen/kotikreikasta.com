@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1">
+  <defs>
+    <filter id="invert" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncR type="table" tableValues="1 0" />
+        <feFuncG type="table" tableValues="1 0" />
+        <feFuncB type="table" tableValues="1 0" />
+      </feComponentTransfer>
+    </filter>
+    <mask id="logoMask" maskContentUnits="objectBoundingBox" maskUnits="objectBoundingBox">
+      <!-- Use the raster logo as the source, invert so dark artwork becomes light (opaque in mask) and white bg becomes transparent -->
+      <image href="kotikreikasta_com.png" x="0" y="0" width="1" height="1" preserveAspectRatio="xMidYMid meet" filter="url(#invert)" />
+    </mask>
+  </defs>
+  <!-- Fill with white and apply mask so only the logo shapes remain; background is transparent -->
+  <rect x="0" y="0" width="1024" height="1024" fill="#FFFFFF" mask="url(#logoMask)" />
+</svg>

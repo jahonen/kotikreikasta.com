@@ -48,13 +48,15 @@ body { font-family: 'Jost', sans-serif; background: var(--white); color: var(--t
 /* Nav */
 .navbar {
   position: fixed; inset: 0 0 auto 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
-  padding: 1.2rem 2rem; background: transparent; transition: background 0.4s, backdrop-filter 0.4s;
+  padding: 1.2rem 2rem; background: rgba(10, 20, 35, 0.6); transition: background 0.4s, backdrop-filter 0.4s;
+  backdrop-filter: blur(6px);
+  isolation: isolate;
 }
 .navbar.scrolled { background: rgba(10, 20, 35, 0.88); backdrop-filter: blur(12px); }
 .nav-links { display: flex; gap: 2rem; list-style: none; }
 .nav-links a { color: rgba(255,255,255,0.82); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
 .nav-cta { background: var(--gold); color: var(--aegean-deep) !important; padding: 0.55rem 1.4rem; font-weight: 600 !important; letter-spacing: 0.1em; }
-.logo-mono { filter: grayscale(1) brightness(0) invert(1); }
+.logo-mono { filter: invert(1) grayscale(1) contrast(1.25) brightness(1.1); mix-blend-mode: screen; }
 
 /* Hero */
 .hero { position: relative; min-height: 85vh; display: flex; align-items: center; overflow: hidden; }

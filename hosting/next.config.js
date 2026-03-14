@@ -6,6 +6,10 @@ const nextConfig = {
     '@google-cloud/secret-manager',
     'google-auth-library',
   ],
+  images: {
+    // Serve original images without going through Next's optimizer route
+    unoptimized: true,
+  },
 };
 
 module.exports = nextConfig;
