@@ -151,25 +151,27 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
         />
       )}
       <NavBar />
-      <main className="container" style={{ padding: '6rem 0 3rem', maxWidth: 840, margin: '0 auto' }}>
-        <nav aria-label="breadcrumb" style={{ fontSize: 14, marginBottom: 12 }}>
-          <ol style={{ listStyle: 'none', display: 'flex', gap: 8, padding: 0, margin: 0, color: 'var(--text-muted)' }}>
-            <li><Link href="/">Etusivu</Link></li>
-            <li aria-hidden="true">/</li>
-            <li><Link href="/#latest-blogs">Blogi</Link></li>
-            <li aria-hidden="true">/</li>
-            <li aria-current="page" style={{ color: 'inherit' }}>{slug.replace(/-/g, ' ')}</li>
-          </ol>
-        </nav>
-        <BlogPostClient slug={slug} />
+      <main style={{ marginTop: '72px', padding: '0 1.25rem' }}>
+        <div style={{ padding: '3rem 0', maxWidth: 840, margin: '0 auto' }}>
+          <nav aria-label="breadcrumb" style={{ fontSize: 14, marginBottom: 12 }}>
+            <ol style={{ listStyle: 'none', display: 'flex', gap: 8, padding: 0, margin: 0, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+              <li><Link href="/">Etusivu</Link></li>
+              <li aria-hidden="true">/</li>
+              <li><Link href="/#latest-blogs">Blogi</Link></li>
+              <li aria-hidden="true">/</li>
+              <li aria-current="page" style={{ color: 'inherit' }}>{slug.replace(/-/g, ' ')}</li>
+            </ol>
+          </nav>
+          <BlogPostClient slug={slug} />
 
-        <section style={{ marginTop: 48 }}>
-          <h2 style={{ marginBottom: 12 }}>Ota yhteyttä</h2>
-          <p style={{ color: 'var(--text-muted)', marginTop: 0, marginBottom: 16 }}>
-            Jäikö kysyttävää? Jätä yhteystietosi ja viestisi – palaamme sinulle pian.
-          </p>
-          <ContactForm source={{ type: 'content', slug, title: human, url }} />
-        </section>
+          <section style={{ marginTop: 48 }}>
+            <h2 style={{ marginBottom: 12 }}>Ota yhteyttä</h2>
+            <p style={{ color: 'var(--text-muted)', marginTop: 0, marginBottom: 16 }}>
+              Jäikö kysyttävää? Jätä yhteystietosi ja viestisi – palaamme sinulle pian.
+            </p>
+            <ContactForm source={{ type: 'content', slug, title: human, url }} />
+          </section>
+        </div>
       </main>
       <Footer />
     </>

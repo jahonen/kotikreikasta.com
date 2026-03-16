@@ -6,8 +6,7 @@ export default function Hero(_props: HeroProps) {
       <div
         className="hero-bg"
         style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1800&q=85')",
+          backgroundImage: "url('/etuovi_kreikkaan.jpg')",
         }}
       />
       <div className="hero-overlay" />
@@ -22,11 +21,11 @@ export default function Hero(_props: HeroProps) {
           lukien vuoden mittainen konsierge-palvelu ensimmäiselle vuodelle.
         </p>
         <div className="hero-btns">
-          <a href="#listings" className="btn-primary">
-            Tutki kohteita
-          </a>
-          <a href="#process" className="btn-outline">
+          <a href="#process" className="btn-primary">
             Miten se toimii
+          </a>
+          <a href="#listings" className="btn-outline">
+            Tutki kohteita
           </a>
         </div>
       </div>

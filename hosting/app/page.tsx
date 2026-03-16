@@ -1,5 +1,6 @@
 import NavBar from "../components/nav-bar";
 import Hero from "../components/Hero";
+import TrustBar from "../components/TrustBar";
 import NewsletterCta from "../components/NewsletterCta";
 import LatestBlogsClient from "../components/LatestBlogsClient";
 import Footer from "../components/Footer";
@@ -9,36 +10,83 @@ export default async function Page() {
     <>
       <NavBar />
       <Hero />
+      <TrustBar />
 
-      <section id="listings" className="container" style={{ padding: '4rem 0' }}>
-        <p className="section-label">Valikoituja kohteita</p>
-        <h2 className="section-title">Löydä oma <em>paratiisisi</em></h2>
+      {/* ICP Journey: Step 1 - Understand the Process */}
+      <section id="process" style={{ padding: '4rem 0' }}>
+        <div className="container">
+          <p className="section-label">Ostoprosessi</p>
+          <h2 className="section-title">Viisi askelta <em>unelmaasi</em></h2>
+          <p style={{ 
+            fontFamily: 'var(--font-body)',
+            fontSize: '1.0625rem',
+            lineHeight: 1.7,
+            color: 'var(--text-mid)',
+            maxWidth: '720px',
+            marginBottom: 'var(--space-xl)'
+          }}>
+            Turvallinen ja asiantunteva prosessi alusta loppuun. Hoidamme kaikki käytännön asiat puolestasi – kreikkalaisesta verotunnuksesta notaarin edessä allekirjoitettavaan kauppakirjaan.
+          </p>
+          <a href="/ostoprosessi" className="btn-primary">
+            Tutustu prosessiin
+          </a>
+        </div>
       </section>
 
-      <section id="process" className="container" style={{ padding: '4rem 0' }}>
-        <p className="section-label">Ostoprosessi</p>
-        <h2 className="section-title">Viisi askelta <em>unelmaasi</em></h2>
+      {/* ICP Journey: Step 2 - Explore Regions */}
+      <section id="regions" style={{ padding: '4rem 0' }}>
+        <div className="container">
+          <p className="section-label">Alueopas</p>
+          <h2 className="section-title">Löydä <em>oikea alue</em> sinulle</h2>
+          <p style={{ 
+            fontFamily: 'var(--font-body)',
+            fontSize: '1.0625rem',
+            lineHeight: 1.7,
+            color: 'var(--text-mid)',
+            maxWidth: '720px',
+            marginBottom: 'var(--space-xl)'
+          }}>
+            Kreikka tarjoaa monipuolisia alueita jokaiseen tarpeeseen – Kreeta, Korfu, Peloponnesos ja muut. Tutustu yhdeksään suosituimpaan alueeseen ja löydä täydellinen paikka.
+          </p>
+          <a href="/alueet" className="btn-primary">
+            Tutustu alueisiin
+          </a>
+        </div>
       </section>
 
-      <section id="concierge" className="container" style={{ padding: '4rem 0' }}>
-        <p className="section-label">Konsierge-palvelu</p>
-        <h2 className="section-title">Kattava tuki <em>ensimmäiselle</em> vuodelle</h2>
+      {/* ICP Journey: Step 3 - Browse Listings or Custom Search */}
+      <section id="listings" style={{ padding: '4rem 0' }}>
+        <div className="container">
+          <p className="section-label">Kohteet</p>
+          <h2 className="section-title">Valikoituja <em>kohteita</em></h2>
+          <p style={{ 
+            fontFamily: 'var(--font-body)',
+            fontSize: '1.0625rem',
+            lineHeight: 1.7,
+            color: 'var(--text-mid)',
+            maxWidth: '720px',
+            marginBottom: 'var(--space-lg)'
+          }}>
+            Selaa valikoimaamme tai anna meidän etsiä juuri sinulle sopiva kiinteistö.
+          </p>
+          <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+            <a href="#newsletter" className="btn-primary">
+              Näytä kohteet
+            </a>
+            <a href="/tasmahaku" className="btn-outline" style={{ color: 'var(--text)', borderColor: 'var(--gold)' }}>
+              Täsmähaku-palvelu
+            </a>
+          </div>
+        </div>
       </section>
 
-      <section id="regions" className="container" style={{ padding: '4rem 0' }}>
-        <p className="section-label">Alueopas</p>
-        <h2 className="section-title">Löydä <em>oikea alue</em> sinulle</h2>
-      </section>
-
-      <section id="latest-blogs" className="container" style={{ padding: '4rem 0' }}>
-        <p className="section-label">Blogi</p>
-        <h2 className="section-title">Uusimmat <em>artikkelit</em></h2>
-        <LatestBlogsClient count={3} />
-      </section>
-
-      <section id="faq" className="container" style={{ padding: '4rem 0' }}>
-        <p className="section-label">Usein kysytyt</p>
-        <h2 className="section-title">Kysymykset ja <em>vastaukset</em></h2>
+      {/* ICP Journey: Step 4 - Learn from Content */}
+      <section id="latest-blogs" style={{ padding: '4rem 0' }}>
+        <div className="container">
+          <p className="section-label">Blogi</p>
+          <h2 className="section-title">Asiantuntija-<em>artikkelit</em></h2>
+          <LatestBlogsClient count={3} />
+        </div>
       </section>
 
       <NewsletterCta />

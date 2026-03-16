@@ -162,13 +162,44 @@ export default function BlogPostClient({ slug }: { slug: string }) {
   return (
     <article>
       {post?.featuredImage?.url && (
-        <div style={{ width: '100%', aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 12, background: '#f5f5f5', marginBottom: 16 }}>
-          <img src={post.featuredImage.url} alt={post.featuredImage.alt || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ 
+          width: 'calc(100% + 2.5rem)',
+          marginLeft: '-1.25rem',
+          marginRight: '-1.25rem',
+          aspectRatio: '16 / 9', 
+          overflow: 'hidden', 
+          background: 'var(--sand)', 
+          marginBottom: 'var(--space-xl)' 
+        }}>
+          <img 
+            src={post.featuredImage.url} 
+            alt={post.featuredImage.alt || ''} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
         </div>
       )}
-      <header>
-        <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{dateStr}</p>
-        <h1 style={{ margin: '6px 0 12px' }}>{post?.title}</h1>
+      <header style={{ marginBottom: 'var(--space-xl)' }}>
+        <p style={{ 
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.6875rem',
+          fontWeight: 500,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: 'var(--gold)',
+          marginBottom: 'var(--space-md)'
+        }}>
+          {dateStr}
+        </p>
+        <h1 style={{ 
+          fontFamily: 'var(--font-display)',
+          fontSize: 'clamp(2rem, 5vw, 2.75rem)',
+          fontWeight: 400,
+          lineHeight: 1.2,
+          color: 'var(--text)',
+          margin: 0
+        }}>
+          {post?.title}
+        </h1>
       </header>
       <section className="prose" dangerouslySetInnerHTML={{ __html: html }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

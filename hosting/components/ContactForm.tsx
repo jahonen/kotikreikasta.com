@@ -184,6 +184,7 @@ export default function ContactForm({ source }: ContactFormProps) {
             onChange={(e) => setSubject(e.target.value)}
           >
             <option value="">Valitse kiinnostuksen kohde</option>
+            <option value="tasmahaku">Täsmähaku – Etsin tietynlaista kiinteistöä</option>
             <option value="lomakoti">Etsin lomakotia omaan käyttöön</option>
             <option value="sijoitus">Haen sijoituskiinteistöä Kreikasta</option>
             <option value="prosessi">Haluan tietoa ostoprosessista ja verotuksesta</option>

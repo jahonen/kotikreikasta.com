@@ -402,3 +402,103 @@
 - Revalidation secret must be stored in Secret Manager and Cloud Run environment
 - All server-side operations use Firebase Admin SDK with ADC
 
+## Konsierge Service Page (stable)
+- Lifecycle tag: stable
+- Purpose: Public-facing service page for Kotikreikasta's concierge offering. Explains the service, pricing, and process to potential customers. Generates leads via integrated ContactForm.
+
+### Implementation
+- Page route: `hosting/app/konsierge/page.tsx`
+  - Server component with static metadata export
+  - Renders complete service page with hero, features, pricing, and contact form
+  - Integrates NavBar, Footer, and ContactForm components
+  
+- Layout: `hosting/app/konsierge/layout.tsx`
+  - Exports comprehensive SEO metadata
+  - Open Graph and Twitter Cards for social sharing
+  - JSON-LD Service schema for structured data
+  - Canonical URL and robots directives
+
+### Interface (required)
+- Inputs
+  - None (static page, no dynamic params)
+- Outputs
+  - Server-rendered HTML with full SEO metadata
+  - Integrated ContactForm for lead generation
+  - JSON-LD structured data (Service schema)
+- Side effects
+  - ContactForm writes to Firestore `leads` collection
+  - Triggers admin notifications via Novu and SendGrid
+  - Analytics tracking via ContactForm component
+
+### Content Sections
+1. **Hero**: Service value proposition with CTA buttons
+2. **Trust Bar**: Key benefits (Finnish service, 24h response, direct payment, Greece-wide coverage)
+3. **What is it**: Split section explaining the service concept
+4. **How it works**: 4-step process guide (Tell us, We investigate, You get options, Work gets done)
+5. **Services**: 6 category grid (Repairs, Property care, Authorities, Legal, Emergencies, Other)
+6. **Pricing**: 2-tier comparison (Free for buyers 12 months, €39/month ongoing)
+7. **Disclaimer**: Legal notice about intermediary role
+8. **Contact**: ContactForm integration with source type 'content'
+
+### Design & Responsiveness
+- Mobile-first responsive design
+- All sections use `clamp()` for fluid typography and spacing
+- Responsive grids with `auto-fit` and `minmax()` patterns
+- Grid columns collapse to single column on mobile
+- Minimum 1.25rem (20px) horizontal padding on mobile
+- Images with proper min-height for mobile display
+- Typography: Cormorant Garamond (headings), DM Sans (body)
+- Color palette: aegean-deep, gold, sand, white (site design system)
+
+### SEO Features
+- **Metadata**: Comprehensive title, description, keywords
+- **Open Graph**: Full OG tags for social sharing
+- **Twitter Cards**: Summary large image cards
+- **JSON-LD**: Service schema with provider, area served, languages
+- **Canonical URL**: https://kotikreikasta.com/konsierge
+- **Robots**: index, follow with googleBot settings
+- **Sitemap**: Included with priority 0.8, monthly change frequency
+
+### Navigation
+- Added to main navigation (desktop and mobile NavBar)
+- Added to Footer "Palvelut" section
+- Accessible via `/konsierge` route
+
+### Lead Generation
+- ContactForm with source: `{ type: 'content', slug: 'konsierge', title: 'Konsierge-palvelu', url: 'https://kotikreikasta.com/konsierge' }`
+- Leads written to Firestore with proper source attribution
+- Admin notifications via Novu (in-app) and SendGrid (email)
+- Lead tracking in admin UI at `/markkinointi`
+
+### Dependencies
+- NavBar component (site navigation)
+- Footer component (site footer)
+- ContactForm component (lead generation)
+- Next.js metadata API
+- Site-wide CSS variables and design system
+
+### Environment
+- No specific environment variables required
+- Uses shared Firebase Firestore configuration
+- Relies on ContactForm's Secret Manager secrets (NOVU_API_KEY, SENDGRID_API_KEY, LEADS_ADMIN_EMAIL)
+
+### Testing
+- Visual regression tests for all sections
+- Mobile responsiveness testing across breakpoints
+- Contact form integration testing
+- SEO metadata validation
+- Cross-browser compatibility (Chrome, Safari, Firefox)
+
+### Observability
+- Analytics via ContactForm component
+- Lead tracking in Firestore `leads` collection
+- Admin notifications for new leads
+- No page-specific logging (static content)
+
+### Notes
+- Page is fully static with no dynamic data fetching
+- All content is in Finnish (brand language)
+- Pricing and service details should be kept in sync with actual offering
+- Images use Unsplash URLs; consider migrating to Firebase Storage for production
+- ContactForm handles all lead generation and notification logic
+

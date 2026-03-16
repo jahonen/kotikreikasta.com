@@ -184,3 +184,70 @@
 ### Observability
 - Minimal retry logic wraps Firestore writes
 - Consider adding analytics events for form interactions per policy
+
+## KonsiergePage (stable)
+- Lifecycle tag: stable
+- Description: Full-featured service page for Kotikreikasta's concierge service. Explains the service offering, pricing, and process. Includes hero section, trust indicators, service categories, pricing tiers, and integrated contact form.
+
+### Interface (required)
+- Inputs
+  - none (static page component)
+- Outputs
+  - Renders complete konsierge service page with SEO metadata
+  - Integrates ContactForm with source type 'content'
+- Side effects
+  - Renders JSON-LD structured data (Service schema)
+  - Loads ContactForm which writes to Firestore leads collection
+  - Analytics tracking via ContactForm component
+
+### Behavior
+- Sections:
+  - Hero with service value proposition and CTA buttons
+  - Trust bar with key benefits (Finnish service, 24h response, direct payment, Greece-wide)
+  - "What is it" split section (image + explanation)
+  - "How it works" 4-step process guide
+  - Services grid (6 categories: repairs, property care, authorities, legal, emergencies, other)
+  - Pricing comparison (free for buyers 12 months, €39/month ongoing)
+  - Disclaimer section
+  - Contact section with ContactForm integration
+- Fully responsive with mobile-first design
+- All sections use clamp() for fluid typography and spacing
+- Responsive grids collapse to single column on mobile
+
+### Design
+- Uses site-wide design system (CSS variables)
+- Typography: Cormorant Garamond (headings), DM Sans (body)
+- Color palette: aegean-deep, gold, sand, white
+- Mobile padding: minimum 1.25rem (20px) on all sections
+- Responsive grids with auto-fit and minmax patterns
+- Images with proper min-height for mobile display
+
+### SEO
+- Comprehensive metadata in layout.tsx
+- Open Graph and Twitter Cards
+- Canonical URL
+- JSON-LD Service schema
+- Included in sitemap with priority 0.8
+- Robots: index, follow
+
+### Dependencies
+- NavBar component
+- Footer component
+- ContactForm component
+- Next.js metadata API
+
+### Navigation
+- Added to main navigation (desktop and mobile)
+- Added to footer "Palvelut" section
+- Accessible via /konsierge route
+
+### Testing
+- Visual regression tests for all sections
+- Mobile responsiveness testing across breakpoints
+- Contact form integration testing
+- SEO metadata validation
+
+### Observability
+- Analytics via ContactForm component
+- Lead tracking in Firestore
+- Admin notifications via Novu and SendGrid

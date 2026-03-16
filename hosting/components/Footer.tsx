@@ -14,22 +14,49 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Palvelut</h4>
           <ul>
+            <li><Link href="/ostoprosessi">Ostoprosessi</Link></li>
+            <li><Link href="/alueet">Alueet</Link></li>
+            <li><Link href="/tasmahaku">Täsmähaku</Link></li>
+            <li><Link href="/konsierge">Konsierge</Link></li>
             <li><a href="#listings">Kohteet</a></li>
-            <li><a href="#process">Ostoprosessi</a></li>
-            <li><a href="#concierge">Konsierge</a></li>
           </ul>
         </div>
         <div className="footer-col">
           <h4>Tietoa</h4>
           <ul>
             <li><Link href="/privacy">Tietosuoja</Link></li>
-            <li><a href="#newsletter">Uutiskirje</a></li>
+            <li><Link href="/palveluehdot">Palveluehdot</Link></li>
+            <li><a href="#latest-blogs">Blogi</a></li>
           </ul>
         </div>
         <div className="footer-col">
-          <h4>Yhteys</h4>
+          <h4>Hyödyllistä</h4>
           <ul>
-            <li><a href="mailto:info@kotikreikasta.com">info@kotikreikasta.com</a></li>
+            <li>
+              <a 
+                href="https://en.aegeanair.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}
+              >
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>✈ Lennä Aegeanilla</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>Suorat lennot Helsingistä alle 4h</span>
+              </a>
+            </li>
+            <li style={{ marginTop: '0.75rem' }}>
+              <a 
+                href="https://finlandabroad.fi/web/grc/edustusto" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}
+              >
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>🇫🇮 Suomen Suurlähetystö</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>Ateena, Kreikka</span>
+              </a>
+            </li>
+            <li style={{ marginTop: '1rem' }}>
+              <a href="mailto:info@kotikreikasta.com">info@kotikreikasta.com</a>
+            </li>
           </ul>
         </div>
       </div>
