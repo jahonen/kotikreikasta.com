@@ -10,14 +10,18 @@ export const dynamic = 'force-dynamic';
 function ensureAdminInitialized() {
   if (!admin.apps.length) {
     try {
-      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || undefined;
-      const cred = (admin.credential as any).applicationDefault?.();
-      if (cred) {
-        admin.initializeApp(projectId ? { credential: cred, projectId } as any : { credential: cred } as any);
+      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+      if (projectId) {
+        admin.initializeApp({ projectId });
       } else {
-        admin.initializeApp(projectId ? ({ projectId } as any) : undefined as any);
+        admin.initializeApp();
       }
-    } catch {}
+    } catch (e: any) {
+      const msg = e?.message || String(e || '');
+      if (!/already exists/i.test(msg)) {
+        console.error('[ADMIN_INIT] blogs/draft initialization failed:', e);
+      }
+    }
   }
 }
 
@@ -35,8 +39,8 @@ async function resolveProjectId(): Promise<string> {
   const envProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   if (envProject) return envProject;
   try {
-    if (admin.apps.length) {
-      const p = (admin.app().options as any)?.projectId;
+    if (admin.apps.length > 0) {
+      const p = (admin.apps[0]?.options as any)?.projectId;
       if (p) return String(p);
     }
   } catch {}
@@ -93,6 +97,7 @@ async function generateMarkdown(description: string, guide: string, model: strin
 
 export async function POST(req: NextRequest) {
   ensureAdminInitialized();
+  const app = admin.apps[0];
 
   const requestCookies = await nextCookies();
   let sessionCookie = requestCookies.get('__session')?.value as string | undefined;
@@ -105,7 +110,7 @@ export async function POST(req: NextRequest) {
   let email = '';
   if (sessionCookie) {
     try {
-      const decoded = await admin.auth().verifySessionCookie(sessionCookie, true);
+      const decoded = await admin.auth(app).verifySessionCookie(sessionCookie, true);
       uid = decoded.uid;
       email = (decoded as any).email || '';
     } catch {}
@@ -117,7 +122,7 @@ export async function POST(req: NextRequest) {
     }
     if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     try {
-      const decoded = await admin.auth().verifyIdToken(token);
+      const decoded = await admin.auth(app).verifyIdToken(token);
       uid = decoded.uid;
       email = (decoded as any).email || '';
     } catch (e: any) {
@@ -139,15 +144,19 @@ export async function POST(req: NextRequest) {
   const model = (process.env.GEMINI_COSTOPTIMIZED_MODEL as string) || await readSecret('GEMINI_COSTOPTIMIZED_MODEL', project).catch(() => 'gemini-1.5-flash-002');
 
   try {
+    console.log('[DRAFT] Starting markdown generation', { project, model, descriptionLength: description.length });
     const md = await generateMarkdown(description, guide, model, project);
+    console.log('[DRAFT] Markdown generated successfully', { mdLength: md.length });
     const title = extractTitleFromMarkdown(md) || 'Blogiartikkeli';
+    console.log('[DRAFT] Extracted title:', title);
 
-    const db = admin.firestore();
+    const db = admin.firestore(app);
     let urlStub = (title || 'artikkeli').toLowerCase().normalize('NFKD').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 80) || 'artikkeli';
     let finalStub = urlStub;
     const coll = db.collection('blog_posts');
     const existing = await coll.where('urlStub', '==', finalStub).limit(1).get();
     if (!existing.empty) finalStub = `${urlStub}-2`;
+    console.log('[DRAFT] Creating Firestore document', { urlStub: finalStub });
 
     const docRef = await coll.add({
       title,
@@ -159,8 +168,14 @@ export async function POST(req: NextRequest) {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    console.log('[DRAFT] Draft created successfully', { id: docRef.id });
     return NextResponse.json({ ok: true, id: docRef.id, title, contentMd: md, urlStub: finalStub });
   } catch (e: any) {
+    console.error('[DRAFT] Draft creation failed:', {
+      error: e?.message,
+      stack: e?.stack?.substring(0, 500),
+      name: e?.name,
+    });
     return NextResponse.json({ error: 'draft_failed', detail: e?.message || String(e) }, { status: 500 });
   }
 }

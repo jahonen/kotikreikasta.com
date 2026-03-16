@@ -122,3 +122,65 @@
 
 ### Observability
 - No runtime logging. Consider emitting a lightweight analytics event on primary nav link clicks per policy.
+
+## ContactForm (beta)
+- Lifecycle tag: beta
+- Description: Reusable contact form component for lead generation on public site. Features elegant design with separate name fields, subject dropdown, and trust indicators. Writes to Firestore leads collection and optionally subscribes to newsletter.
+
+### Interface (required)
+- Inputs
+  - `source`: `{ type: 'listing'|'content', ... }`
+    - listing: `{ listingId: string; title: string; url: string; price: number }`
+    - content: `{ slug: string; title: string; url: string }`
+- Outputs
+  - Firestore writes to `leads` collection with: `{ source, contact{name, phone?, email?}, subject?, message, consents{termsAccepted, marketingOptIn}, status('lead'), statusPct(0.10), tcv(2% of price if listing), currentValue(statusPct*tcv), createdAt, updatedAt }`
+  - If `marketingOptIn && email`: write to `newsletterSubscriptions` `{ email, consent: true, source, createdAt }`
+- Side effects
+  - Cloud Function `onLeadCreated`:
+    - Recompute/normalize tcv/currentValue and statusPct
+    - Notify admins via Novu (event: 'lead-created')
+    - Email admins via SendGrid (to LEADS_ADMIN_EMAIL alias and/or role-based admin emails)
+    - Secrets via Secret Manager: NOVU_API_KEY, SENDGRID_API_KEY, LEADS_ADMIN_EMAIL; optional SENDGRID_FROM
+
+### Behavior
+- Form fields:
+  - Etunimi (First name) / Sukunimi (Last name) - 2-column grid
+  - Sähköposti (Email) / Puhelin (Phone) - 2-column grid
+  - Miten voimme auttaa? (Subject) - dropdown with predefined options
+  - Viesti (Message) - textarea
+  - Checkboxes: Terms (required), Marketing opt-in (optional, labeled "vapaaehtoinen")
+- Validation:
+  - Requires message and at least one of phone or email
+  - Requires Palveluehdot (Terms) consent
+  - Optional marketing consent
+- Success state shows confirmation message with checkmark icon
+- Trust indicators: "Vastaus 24 tunnissa · Ei sitoumuksia · Luottamuksellinen"
+
+### Design
+- Styled with ContactForm.scss using CSS variables for theming
+- Colors: cream background, gold accents, refined typography
+- Responsive 2-column grid (stacks on mobile)
+- Custom select dropdown with arrow indicator
+- Focus states with gold border
+- Uppercase labels with letter-spacing
+- Light font weights for elegant feel
+
+### Dependencies
+- Firebase Firestore client
+- Retry logic for transient errors (3 attempts with exponential backoff)
+
+### Embedding
+- Content pages: embedded in `hosting/app/blog/[slug]/page.tsx` with source type 'content'
+- Listing pages: embed `<ContactForm source={{ type: 'listing', listingId, title, url, price }} />`
+
+### Admin UI
+- `admin/app/markkinointi/page.tsx` lists leads and allows status changes; updates currentValue accordingly
+
+### Testing
+- Unit tests for validation logic
+- Integration tests for Firestore writes
+- Visual regression tests for form layout
+
+### Observability
+- Minimal retry logic wraps Firestore writes
+- Consider adding analytics events for form interactions per policy

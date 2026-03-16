@@ -10,14 +10,18 @@ export const dynamic = 'force-dynamic';
 function ensureAdminInitialized() {
   if (!admin.apps.length) {
     try {
-      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || undefined;
-      const cred = (admin.credential as any).applicationDefault?.();
-      if (cred) {
-        admin.initializeApp(projectId ? { credential: cred, projectId } as any : { credential: cred } as any);
+      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+      if (projectId) {
+        admin.initializeApp({ projectId });
       } else {
-        admin.initializeApp(projectId ? ({ projectId } as any) : undefined as any);
+        admin.initializeApp();
       }
-    } catch {}
+    } catch (e: any) {
+      const msg = e?.message || String(e || '');
+      if (!/already exists/i.test(msg)) {
+        console.error('[ADMIN_INIT] blogs/publish initialization failed:', e);
+      }
+    }
   }
 }
 
@@ -90,6 +94,7 @@ async function generateSeoForMarkdown(md: string, title: string, imageUrl?: stri
 
 export async function POST(req: NextRequest) {
   ensureAdminInitialized();
+  const app = admin.apps[0];
 
   const requestCookies = await nextCookies();
   let sessionCookie = requestCookies.get('__session')?.value as string | undefined;
@@ -102,7 +107,7 @@ export async function POST(req: NextRequest) {
   let email = '';
   if (sessionCookie) {
     try {
-      const decoded = await admin.auth().verifySessionCookie(sessionCookie, true);
+      const decoded = await admin.auth(app).verifySessionCookie(sessionCookie, true);
       uid = decoded.uid;
       email = (decoded as any).email || '';
     } catch {}
@@ -114,7 +119,7 @@ export async function POST(req: NextRequest) {
     }
     if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     try {
-      const decoded = await admin.auth().verifyIdToken(token);
+      const decoded = await admin.auth(app).verifyIdToken(token);
       uid = decoded.uid;
       email = (decoded as any).email || '';
     } catch (e: any) {
@@ -132,10 +137,20 @@ export async function POST(req: NextRequest) {
   if (!id || !title || !contentMd) return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
 
   try {
+    console.log('[PUBLISH] Starting SEO generation', { id, titleLength: title.length, contentLength: contentMd.length, hasImage: !!imageUrl });
     const seo = await generateSeoForMarkdown(contentMd, title, imageUrl);
+    console.log('[PUBLISH] SEO generated successfully', { 
+      metaTitleLength: seo.metaTitle.length,
+      metaDescLength: seo.metaDescription.length,
+      keywordsCount: seo.keywords.length,
+      ogTitleLength: seo.ogTitle.length,
+      ogDescLength: seo.ogDescription.length,
+      imageAltLength: seo.imageAlt.length
+    });
 
-    const db = admin.firestore();
+    const db = admin.firestore(app);
     const docRef = db.collection('blog_posts').doc(id);
+    console.log('[PUBLISH] Updating Firestore document', { id });
     await docRef.set({
       title,
       contentMd,
@@ -152,6 +167,7 @@ export async function POST(req: NextRequest) {
       publishedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
 
+    console.log('[PUBLISH] Adding to publication queue');
     await db.collection('publication_queue').add({
       type: 'blog_post',
       action: 'publish',
@@ -161,8 +177,36 @@ export async function POST(req: NextRequest) {
       seo,
     });
 
+    // Trigger ISR revalidation on the public site
+    console.log('[PUBLISH] Triggering ISR revalidation');
+    const urlStub = body?.urlStub || '';
+    if (urlStub) {
+      try {
+        const revalidateSecret = process.env.REVALIDATE_SECRET || 'default-secret-change-me';
+        const publicSiteUrl = process.env.PUBLIC_SITE_URL || 'https://kotikreikasta.com';
+        await fetch(`${publicSiteUrl}/api/revalidate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            path: `/blog/${urlStub}`,
+            secret: revalidateSecret 
+          }),
+        });
+        console.log('[PUBLISH] ISR revalidation triggered for', `/blog/${urlStub}`);
+      } catch (revalidateErr) {
+        console.error('[PUBLISH] ISR revalidation failed:', revalidateErr);
+        // Don't fail the publish if revalidation fails
+      }
+    }
+
+    console.log('[PUBLISH] Publish completed successfully', { id });
     return NextResponse.json({ ok: true, id, seo });
   } catch (e: any) {
+    console.error('[PUBLISH] Publish failed:', {
+      error: e?.message,
+      stack: e?.stack?.substring(0, 500),
+      name: e?.name,
+    });
     return NextResponse.json({ error: 'publish_failed', detail: e?.message || String(e) }, { status: 500 });
   }
 }

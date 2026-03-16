@@ -323,3 +323,82 @@
 - Logs start/end/errors; redact PII and secrets.
 - Queue docs store `status`, optional `note`/`error`, and `updatedAt` for admin visibility.
 
+## Blog SEO & ISR Service (beta)
+- Lifecycle tag: beta
+- Purpose: Provide SEO-optimized blog post rendering with Incremental Static Regeneration (ISR) for fast loading, fresh content, and search engine discoverability.
+
+### Implementation
+- Blog page: `hosting/app/blog/[slug]/page.tsx`
+  - Uses ISR with `revalidate: 3600` (1 hour cache)
+  - Fetches blog post data from Firestore server-side for metadata generation
+  - Generates comprehensive SEO metadata (Open Graph, Twitter Cards, JSON-LD)
+  - Renders blog content via `BlogPostClient` component
+  
+- Sitemap: `hosting/app/sitemap.ts`
+  - Dynamically generates sitemap from Firestore `blog_posts` collection
+  - Includes all published posts with proper `lastModified` dates
+  - Priority weighting: homepage (1.0), listings (0.8), blog (0.7)
+  
+- Revalidation API: `hosting/app/api/revalidate/route.ts`
+  - On-demand path revalidation triggered by publish events
+  - Requires secret token for authorization
+  - Revalidates blog page, sitemap, and homepage
+
+- Firebase Admin Server: `hosting/lib/firebase-admin-server.ts`
+  - Shared Firebase Admin SDK initialization for server-side operations
+  - Uses Application Default Credentials (ADC)
+  - Provides `getFirestore()` and `getAuth()` helpers
+
+### Interface (required)
+- Blog Page
+  - Input: URL slug (e.g., `/blog/siesta-kreikassa-...`)
+  - Output: Server-rendered HTML with full SEO metadata
+  - Metadata includes: title, description, keywords, Open Graph, Twitter Cards, JSON-LD structured data
+  
+- Sitemap
+  - Input: HTTP GET `/sitemap.xml`
+  - Output: XML sitemap with all published blog posts and static pages
+  
+- Revalidation
+  - Input: `POST /api/revalidate` `{ path: string, secret: string }`
+  - Output: `200 { revalidated: true, paths: string[] }`
+
+### Side effects
+- Publish API (`/api/blogs/publish`) triggers revalidation webhook
+- Revalidation clears ISR cache for specified paths
+- Blog posts appear within seconds of publishing
+- Sitemap updates automatically on next request after cache expiry
+
+### SEO Features
+- **Open Graph**: Full OG tags for social sharing (Facebook, LinkedIn)
+- **Twitter Cards**: Summary large image cards with proper metadata
+- **JSON-LD**: BlogPosting structured data for rich snippets
+- **Canonical URLs**: Proper canonical tags for duplicate content prevention
+- **Robot Directives**: Optimized for indexing with proper googleBot settings
+- **Image Optimization**: Featured images with alt text in metadata
+- **Publish Dates**: Article publish/modified times for freshness signals
+
+### Environment
+- Secrets in GSM:
+  - `REVALIDATE_SECRET` – authorization token for revalidation API
+- Environment variables:
+  - `PUBLIC_SITE_URL` – base URL for revalidation webhooks (default: `https://kotikreikasta.com`)
+  - `GOOGLE_CLOUD_PROJECT` / `GCLOUD_PROJECT` / `GCP_PROJECT` – for Firebase Admin initialization
+
+### Performance
+- ISR cache: 1 hour (3600 seconds)
+- Static page delivery from CDN edge
+- On-demand revalidation for immediate updates
+- Firestore queries optimized with proper indexes
+
+### Dependencies
+- Firebase Admin SDK (server-side)
+- Next.js ISR and revalidation APIs
+- Firestore for blog post data
+
+### Notes
+- Blog posts use ISR instead of full static generation for flexibility
+- Sitemap regenerates on each request (consider caching if traffic increases)
+- Revalidation secret must be stored in Secret Manager and Cloud Run environment
+- All server-side operations use Firebase Admin SDK with ADC
+

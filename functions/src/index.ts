@@ -11,6 +11,9 @@ import {setGlobalOptions} from "firebase-functions";
 import * as functions from "firebase-functions/v1";
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
+import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
+import { Novu } from "@novu/node";
+import sgMail from "@sendgrid/mail";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -42,6 +45,134 @@ export const createUserDocument = functions.region("europe-west1").auth.user().o
     createdAt: FieldValue.serverTimestamp(),
   });
 });
+
+// Leads: enrich and notify (alpha)
+export const onLeadCreated = functions
+  .runWith({ maxInstances: 10 })
+  .region("europe-west1")
+  .firestore.document("leads/{id}")
+  .onCreate(async (snap, ctx) => {
+    const db = getFirestore();
+    const id = ctx.params.id as string;
+    const data = snap.data() as any;
+
+    functions.logger.info("onLeadCreated:start", { id, source: data?.source?.type, email: data?.contact?.email });
+
+    // Compute/normalize server-side to ensure integrity
+    const status = (data?.status as string) || "lead";
+    const statusPctMap: Record<string, number> = { lead: 0.10, prospect: 0.25, proposal: 0.50, contracting: 0.80, closed: 1.0 };
+    const statusPct = statusPctMap[status] ?? 0.10;
+    let tcv = Number(data?.tcv || 0);
+    if (!tcv && data?.source?.type === 'listing') {
+      const price = Number(data?.source?.price || 0);
+      if (isFinite(price) && price > 0) tcv = Math.round(price * 0.02);
+    }
+    const currentValue = Math.round((tcv || 0) * statusPct);
+
+    try {
+      await snap.ref.set({
+        status,
+        statusPct,
+        tcv: tcv || 0,
+        currentValue,
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (e: any) {
+      functions.logger.warn("onLeadCreated:update_failed", { id, error: e?.message || String(e) });
+    }
+
+    // Load secrets (prefer Secret Manager; fallback to env for local dev)
+    const sm = new SecretManagerServiceClient();
+    async function accessSecret(name: string): Promise<string> {
+      try {
+        const project = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+        if (!project) return process.env[name] || '';
+        const full = `projects/${project}/secrets/${name}/versions/latest`;
+        const [version] = await sm.accessSecretVersion({ name: full });
+        return version.payload?.data?.toString() ?? '';
+      } catch {
+        return process.env[name] || '';
+      }
+    }
+
+    // Prepare recipients (admins)
+    let adminUids: string[] = [];
+    try {
+      const rs = await db.collection('roles').where('role', '==', 'admin').get();
+      adminUids = rs.docs.map((d) => d.id);
+    } catch {}
+    let adminEmails: string[] = [];
+    try {
+      if (adminUids.length) {
+        const snaps = await Promise.all(adminUids.map((uid) => db.doc(`users/${uid}`).get()));
+        adminEmails = snaps.map((s) => (s.data() as any)?.email).filter(Boolean);
+      }
+    } catch {}
+
+    // Trigger Novu event
+    (async () => {
+      try {
+        const NOVU_API_KEY = await accessSecret('NOVU_API_KEY');
+        if (!NOVU_API_KEY) return;
+        const backendUrl = process.env.NEXT_PUBLIC_NOVU_BACKEND_URL as string | undefined;
+        const novu = new Novu(NOVU_API_KEY, ...(backendUrl ? [{ backendUrl }] : [{}] as any));
+        const to = adminUids.length ? adminUids.map((uid) => ({ subscriberId: uid })) : [];
+        if (!to.length) return;
+        await novu.trigger('lead-created', {
+          to,
+          payload: {
+            id,
+            source: data?.source || null,
+            contact: data?.contact || null,
+            message: data?.message || '',
+            tcv,
+            currentValue,
+            status,
+          },
+        });
+      } catch (e: any) {
+        functions.logger.warn('onLeadCreated:novu_failed', { id, error: e?.message || String(e) });
+      }
+    })();
+
+    // SendGrid email to admin alias or admin emails
+    (async () => {
+      try {
+        const SENDGRID_API_KEY = await accessSecret('SENDGRID_API_KEY');
+        if (!SENDGRID_API_KEY) return;
+        sgMail.setApiKey(SENDGRID_API_KEY);
+        const TO_ALIAS = (await accessSecret('LEADS_ADMIN_EMAIL')) || '';
+        const toList = (TO_ALIAS ? [TO_ALIAS] : []).concat(adminEmails).filter(Boolean);
+        if (!toList.length) return;
+
+        const src = data?.source || {};
+        const title = src?.title || (src?.type === 'listing' ? `Kohde ${src?.listingId || ''}` : 'Yhteydenotto');
+        const url = src?.url || '';
+        const c = data?.contact || {};
+        const lines = [
+          `Uusi liidi — ${title}`,
+          url ? `Lähde: ${url}` : '',
+          `Nimi: ${c?.name || '-'}`,
+          `Sähköposti: ${c?.email || '-'}`,
+          `Puhelin: ${c?.phone || '-'}`,
+          `Viesti: ${data?.message || ''}`,
+          `TCV: €${(tcv || 0).toLocaleString('fi-FI')}`,
+          `Nykyarvo: €${(currentValue || 0).toLocaleString('fi-FI')} (${Math.round(statusPct*100)}%)`,
+        ].filter(Boolean).join('\n');
+
+        await sgMail.send({
+          to: toList,
+          from: process.env.SENDGRID_FROM || 'no-reply@kotikreikasta.com',
+          subject: `Uusi liidi: ${title}`,
+          text: lines,
+        } as any);
+      } catch (e: any) {
+        functions.logger.warn('onLeadCreated:email_failed', { id, error: e?.message || String(e) });
+      }
+    })();
+
+    functions.logger.info("onLeadCreated:done", { id });
+  });
 
 // MVP publication queue processor (alpha)
 export const processPublicationQueue = functions

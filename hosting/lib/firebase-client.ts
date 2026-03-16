@@ -1,6 +1,6 @@
 'use client';
 import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAuth as _getAuth, type Auth } from "firebase/auth";
 
@@ -19,11 +19,24 @@ const hasEnvConfig = Boolean(envConfig.apiKey && envConfig.appId && envConfig.pr
 let appInstance: FirebaseApp | null = null;
 let initPromise: Promise<boolean> | null = null;
 
+function ensureFirestoreInitialized(app: FirebaseApp) {
+  try {
+    // Helps in environments where HTTP/2, proxies or fetch streams cause transport errors
+    initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+      useFetchStreams: false,
+    } as any);
+  } catch {
+    // ignore if already initialized
+  }
+}
+
 async function initIfNeeded(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
   if (appInstance) return true;
   if (getApps().length) {
     appInstance = getApp();
+    ensureFirestoreInitialized(appInstance);
     return true;
   }
   // Prefer Hosting-injected config when available
@@ -35,11 +48,13 @@ async function initIfNeeded(): Promise<boolean> {
       })
       .then((cfg) => {
         appInstance = initializeApp(cfg);
+        ensureFirestoreInitialized(appInstance!);
         return true;
       })
       .catch(() => {
         if (hasEnvConfig) {
           appInstance = initializeApp(envConfig as any);
+          ensureFirestoreInitialized(appInstance!);
           return true;
         }
         return false;

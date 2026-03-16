@@ -249,11 +249,11 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
             <legend style={{ padding: '0 6px', fontWeight: 700 }}>Hakukoneoptimoinnin metatiedot</legend>
             <div style={{ display: 'grid', gap: 10 }}>
               <div style={{ display: 'grid', gap: 6 }}>
-                <label htmlFor="metaTitle" style={{ fontWeight: 600 }}>Meta title</label>
+                <label htmlFor="metaTitle" style={{ fontWeight: 600 }}>Meta-otsikko</label>
                 <input id="metaTitle" className="input" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
               </div>
               <div style={{ display: 'grid', gap: 6 }}>
-                <label htmlFor="metaDescription" style={{ fontWeight: 600 }}>Meta description</label>
+                <label htmlFor="metaDescription" style={{ fontWeight: 600 }}>Meta-kuvaus</label>
                 <textarea id="metaDescription" className="input" rows={3} value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
               </div>
               <div style={{ display: 'grid', gap: 6 }}>
@@ -262,11 +262,11 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
                 <input id="keywords" aria-describedby="keywords-help" className="input" value={keywordsCsv} onChange={(e) => setKeywordsCsv(e.target.value)} />
               </div>
               <div style={{ display: 'grid', gap: 6 }}>
-                <label htmlFor="ogTitle" style={{ fontWeight: 600 }}>OG title</label>
+                <label htmlFor="ogTitle" style={{ fontWeight: 600 }}>OG-otsikko</label>
                 <input id="ogTitle" className="input" value={ogTitle} onChange={(e) => setOgTitle(e.target.value)} />
               </div>
               <div style={{ display: 'grid', gap: 6 }}>
-                <label htmlFor="ogDescription" style={{ fontWeight: 600 }}>OG description</label>
+                <label htmlFor="ogDescription" style={{ fontWeight: 600 }}>OG-kuvaus</label>
                 <textarea id="ogDescription" className="input" rows={3} value={ogDescription} onChange={(e) => setOgDescription(e.target.value)} />
               </div>
             </div>

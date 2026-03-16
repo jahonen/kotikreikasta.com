@@ -26,12 +26,12 @@ const COLORS = {
 };
 
 const navItems: { href: string; label: string; icon: string }[] = [
-  { href: '/admin/listings', label: 'Listings', icon: '🏛️' },
-  { href: '/admin/blogs', label: 'Blogs', icon: '✍️' },
-  { href: '/admin/team', label: 'Team', icon: '👥' },
-  { href: '/admin/partners', label: 'Partners', icon: '🤝' },
-  { href: '/admin/marketing', label: 'Marketing', icon: '📊' },
-  { href: '/admin/service-requests', label: 'Service Requests', icon: '🛠️' },
+  { href: '/admin/listings', label: 'Kohteet', icon: '🏛️' },
+  { href: '/admin/blogs', label: 'Blogit', icon: '✍️' },
+  { href: '/admin/team', label: 'Tiimi', icon: '👥' },
+  { href: '/admin/partners', label: 'Kumppanit', icon: '🤝' },
+  { href: '/admin/marketing', label: 'Markkinointi', icon: '📊' },
+  { href: '/admin/service-requests', label: 'Palvelupyynnöt', icon: '🛠️' },
 ];
 
 function PlaceholderTable({ title }: { title: string }) {
@@ -40,7 +40,7 @@ function PlaceholderTable({ title }: { title: string }) {
       <div style={{ padding: '14px 16px', borderBottom: `1px solid ${COLORS.sandDark}`, background: COLORS.sand }}>
         <h2 style={{ margin: 0, fontSize: 18, color: COLORS.charcoal }}>{title}</h2>
       </div>
-      <div style={{ padding: 16, color: COLORS.muted, fontSize: 14 }}>Coming soon.</div>
+      <div style={{ padding: 16, color: COLORS.muted, fontSize: 14 }}>Tulossa pian.</div>
     </div>
   );
 }
@@ -62,7 +62,7 @@ export default function AdminShell({ onSignOut, onToast, subscriberId, children 
             {sidebarOpen && (
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>Kotikreikasta</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500, letterSpacing: '0.05em' }}>ADMIN</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500, letterSpacing: '0.05em' }}>YLLÄPITO</div>
               </div>
             )}
           </div>
@@ -114,7 +114,7 @@ export default function AdminShell({ onSignOut, onToast, subscriberId, children 
           <div className={styles.topbar}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <button className={styles.mobileToggle} onClick={() => setMobileMenuOpen((v) => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: COLORS.charcoal }}>☰</button>
-              <div style={{ fontSize: 13, color: COLORS.muted }}>Admin</div>
+              <div style={{ fontSize: 13, color: COLORS.muted }}>Ylläpito</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {appId && (

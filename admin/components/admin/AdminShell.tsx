@@ -26,12 +26,12 @@ const COLORS = {
 };
 
 const navItems: { href: string; label: string; icon: string }[] = [
-  { href: '/listings', label: 'Listings', icon: '🏛️' },
-  { href: '/blogs', label: 'Blogs', icon: '✍️' },
-  { href: '/team', label: 'Team', icon: '👥' },
-  { href: '/partners', label: 'Partners', icon: '🤝' },
-  { href: '/marketing', label: 'Marketing', icon: '📊' },
-  { href: '/service-requests', label: 'Service Requests', icon: '🛠️' },
+  { href: '/listings', label: 'Kohteet', icon: '🏛️' },
+  { href: '/blogs', label: 'Blogit', icon: '✍️' },
+  { href: '/team', label: 'Tiimi', icon: '👥' },
+  { href: '/partners', label: 'Kumppanit', icon: '🤝' },
+  { href: '/marketing', label: 'Markkinointi', icon: '📊' },
+  { href: '/service-requests', label: 'Palvelupyynnöt', icon: '🛠️' },
 ];
 
 export default function AdminShell({ onSignOut, onToast, subscriberId, children }: AdminShellProps) {
@@ -51,7 +51,7 @@ export default function AdminShell({ onSignOut, onToast, subscriberId, children 
             {sidebarOpen && (
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>Kotikreikasta</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500, letterSpacing: '0.05em' }}>ADMIN</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500, letterSpacing: '0.05em' }}>YLLÄPITO</div>
               </div>
             )}
           </div>
@@ -103,7 +103,7 @@ export default function AdminShell({ onSignOut, onToast, subscriberId, children 
           <div className={styles.topbar}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <button className={styles.mobileToggle} onClick={() => setMobileMenuOpen((v) => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: COLORS.charcoal }}>☰</button>
-              <div style={{ fontSize: 13, color: COLORS.muted }}>Admin</div>
+              <div style={{ fontSize: 13, color: COLORS.muted }}>Ylläpito</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {appId && (

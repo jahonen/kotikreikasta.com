@@ -1,0 +1,404 @@
+{
+  "services": [
+    {
+      "id": 1,
+      "name": {
+        "greek": "Καθαρισμός σπιτιού",
+        "english": "House cleaning",
+        "finnish": "Kodin siivous"
+      }
+    },
+    {
+      "id": 2,
+      "name": {
+        "greek": "Συντήρηση πισίνας",
+        "english": "Pool maintenance",
+        "finnish": "Uima-altaan huolto"
+      }
+    },
+    {
+      "id": 3,
+      "name": {
+        "greek": "Κηπουρική",
+        "english": "Gardening",
+        "finnish": "Puutarhanhoito"
+      }
+    },
+    {
+      "id": 4,
+      "name": {
+        "greek": "Επισκευές ηλεκτρολογικών",
+        "english": "Electrical repairs",
+        "finnish": "Sähkökorjaukset"
+      }
+    },
+    {
+      "id": 5,
+      "name": {
+        "greek": "Επισκευές υδραυλικών",
+        "english": "Plumbing repairs",
+        "finnish": "Putkiremontit"
+      }
+    },
+    {
+      "id": 6,
+      "name": {
+        "greek": "Συντήρηση κλιματισμού",
+        "english": "Air conditioning maintenance",
+        "finnish": "Ilmastointilaitteiden huolto"
+      }
+    },
+    {
+      "id": 7,
+      "name": {
+        "greek": "Ασφάλεια σπιτιού",
+        "english": "Home security",
+        "finnish": "Kotiturvallisuus"
+      }
+    },
+    {
+      "id": 8,
+      "name": {
+        "greek": "Διαχείριση απορριμμάτων",
+        "english": "Waste management",
+        "finnish": "Jätehuolto"
+      }
+    },
+    {
+      "id": 9,
+      "name": {
+        "greek": "Μεταφορά από/προς αεροδρόμιο",
+        "english": "Airport transfer",
+        "finnish": "Lentokenttäkuljetus"
+      }
+    },
+    {
+      "id": 10,
+      "name": {
+        "greek": "Ενοικίαση αυτοκινήτου",
+        "english": "Car rental",
+        "finnish": "Autonvuokraus"
+      }
+    },
+    {
+      "id": 11,
+      "name": {
+        "greek": "Φύλαξη κατοικίδιων",
+        "english": "Pet sitting",
+        "finnish": "Lemmikkien hoito"
+      }
+    },
+    {
+      "id": 12,
+      "name": {
+        "greek": "Οργάνωση εκδηλώσεων",
+        "english": "Event organization",
+        "finnish": "Tapahtumajärjestelyt"
+      }
+    },
+    {
+      "id": 13,
+      "name": {
+        "greek": "Φωτογράφιση ακινήτου",
+        "english": "Property photography",
+        "finnish": "Kiinteistön valokuvaaminen"
+      }
+    },
+    {
+      "id": 14,
+      "name": {
+        "greek": "Νομικές υπηρεσίες",
+        "english": "Legal services",
+        "finnish": "Oikeudelliset palvelut"
+      }
+    },
+    {
+      "id": 15,
+      "name": {
+        "greek": "Φορολογική συμβουλή",
+        "english": "Tax advice",
+        "finnish": "Vero-neuvonta"
+      }
+    },
+    {
+      "id": 16,
+      "name": {
+        "greek": "Ασφάλιση ακινήτου",
+        "english": "Property insurance",
+        "finnish": "Kiinteistön vakuutus"
+      }
+    },
+    {
+      "id": 17,
+      "name": {
+        "greek": "Επισκευή οικιακών συσκευών",
+        "english": "Appliance repair",
+        "finnish": "Kotilaitteiden korjaus"
+      }
+    },
+    {
+      "id": 18,
+      "name": {
+        "greek": "Συντήρηση ηλιακών συλλεκτών",
+        "english": "Solar panel maintenance",
+        "finnish": "Aurinkopaneelien huolto"
+      }
+    },
+    {
+      "id": 19,
+      "name": {
+        "greek": "Επισκευή επίπλων",
+        "english": "Furniture repair",
+        "finnish": "Huonekalujen korjaus"
+      }
+    },
+    {
+      "id": 20,
+      "name": {
+        "greek": "Συντήρηση τζακιού",
+        "english": "Fireplace maintenance",
+        "finnish": "Takan huolto"
+      }
+    },
+    {
+      "id": 21,
+      "name": {
+        "greek": "Επισκευή στέγης",
+        "english": "Roof repair",
+        "finnish": "Katon korjaus"
+      }
+    },
+    {
+      "id": 22,
+      "name": {
+        "greek": "Συντήρηση συστήματος άρδευσης",
+        "english": "Irrigation system maintenance",
+        "finnish": "Kastelujärjestelmän huolto"
+      }
+    },
+    {
+      "id": 23,
+      "name": {
+        "greek": "Επισκευή παραθύρων/πορτών",
+        "english": "Window/door repair",
+        "finnish": "Ikkunoiden/ovien korjaus"
+      }
+    },
+    {
+      "id": 24,
+      "name": {
+        "greek": "Συντήρηση συστήματος θέρμανσης",
+        "english": "Heating system maintenance",
+        "finnish": "Lämmitysjärjestelmän huolto"
+      }
+    },
+    {
+      "id": 25,
+      "name": {
+        "greek": "Επισκευή τοιχοποιίας",
+        "english": "Masonry repair",
+        "finnish": "Tiilimuurauksen korjaus"
+      }
+    },
+    {
+      "id": 26,
+      "name": {
+        "greek": "Συντήρηση συστήματος συναγερμού",
+        "english": "Alarm system maintenance",
+        "finnish": "Hälytysjärjestelmän huolto"
+      }
+    },
+    {
+      "id": 27,
+      "name": {
+        "greek": "Επισκευή δαπέδων",
+        "english": "Floor repair",
+        "finnish": "Lattian korjaus"
+      }
+    },
+    {
+      "id": 28,
+      "name": {
+        "greek": "Συντήρηση συστήματος ψύξης",
+        "english": "Cooling system maintenance",
+        "finnish": "Jäähdytysjärjestelmän huolto"
+      }
+    },
+    {
+      "id": 29,
+      "name": {
+        "greek": "Επισκευή σωλήνων",
+        "english": "Pipe repair",
+        "finnish": "Putkien korjaus"
+      }
+    },
+    {
+      "id": 30,
+      "name": {
+        "greek": "Συντήρηση συστήματος φωτισμού",
+        "english": "Lighting system maintenance",
+        "finnish": "Valaistusjärjestelmän huolto"
+      }
+    },
+    {
+      "id": 31,
+      "name": {
+        "greek": "Επισκευή κουφωμάτων",
+        "english": "Carpentry repair",
+        "finnish": "Puusepänteiden korjaus"
+      }
+    },
+    {
+      "id": 32,
+      "name": {
+        "greek": "Συντήρηση συστήματος εξαερισμού",
+        "english": "Ventilation system maintenance",
+        "finnish": "Ilmanvaihtojärjestelmän huolto"
+      }
+    },
+    {
+      "id": 33,
+      "name": {
+        "greek": "Επισκευή ηλεκτρονικών συσκευών",
+        "english": "Electronics repair",
+        "finnish": "Elektroniikkalaitteiden korjaus"
+      }
+    },
+    {
+      "id": 34,
+      "name": {
+        "greek": "Συντήρηση συστήματος ηχομόνωσης",
+        "english": "Soundproofing maintenance",
+        "finnish": "Äänieristyksen huolto"
+      }
+    },
+    {
+      "id": 35,
+      "name": {
+        "greek": "Επισκευή κλιμακοστασίου",
+        "english": "Staircase repair",
+        "finnish": "Portaiden korjaus"
+      }
+    },
+    {
+      "id": 36,
+      "name": {
+        "greek": "Συντήρηση συστήματος αυτόματου ποτισμού",
+        "english": "Automatic watering system maintenance",
+        "finnish": "Automaattisen kastelujärjestelmän huolto"
+      }
+    },
+    {
+      "id": 37,
+      "name": {
+        "greek": "Επισκευή μπάνιου",
+        "english": "Bathroom repair",
+        "finnish": "Kylpyhuoneen korjaus"
+      }
+    },
+    {
+      "id": 38,
+      "name": {
+        "greek": "Συντήρηση συστήματος ενέργειας",
+        "english": "Energy system maintenance",
+        "finnish": "Energiajärjestelmän huolto"
+      }
+    },
+    {
+      "id": 39,
+      "name": {
+        "greek": "Επισκευή κουζίνας",
+        "english": "Kitchen repair",
+        "finnish": "Keittiön korjaus"
+      }
+    },
+    {
+      "id": 40,
+      "name": {
+        "greek": "Συντήρηση συστήματος ασφαλείας",
+        "english": "Security system maintenance",
+        "finnish": "Turvajärjestelmän huolto"
+      }
+    },
+    {
+      "id": 41,
+      "name": {
+        "greek": "Επισκευή γκαράζ",
+        "english": "Garage repair",
+        "finnish": "Autotallin korjaus"
+      }
+    },
+    {
+      "id": 42,
+      "name": {
+        "greek": "Συντήρηση συστήματος τηλεπικοινωνιών",
+        "english": "Telecommunications system maintenance",
+        "finnish": "Tietoliikennejärjestelmän huolto"
+      }
+    },
+    {
+      "id": 43,
+      "name": {
+        "greek": "Επισκευή βεράντας",
+        "english": "Patio repair",
+        "finnish": "Terassin korjaus"
+      }
+    },
+    {
+      "id": 44,
+      "name": {
+        "greek": "Συντήρηση συστήματος αυτόματου ελέγχου",
+        "english": "Automation system maintenance",
+        "finnish": "Automaatiojärjestelmän huolto"
+      }
+    },
+    {
+      "id": 45,
+      "name": {
+        "greek": "Επισκευή εξωτερικών χώρων",
+        "english": "Outdoor area repair",
+        "finnish": "Ulkoalueen korjaus"
+      }
+    },
+    {
+      "id": 46,
+      "name": {
+        "greek": "Συντήρηση συστήματος θέρμανσης νερού",
+        "english": "Water heating system maintenance",
+        "finnish": "Vedenlämmittimen huolto"
+      }
+    },
+    {
+      "id": 47,
+      "name": {
+        "greek": "Επισκευή κήπου",
+        "english": "Garden repair",
+        "finnish": "Puutarhan korjaus"
+      }
+    },
+    {
+      "id": 48,
+      "name": {
+        "greek": "Συντήρηση συστήματος φιλτραρίσματος νερού",
+        "english": "Water filtration system maintenance",
+        "finnish": "Veden suodatusjärjestelmän huolto"
+      }
+    },
+    {
+      "id": 49,
+      "name": {
+        "greek": "Επισκευή εξωτερικών φώτων",
+        "english": "Outdoor lighting repair",
+        "finnish": "Ulkovalaistuksen korjaus"
+      }
+    },
+    {
+      "id": 50,
+      "name": {
+        "greek": "Συντήρηση συστήματος αυτόματου ελέγχου πρόσβασης",
+        "english": "Access control system maintenance",
+        "finnish": "Pääsynvalvontajärjestelmän huolto"
+      }
+    }
+  ]
+}

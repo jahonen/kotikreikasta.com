@@ -30,6 +30,19 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Leads: public create with minimal validation; admin can manage
+    match /leads/{doc} {
+      allow create: if (
+        request.resource.data.message is string &&
+        (
+          (request.resource.data.contact.email is string && request.resource.data.contact.email.size() > 0) ||
+          (request.resource.data.contact.phone is string && request.resource.data.contact.phone.size() > 0)
+        ) &&
+        request.resource.data.consents.termsAccepted == true
+      );
+      allow read, update, delete: if isAdmin();
+    }
+
     // Inquiries: anyone can create; admin can read/manage
     match /inquiries/{doc} {
       allow create: if request.resource.data.message is string;
@@ -59,6 +72,19 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/roles/$(uid));
       allow read: if isAdmin() || (isSignedIn() && resource.data.role == "admin");
       allow update, delete: if isAdmin();
+    }
+
+    // Persons: admin-only (partners, customers, stakeholders)
+    match /persons/{doc} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    // Organizations (partner companies) and their business locations: admin-only
+    match /organizations/{orgId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+    match /organizations/{orgId}/locations/{locId} {
+      allow read, create, update, delete: if isAdmin();
     }
 
     match /{document=**} {

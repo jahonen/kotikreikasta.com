@@ -125,12 +125,20 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
         .split(',')
         .map((k) => k.trim())
         .filter(Boolean);
+      // Only update fields that are being edited, preserve urlStub and other system fields
       const patch: any = {
-        title: title.trim() || undefined,
-        contentMd: contentMd.trim() || undefined,
-        categories: cats.length ? cats : undefined,
         updatedAt: serverTimestamp(),
       };
+      
+      if (title.trim()) {
+        patch.title = title.trim();
+      }
+      if (contentMd.trim()) {
+        patch.contentMd = contentMd.trim();
+      }
+      if (cats.length) {
+        patch.categories = cats;
+      }
       if (imageUrl) {
         patch['featuredImage'] = { url: imageUrl, ...(imageAlt ? { alt: imageAlt } : {}) };
       }

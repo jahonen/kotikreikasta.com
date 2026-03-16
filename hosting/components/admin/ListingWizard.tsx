@@ -91,7 +91,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         canvas.width = Math.max(1, Math.floor(crop.width));
         canvas.height = Math.max(1, Math.floor(crop.height));
         const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error('Canvas not supported'));
+        if (!ctx) return reject(new Error('Canvas ei ole tuettu'));
         ctx.drawImage(
           image,
           Math.floor(crop.x),
@@ -105,7 +105,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         );
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
-          else reject(new Error('Failed to create blob'));
+          else reject(new Error('Kuvan luonti epäonnistui'));
         }, 'image/jpeg', 0.9);
       };
       image.onerror = (e) => reject(e);

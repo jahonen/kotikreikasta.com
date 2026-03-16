@@ -10,14 +10,17 @@ export const dynamic = 'force-dynamic';
 function ensureAdminInitialized() {
   if (!admin.apps.length) {
     try {
-      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || undefined;
-      const cred = (admin.credential as any).applicationDefault?.();
-      if (cred) {
-        admin.initializeApp(projectId ? { credential: cred, projectId } as any : { credential: cred } as any);
+      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+      if (projectId) {
+        admin.initializeApp({ projectId });
       } else {
-        admin.initializeApp(projectId ? ({ projectId } as any) : undefined as any);
+        admin.initializeApp();
       }
-    } catch (e) {
+    } catch (e: any) {
+      const msg = e?.message || String(e || '');
+      if (!/already exists/i.test(msg)) {
+        console.error('[ADMIN_INIT] novu/events/listing-created initialization failed:', e);
+      }
     }
   }
 }

@@ -30,13 +30,27 @@ async function initIfNeeded(): Promise<boolean> {
     return true;
   }
   if (!initPromise) {
-    initPromise = fetch('/__/firebase/init.json')
-      .then((r) => r.json())
-      .then((cfg) => {
-        appInstance = initializeApp(cfg);
-        return true;
-      })
-      .catch(() => false);
+    initPromise = (async () => {
+      // Try local Hosting-injected config first (not available in Next dev)
+      try {
+        const r = await fetch('/__/firebase/init.json');
+        if (r.ok) {
+          const cfg = await r.json();
+          appInstance = initializeApp(cfg);
+          return true;
+        }
+      } catch {}
+      // Dev fallback: fetch project config from the deployed public site
+      try {
+        const r2 = await fetch('https://kotikreikasta.web.app/__/firebase/init.json', { cache: 'no-store' });
+        if (r2.ok) {
+          const cfg2 = await r2.json();
+          appInstance = initializeApp(cfg2);
+          return true;
+        }
+      } catch {}
+      return false;
+    })();
   }
   return initPromise;
 }

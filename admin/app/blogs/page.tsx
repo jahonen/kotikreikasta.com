@@ -47,26 +47,26 @@ export default function BlogsDashboardPage() {
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Blogs</h2>
-          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>Write and manage articles</p>
+          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Blogit</h2>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>Kirjoita ja hallitse artikkeleita</p>
         </div>
-        <Link href="/blogs/new" className="btn-primary">+ New blog post</Link>
+        <Link href="/blogs/new" className="btn-primary">+ Uusi blogikirjoitus</Link>
       </div>
 
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ padding: '10px 12px', fontWeight: 600, background: 'var(--sand)', borderBottom: '1px solid #e5e7eb' }}>Recent</div>
+        <div style={{ padding: '10px 12px', fontWeight: 600, background: 'var(--sand)', borderBottom: '1px solid #e5e7eb' }}>Viimeisimmät</div>
         {loading ? (
-          <div style={{ padding: 12, color: 'var(--text-muted)' }}>Loading…</div>
+          <div style={{ padding: 12, color: 'var(--text-muted)' }}>Ladataan…</div>
         ) : rows.length === 0 ? (
-          <div style={{ padding: 12, color: 'var(--text-muted)' }}>No blog posts yet.</div>
+          <div style={{ padding: 12, color: 'var(--text-muted)' }}>Ei blogikirjoituksia vielä.</div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: '#fafafa' }}>
-                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Title</th>
-                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Status</th>
-                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Updated</th>
-                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Actions</th>
+                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Otsikko</th>
+                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Tila</th>
+                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Päivitetty</th>
+                <th style={{ padding: 10, borderBottom: '1px solid #eee' }}>Toiminnot</th>
               </tr>
             </thead>
             <tbody>
@@ -77,11 +77,11 @@ export default function BlogsDashboardPage() {
                   <td style={{ padding: 10, borderBottom: '1px solid #f0f0f0' }}>{r.updatedAt}</td>
                   <td style={{ padding: 10, borderBottom: '1px solid #f0f0f0' }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <Link href={`/blogs/${r.id}`} aria-label="Edit" title="Edit">✏️</Link>
+                      <Link href={`/blogs/${r.id}`} aria-label="Muokkaa" title="Muokkaa">✏️</Link>
                       {r.status === 'published' || r.status === 'queued' ? (
                         <button
-                          aria-label="Unpublish"
-                          title="Unpublish"
+                          aria-label="Palauta luonnokseksi"
+                          title="Palauta luonnokseksi"
                           disabled={!!busy[r.id]}
                           onClick={async () => {
                             setBusy((b) => ({ ...b, [r.id]: true }));
@@ -105,8 +105,8 @@ export default function BlogsDashboardPage() {
                         </button>
                       ) : (
                         <button
-                          aria-label="Publish"
-                          title="Publish"
+                          aria-label="Julkaise"
+                          title="Julkaise"
                           disabled={!!busy[r.id]}
                           onClick={async () => {
                             setBusy((b) => ({ ...b, [r.id]: true }));
@@ -144,11 +144,11 @@ export default function BlogsDashboardPage() {
                         </button>
                       )}
                       <button
-                        aria-label="Delete"
-                        title="Delete"
+                        aria-label="Poista"
+                        title="Poista"
                         disabled={!!busy[r.id]}
                         onClick={async () => {
-                          if (!confirm('Delete this blog post?')) return;
+                          if (!confirm('Poistetaanko tämä blogikirjoitus?')) return;
                           setBusy((b) => ({ ...b, [r.id]: true }));
                           try {
                             const db = await getDbClient();
