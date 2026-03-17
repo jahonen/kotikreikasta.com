@@ -90,27 +90,21 @@ export default function PointsOfInterestPicker({
   useEffect(() => {
     const lat = center?.lat;
     const lng = center?.lng;
-    console.log('[POI] useEffect triggered:', { center, lat, lng, latType: typeof lat, lngType: typeof lng });
     if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-      console.log('[POI] Invalid center, not fetching');
       setPois([]);
       return;
     }
     const key = `${lat.toFixed(6)}|${lng.toFixed(6)}|${radius}`;
-    console.log('[POI] Checking cache key:', key, 'vs last:', lastKeyRef.current);
     if (lastKeyRef.current === key) {
-      console.log('[POI] Same key as last fetch, skipping');
       return;
     }
     lastKeyRef.current = key;
-    console.log('[POI] New key, will fetch');
     if (abortRef.current) {
       try { abortRef.current.abort(); } catch {}
     }
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     const run = async () => {
-      console.log('[POI] Starting fetch to', PLACES_ENDPOINT, 'with', { center: { lat, lng }, radius });
       setLoading(true);
       try {
         const resp = await fetch(PLACES_ENDPOINT, {
@@ -119,7 +113,6 @@ export default function PointsOfInterestPicker({
           body: JSON.stringify({ center: { lat, lng }, radius }),
           signal: ctrl.signal,
         });
-        console.log('[POI] Fetch response:', resp.status, resp.ok);
         if (!resp.ok) {
           const errorText = await resp.text().catch(() => '');
           console.error('[POI] API error:', resp.status, errorText);
@@ -130,9 +123,7 @@ export default function PointsOfInterestPicker({
           return;
         }
         const data: any = await resp.json().catch(() => ({}));
-        console.log('[POI] Response data:', data);
         const list: any[] = Array.isArray(data?.places) ? data.places : [];
-        console.log('[POI] Places list:', list.length, 'items');
         const mapped: PoiItem[] = list.map((p: any) => ({
           place_id: p?.id || p?.name || '',
           name: p?.displayName?.text || p?.displayName || '',
@@ -141,10 +132,8 @@ export default function PointsOfInterestPicker({
             ? { lat: p.location.latitude, lng: p.location.longitude }
             : undefined,
         })).filter((p: PoiItem) => p.place_id);
-        console.log('[POI] Mapped POIs:', mapped.length, 'items', mapped);
         if (!ctrl.signal.aborted) {
           setPois(mapped);
-          console.log('[POI] Set pois state');
         }
       } catch (e: any) {
         if (e?.name === 'AbortError') return;
@@ -152,7 +141,6 @@ export default function PointsOfInterestPicker({
       } finally {
         if (!ctrl.signal.aborted) {
           setLoading(false);
-          console.log('[POI] Set loading to false');
         }
         if (abortRef.current === ctrl) {
           abortRef.current = null;
@@ -161,7 +149,6 @@ export default function PointsOfInterestPicker({
     };
     run();
     return () => {
-      console.log('[POI] Cleanup: aborting controller');
       ctrl.abort();
       lastKeyRef.current = null;
     };
@@ -182,7 +169,6 @@ export default function PointsOfInterestPicker({
     });
   };
 
-  console.log('[POI] Render:', { center: !!center, loading, poisCount: pois.length });
   return (
     <div>
       <div ref={containerRef} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden />

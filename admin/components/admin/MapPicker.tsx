@@ -163,15 +163,6 @@ export default function MapPicker({
         const results: any[] = Array.isArray(resp?.results) ? resp.results : [];
         const first = results[0];
         
-        console.log('[MapPicker] All geocode results:', results.map((r: any) => ({
-          formatted_address: r.formatted_address,
-          types: r.types,
-          address_components: r.address_components?.map((c: any) => ({
-            long_name: c.long_name,
-            types: c.types
-          }))
-        })));
-        
         // Merge address components from all results to get complete administrative hierarchy
         const allComponents = new Map<string, any>();
         results.forEach((result: any) => {

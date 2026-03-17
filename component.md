@@ -20,28 +20,28 @@
   - Conditionally uses AdvancedMarkerElement when a map style `mapId` is configured; otherwise legacy Marker
   - Uses Places (New) `PlaceAutocompleteElement` for search
   - Performs reverse geocoding (prefers political results) after map interactions and place selections
-  - Fetches the browser Maps JS key from `/api/maps/key` (Secret Manager backend)
+  - Fetches the browser Maps JS key from `/api/maps/key` (Secret Manager backend with env var fallback for local dev)
 
 ### Behavior
 - Initializes map after the container has a visible size to ensure tiles render reliably
 - Supports:
   - Search selection → center & set marker, fetch fields from Place, then reverse geocode for complete results
   - Map click & marker drag → update position and reverse geocode
-- Emits merged address components from all reverse-geocode results to preserve admin levels (region/island/etc.)
-- Minimal console.info diagnostics for initialization and geocode events
+- **Merges address components from all reverse-geocode results** to preserve complete administrative hierarchy (region/municipality/island/etc.)
+- This ensures all administrative levels are available even when the primary result doesn't include them
 
 ### Address field mapping used by downstream UI
-- Greek administrative hierarchy (Greece):
-  - administrative_area_level_1 → Περιφέρεια (Perifereia) – FI: Alue
-  - administrative_area_level_2 → Περιφερειακή Ενότητα (Perifereiakí Enótita) – FI: Seutu
-  - administrative_area_level_3 → Δήμος (Dímos) – FI: Kunta
-  - administrative_area_level_4 → Χωριό/Συνοικία (Chorió/Synoikía) – FI: Kylä/Lähiö
-- Finnish UI display on /maptest (with Greek tooltips):
+- **Greek administrative hierarchy** (actual Google Geocoding API levels):
+  - `administrative_area_level_2` → Περιφέρεια (Region) – FI: **Alue** (e.g., "Attika")
+  - `administrative_area_level_3` → Περιφερειακή Ενότητα (Regional Unit) – FI: **Seutu** (e.g., "Anatoliki Attiki")
+  - `administrative_area_level_4` → Δήμος (Municipality) – FI: **Kunta** (e.g., "Markopoulo Mesogeas")
+  - `locality` → Τοπική Κοινότητα (Local Community) – FI: **Paikka** (e.g., "Porto Rafti")
+- Finnish UI display in ListingWizard (with Greek tooltips):
   - Katuosoite ("Οδός + Αριθμός") → `street_address` (fallback: `route` + `street_number`)
   - Paikka ("Τοπική Κοινότητα") → `locality`
-  - Kunta ("Δήμος") → `administrative_area_level_3`
-  - Seutu ("Περιφερειακή Ενότητα") → `administrative_area_level_2`
-  - Alue ("Περιφέρεια") → `administrative_area_level_1`
+  - Kunta ("Δήμος") → `administrative_area_level_4` (fallback to level_3)
+  - Seutu ("Περιφερειακή Ενότητα") → `administrative_area_level_3`
+  - Alue ("Περιφέρεια") → `administrative_area_level_2` (fallback to level_1)
   - Postinumero ("Ταχυδρομικός Κώδικας") → `postal_code`
   - Maa ("Χώρα") → `country`
 
@@ -49,50 +49,56 @@
 - Google Maps JavaScript API (libraries: places, marker)
 - Places API (New)
 - Geocoding API
-- Secret Manager via `/app/api/maps/key` route
+- Secret Manager via `/api/maps/key` route (with `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` env var fallback)
 
 ### Testing
 - Vitest + jsdom configured in the project. Component logic designed to avoid stalling in test env (skips wait-for-size loop). Add unit tests for:
   - Emitting `onChange` on drag/click/selection
-  - Admin level extraction from `addressComponents`
+  - Admin level extraction from merged `addressComponents`
   - Fallback behavior when constructors are delayed
 
 ### Observability
-- Logs start/ready and geocode events via `console.info` (no PII beyond formatted address).
+- No verbose logging in production
 - Consider adding analytics events on user interactions (search select, drag, click) per project policy.
 
 ## PointsOfInterestPicker (beta)
 - Lifecycle tag: beta
-- Description: Hakee lähellä olevat kiinnostavat kohteet (POI) Google Places API (New) -rajapinnan kautta ja näyttää ne valintaruudukossa suomalaisilla tyyppilabeleilla. Käytössä `/maptest`-sivulla ja yhdistettävissä `MapPicker`iin valitun sijainnin perusteella.
+- Description: Hakee lähellä olevat kiinnostavat kohteet (POI) Google Places API (New) -rajapinnan kautta ja näyttää ne valintaruudukossa suomalaisilla tyyppilabeleilla. Käytössä ListingWizardissa ja `/maptest`-sivulla. Integroituu `MapPicker`iin valitun sijainnin perusteella.
 
 ### Interface (required)
 - Inputs
-  - `center`: `{ lat: number; lng: number }` – hakualueen keskipiste
-  - `radius?`: number – hakuympyrän säde metreinä (oletus ~2000 m)
-  - `includedTypes?`: string[] – suodatettavat Place-tyypit
+  - `center`: `{ lat: number; lng: number } | null` – hakualueen keskipiste
+  - `radius?`: number – hakuympyrän säde metreinä (oletus 2000 m)
+  - `onChange?`: `(selectedPois: PoiItem[]) => void` – callback valituille kohteille
 - Outputs
   - Renderöity UI, joka listaa `places` (nimi, tyyppi, sijainti) ja valintaruudut kohteiden poimintaan
+  - Kutsuu `onChange` kun valitut kohteet muuttuvat
 - Side effects
-  - Tekee `POST`-kutsun taustapalveluun `NEXT_PUBLIC_PLACES_ENDPOINT` (oletus `/api/places/nearby`)
-  - Dedupoi ja peruu päällekkäiset haut `AbortController`illa, jos koordinaatit eivät muutu
+  - Tekee `POST`-kutsun taustapalveluun `/api/places/nearby` (Secret Manager backend with env var fallback)
+  - Dedupoi ja peruu päällekkäiset haut `AbortController`illa käyttäen cache-avainta (lat/lng/radius)
   - Näyttää lataus- ja virhetilat
+  - **Tyhjentää cache-avaimen cleanup-funktiossa** estääkseen React Strict Mode -ongelmat
 
 ### Dependencies
 - Places API (New) taustapalvelun kautta
-- Firebase Hosting rewrite → Cloud Run `places-nearby`
+- Secret Manager via `/api/places/nearby` route (with `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` env var fallback)
 
 ### Behavior
 - Muodostaa pyynnön: `{ center: { lat, lng }, radius }`
 - Kartoitus suomenkielisiin tyyppilabeleihin (esim. `restaurant` → `Ravintola`, `pharmacy` → `Apteekki`)
-- Näyttää listan; valitut kohteet välitettävissä yläkomponentille (käyttökohteesta riippuen)
+- Näyttää listan; valitut kohteet välitetään `onChange`-callbackin kautta
+- **Käyttää `AbortController.signal.aborted` -tarkistusta** estääkseen state-päivitykset keskeytettyjen pyyntöjen jälkeen
+- Cache-avain nollataan cleanup-funktiossa, jotta uudelleenmounttaus käynnistää uuden haun
 
 ### Testing
 - Vitest-yksikkötestit kattavat:
   - POI-listan renderöinti mockatulla vastauksella
-  - Pyyntöjen deduplikointi, kun `center`-objektin identiteetti vaihtuu, mutta koordinaatit pysyvät samoina
+  - Pyyntöjen deduplikointi cache-avaimen perusteella
+  - AbortController-toiminnallisuus React Strict Modessa
 
 ### Observability
-- Kevyt lokitus kehitystä varten; ei tulosteta PII:tä
+- Virhelokit API-ongelmista (`console.error`)
+- Ei verbose-lokitusta tuotannossa
 
 ## NavBar (stable)
 - Lifecycle tag: stable

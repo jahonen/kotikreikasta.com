@@ -386,7 +386,6 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                     setLng(String(plng));
                     if (fa) setFormattedAddress(fa);
                     if (addressComponents && addressComponents.length) {
-                      console.log('[Wizard] Address components:', addressComponents);
                       const toSnakeCaseType = (t: string) => (!t ? t : t.includes('_') ? t.toLowerCase() : t.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, ''));
                       const toCamelCaseType = (t: string) => (!t ? t : !t.includes('_') ? t : t.replace(/_([a-z])/g, (_: any, c: string) => c.toUpperCase()));
                       const hasType = (c: any, type: string) => {
@@ -410,16 +409,6 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                       const subloc = pick('sublocality_level_1', 'sublocalityLevel1', 'sublocality');
                       const isl = pick('island', 'archipelago');
                       const countryC = pick('country');
-
-                      console.log('[Wizard] Picked components:', {
-                        adm1: text(adm1C),
-                        adm2: text(adm2C),
-                        adm3: text(adm3C),
-                        adm4: text(adm4C),
-                        locality: text(loc),
-                        island: text(isl),
-                        sublocality: text(subloc)
-                      });
 
                       const katuosoite = (text(streetAddr) || [text(routeC), text(streetNo)].filter(Boolean).join(' ')).trim();
                       setStreetAddress(katuosoite);
