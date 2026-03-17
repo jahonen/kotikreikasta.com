@@ -32,7 +32,11 @@ export async function POST(req: Request) {
     if (!Number.isFinite(radius) || radius <= 0) radius = 2000;
     radius = Math.max(50, Math.min(5000, Math.floor(radius)));
 
-    const key = await getGoogleMapsApiKey();
+    // Try Secret Manager first (production), fallback to env var (local dev)
+    let key = await getGoogleMapsApiKey();
+    if (!key) {
+      key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null;
+    }
     if (!key) {
       return NextResponse.json({ error: 'missing_key' }, { status: 500 });
     }
