@@ -244,6 +244,88 @@
 - Verify time spent tracking on page exit
 - Check events in GTM preview mode
 
+## Blog Post Page (stable)
+- Lifecycle tag: stable
+- Path: `hosting/app/blog/[slug]/page.tsx`
+- Description: Server-side rendered blog post page with full SEO optimization. Fetches content from Firestore on server, renders complete HTML for crawlers.
+
+### Interface (required)
+- Inputs
+  - `params.slug`: string - blog post URL slug or document ID
+- Outputs
+  - Full HTML page with article content, metadata, social sharing, analytics
+- Side effects
+  - Server-side Firebase Admin fetch
+  - Static generation at build time via generateStaticParams
+
+### Behavior
+- **Server Component**: No "use client" - renders on server
+- **Static Generation**: Pre-renders all published posts at build time
+- **ISR**: Revalidates every 3600 seconds (1 hour)
+- **Metadata**: Generates comprehensive SEO tags, OG images, Twitter Cards
+- **Content Rendering**: Converts markdown to HTML server-side
+- **Description Extraction**: Auto-generates meta description from body text
+
+### SEO Features
+- Full article content in initial HTML response (not client-side)
+- Proper og:description from body text (strips markdown)
+- Keywords populated in JSON-LD BlogPosting schema
+- Breadcrumb navigation with actual post title
+- Static generation for instant crawlability
+- Image dimensions in OG tags for better social previews
+
+### Components Used
+- BlogAnalytics (client) - Engagement tracking
+- BlogSocialShare (client) - Share buttons
+- BlogInternalLinks (server) - SEO internal linking
+- ContactForm (client) - Lead generation
+
+### Dependencies
+- Firebase Admin SDK (server-side)
+- blog-utils.ts (markdown processing)
+- Next.js App Router with generateStaticParams
+
+### Testing
+- Test with curl to verify content in HTML (no JS)
+- Verify meta description is clean text (no markdown)
+- Test social previews on Facebook, Twitter, LinkedIn
+- Verify breadcrumb shows actual title
+- Check JSON-LD schema has keywords
+
+## Blog Utilities (stable)
+- Lifecycle tag: stable
+- Path: `hosting/lib/blog-utils.ts`
+- Description: Utility functions for markdown processing and content extraction used in server-side blog rendering.
+
+### Functions
+
+#### mdToHtml(md: string): string
+- Converts markdown to HTML
+- Handles headings, lists, bold, italic, links, images
+- Escapes HTML entities for security
+- Used for server-side content rendering
+
+#### stripMarkdown(md: string): string
+- Removes all markdown syntax from text
+- Strips headings, bold, italic, links, code, lists
+- Returns plain text
+- Used for meta description generation
+
+#### extractDescription(contentMd: string, maxLength: number = 155): string
+- Extracts clean description from markdown content
+- Removes title (first heading)
+- Strips all markdown syntax
+- Takes first N characters of plain text
+- Breaks at word boundary if possible
+- Returns description with ellipsis if truncated
+- Used for og:description and meta description
+
+### Testing
+- Test mdToHtml with various markdown formats
+- Verify stripMarkdown removes all syntax
+- Test extractDescription with different content lengths
+- Verify word boundary breaking works correctly
+
 ## PointsOfInterestPicker (beta)
 - Lifecycle tag: beta
 - Description: Hakee lähellä olevat kiinnostavat kohteet (POI) Google Places API (New) -rajapinnan kautta ja näyttää ne valintaruudukossa suomalaisilla tyyppilabeleilla. Käytössä ListingWizardissa ja `/maptest`-sivulla. Integroituu `MapPicker`iin valitun sijainnin perusteella.
