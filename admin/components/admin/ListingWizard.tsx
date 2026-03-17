@@ -428,15 +428,18 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                       if (pc) setPostalCode(text(pc));
                       setLocality(text(loc));
                       
-                      // For Greece: adm3 is typically the regional unit (Περιφερειακή Ενότητα)
-                      // We need to query for the region (Περιφέρεια) separately or derive it
-                      setAdmin1(text(adm1C) || ''); // Alue (Περιφέρεια) - often missing
-                      setAdmin2(text(adm2C) || text(adm3C) || ''); // Seutu (Περιφερειακή Ενότητα)
-                      setAdmin3(text(adm3C) || ''); // Kunta (Δήμος)
+                      // Greek administrative structure (from merged geocode results):
+                      // adm1 = Region (Περιφέρεια) e.g., "Attika"
+                      // adm3 = Regional Unit (Περιφερειακή Ενότητα) e.g., "Anatoliki Attiki"
+                      // adm4 = Municipality (Δήμος) e.g., "Markopoulo Mesogeas"
+                      // locality = Local community (Τοπική Κοινότητα) e.g., "Porto Rafti"
+                      setAdmin1(text(adm1C) || ''); // Alue (Περιφέρεια)
+                      setAdmin2(text(adm3C) || ''); // Seutu (Περιφερειακή Ενότητα)
+                      setAdmin3(text(adm4C) || text(adm3C) || ''); // Kunta (Δήμος)
                       setAdmin4(text(adm4C));
                       setCountry(text(countryC));
 
-                      const municipality = text(adm3C) || text(loc);
+                      const municipality = text(adm4C) || text(adm3C) || text(loc);
                       if (municipality) setCity(municipality);
                       const regionCandidates = [text(adm1C), text(adm2C), text(isl), text(adm4C), text(subloc)];
                       const region = regionCandidates.find((v) => v && norm(v) !== norm(municipality)) || '';
