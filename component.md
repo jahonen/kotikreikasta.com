@@ -169,6 +169,81 @@
 - Visual regression test for layout
 - Verify all links work correctly
 
+## BlogSocialShare (stable)
+- Lifecycle tag: stable
+- Description: Social sharing component for blog posts with buttons for Facebook, X (Twitter), LinkedIn, WhatsApp, Email, and copy link functionality. Tracks all share events via Google Tag Manager.
+
+### Interface (required)
+- Inputs
+  - `url`: string - full URL of the blog post
+  - `title`: string - blog post title
+  - `description?`: string - blog post description (optional)
+- Outputs
+  - Renders social sharing buttons with platform-specific colors and icons
+  - Copy link button with success feedback
+- Side effects
+  - Opens share dialogs in popup windows
+  - Copies URL to clipboard
+  - Pushes analytics events to dataLayer
+
+### Behavior
+- 6 sharing options: Facebook, X, LinkedIn, WhatsApp, Email, Copy Link
+- Opens share dialogs in centered popup windows (600x400)
+- Email opens mailto: link in default email client
+- Copy link shows "Kopioitu!" confirmation for 2 seconds
+- All buttons have hover effects and proper ARIA labels
+
+### Analytics Events
+- Tracks `blog_share` event with:
+  - `share_platform`: facebook|twitter|linkedin|whatsapp|email|copy_link
+  - `blog_url`: full URL of the post
+  - `blog_title`: title of the post
+
+### Dependencies
+- None (pure React component with clipboard API)
+
+### Testing
+- Test all share buttons open correct platforms
+- Verify copy link functionality
+- Test analytics event tracking
+- Verify responsive layout on mobile
+
+## BlogAnalytics (stable)
+- Lifecycle tag: stable
+- Description: Enhanced analytics tracking for blog posts. Tracks page views, scroll depth (25%, 50%, 75%, 100%), and time spent on page.
+
+### Interface (required)
+- Inputs
+  - `id`: string - blog post Firestore document ID
+  - `slug`: string - blog post URL slug
+  - `title`: string - blog post title
+- Outputs
+  - Invisible component (returns null)
+- Side effects
+  - Pushes analytics events to dataLayer (Google Tag Manager)
+
+### Behavior
+- **Page View**: Tracks immediately on mount with timestamp
+- **Scroll Depth**: Tracks when user scrolls to 25%, 50%, 75%, 100% of page
+- **Time Spent**: Tracks total seconds on page when user leaves (beforeunload)
+
+### Analytics Events
+1. `blog_view`:
+   - `blog_id`, `blog_slug`, `blog_title`, `timestamp`
+2. `blog_scroll`:
+   - `blog_id`, `blog_slug`, `scroll_depth` (25|50|75|100)
+3. `blog_time_spent`:
+   - `blog_id`, `blog_slug`, `time_spent_seconds`
+
+### Dependencies
+- Google Tag Manager (dataLayer)
+
+### Testing
+- Verify page view event fires on mount
+- Test scroll depth tracking at different scroll positions
+- Verify time spent tracking on page exit
+- Check events in GTM preview mode
+
 ## PointsOfInterestPicker (beta)
 - Lifecycle tag: beta
 - Description: Hakee lähellä olevat kiinnostavat kohteet (POI) Google Places API (New) -rajapinnan kautta ja näyttää ne valintaruudukossa suomalaisilla tyyppilabeleilla. Käytössä ListingWizardissa ja `/maptest`-sivulla. Integroituu `MapPicker`iin valitun sijainnin perusteella.

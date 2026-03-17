@@ -4,6 +4,7 @@ import NavBar from "../../../components/nav-bar";
 import Footer from "../../../components/Footer";
 import BlogPostClient from "../BlogPostClient";
 import BlogInternalLinks from "../../../components/BlogInternalLinks";
+import BlogSocialShare from "../../../components/BlogSocialShare";
 import "../blog-content.scss";
 import ContactForm from "../../../components/ContactForm";
 import { getFirestore } from "../../../lib/firebase-admin-server";
@@ -61,6 +62,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const ogDescription = seo.ogDescription || metaDescription;
   const imageUrl = post.featuredImage?.url || 'https://kotikreikasta.com/og-image.jpg';
   const imageAlt = post.featuredImage?.alt || metaTitle;
+  const imageWidth = post.featuredImage?.width || 1200;
+  const imageHeight = post.featuredImage?.height || 630;
   
   return {
     title: metaTitle,
@@ -77,6 +80,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       images: [
         {
           url: imageUrl,
+          width: imageWidth,
+          height: imageHeight,
           alt: imageAlt,
         },
       ],
@@ -84,12 +89,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: 'article',
       publishedTime: post.publishedAt?.toISOString(),
       modifiedTime: post.updatedAt?.toISOString(),
+      authors: ['Kotikreikasta'],
     },
     twitter: {
       card: 'summary_large_image',
       title: ogTitle,
       description: ogDescription,
       images: [imageUrl],
+      creator: '@kotikreikasta',
+      site: '@kotikreikasta',
     },
     robots: {
       index: true,
@@ -118,13 +126,23 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.seo?.metaDescription || '',
-    image: post.featuredImage?.url || 'https://kotikreikasta.com/og-image.jpg',
+    image: {
+      '@type': 'ImageObject',
+      url: post.featuredImage?.url || 'https://kotikreikasta.com/og-image.jpg',
+      width: post.featuredImage?.width || 1200,
+      height: post.featuredImage?.height || 630,
+      caption: post.featuredImage?.alt || post.title,
+    },
     datePublished: post.publishedAt?.toISOString(),
     dateModified: post.updatedAt?.toISOString(),
     author: {
       '@type': 'Organization',
       name: 'Kotikreikasta',
       url: 'https://kotikreikasta.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://kotikreikasta.com/logo.png',
+      },
     },
     publisher: {
       '@type': 'Organization',
@@ -141,6 +159,16 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
     },
     keywords: post.seo?.keywords?.join(', ') || '',
     inLanguage: 'fi-FI',
+    isPartOf: {
+      '@type': 'Blog',
+      '@id': 'https://kotikreikasta.com/blog',
+      name: 'Kotikreikasta Blogi',
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'Kreikan kiinteistöt',
+      description: 'Asiantuntija-artikkelit Kreikan kiinteistömarkkinoista',
+    },
   } : null;
 
   return (
@@ -164,6 +192,12 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
             </ol>
           </nav>
           <BlogPostClient slug={slug} />
+
+          <BlogSocialShare 
+            url={url} 
+            title={post?.title || human}
+            description={post?.seo?.metaDescription || ''}
+          />
 
           <BlogInternalLinks />
 
