@@ -22,7 +22,11 @@ async function getGoogleMapsApiKey(): Promise<string | null> {
 
 export async function GET() {
   try {
-    const key = await getGoogleMapsApiKey();
+    // Try Secret Manager first (production), fallback to env var (local dev)
+    let key = await getGoogleMapsApiKey();
+    if (!key) {
+      key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null;
+    }
     if (!key) {
       return NextResponse.json({ error: 'missing_key' }, { status: 500 });
     }

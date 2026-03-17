@@ -162,7 +162,22 @@ export default function MapPicker({
         const resp: any = usePrimary ? primaryResp : fallbackResp;
         const results: any[] = Array.isArray(resp?.results) ? resp.results : [];
         const first = results[0];
-        onChangeRef.current?.({ ...pt, formattedAddress: first?.formatted_address, geocodeResults: serializeResults(results) });
+        
+        // Extract address components from the first result
+        const addressComponents = Array.isArray(first?.address_components) 
+          ? first.address_components.map((comp: any) => ({
+              types: Array.isArray(comp?.types) ? comp.types : [],
+              longText: comp?.long_name || '',
+              shortText: comp?.short_name || '',
+            }))
+          : [];
+        
+        onChangeRef.current?.({ 
+          ...pt, 
+          formattedAddress: first?.formatted_address, 
+          addressComponents,
+          geocodeResults: serializeResults(results) 
+        });
       } catch {}
     };
 
