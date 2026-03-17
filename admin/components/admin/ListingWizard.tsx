@@ -429,11 +429,11 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                       setLocality(text(loc));
                       
                       // Greek administrative structure (from merged geocode results):
-                      // adm1 = Region (Περιφέρεια) e.g., "Attika"
+                      // adm2 = Region (Περιφέρεια) e.g., "Attika"
                       // adm3 = Regional Unit (Περιφερειακή Ενότητα) e.g., "Anatoliki Attiki"
                       // adm4 = Municipality (Δήμος) e.g., "Markopoulo Mesogeas"
                       // locality = Local community (Τοπική Κοινότητα) e.g., "Porto Rafti"
-                      setAdmin1(text(adm1C) || ''); // Alue (Περιφέρεια)
+                      setAdmin1(text(adm2C) || text(adm1C) || ''); // Alue (Περιφέρεια)
                       setAdmin2(text(adm3C) || ''); // Seutu (Περιφερειακή Ενότητα)
                       setAdmin3(text(adm4C) || text(adm3C) || ''); // Kunta (Δήμος)
                       setAdmin4(text(adm4C));
