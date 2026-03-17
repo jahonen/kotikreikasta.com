@@ -2,15 +2,34 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import NavBar from "../../../components/nav-bar";
 import Footer from "../../../components/Footer";
-import BlogPostClient from "../BlogPostClient";
 import BlogInternalLinks from "../../../components/BlogInternalLinks";
 import BlogSocialShare from "../../../components/BlogSocialShare";
+import BlogAnalytics from "../../../components/BlogAnalytics";
 import "../blog-content.scss";
 import ContactForm from "../../../components/ContactForm";
 import { getFirestore } from "../../../lib/firebase-admin-server";
+import { mdToHtml, extractDescription } from "../../../lib/blog-utils";
 
 // ISR: Revalidate every 3600 seconds (1 hour) or on-demand via revalidatePath
 export const revalidate = 3600;
+
+// Generate static params for all blog posts at build time
+export async function generateStaticParams() {
+  try {
+    const db = await getFirestore();
+    const snapshot = await db
+      .collection('blog_posts')
+      .where('status', '==', 'published')
+      .get();
+    
+    return snapshot.docs.map((doc) => ({
+      slug: doc.data().urlStub || doc.id,
+    }));
+  } catch (error) {
+    console.error('[BLOG_STATIC_PARAMS] Error:', error);
+    return [];
+  }
+}
 
 async function getBlogPost(slug: string) {
   try {
@@ -29,6 +48,7 @@ async function getBlogPost(slug: string) {
       id: doc.id,
       title: data.title || '',
       contentMd: data.contentMd || '',
+      urlStub: data.urlStub || doc.id,
       seo: data.seo || {},
       featuredImage: data.featuredImage || null,
       publishedAt: data.publishedAt?.toDate?.() || null,
@@ -56,7 +76,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const seo = post.seo || {};
   const metaTitle = seo.metaTitle || post.title || 'Kotikreikasta';
-  const metaDescription = seo.metaDescription || '';
+  
+  // Extract description from body text, not markdown title
+  const metaDescription = seo.metaDescription || extractDescription(post.contentMd || '', 155);
+  
   const keywords = seo.keywords || [];
   const ogTitle = seo.ogTitle || metaTitle;
   const ogDescription = seo.ogDescription || metaDescription;
@@ -157,7 +180,7 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
       '@type': 'WebPage',
       '@id': url,
     },
-    keywords: post.seo?.keywords?.join(', ') || '',
+    keywords: (post.seo?.keywords && post.seo.keywords.length > 0) ? post.seo.keywords.join(', ') : 'Kreikka, kiinteistöt, asunnot, ostoprosessi',
     inLanguage: 'fi-FI',
     isPartOf: {
       '@type': 'Blog',
@@ -188,16 +211,80 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
               <li aria-hidden="true">/</li>
               <li><Link href="/blog">Blogi</Link></li>
               <li aria-hidden="true">/</li>
-              <li aria-current="page" style={{ color: 'inherit' }}>{slug.replace(/-/g, ' ')}</li>
+              <li aria-current="page" style={{ color: 'inherit' }}>{post?.title || human}</li>
             </ol>
           </nav>
-          <BlogPostClient slug={slug} />
+          
+          {!post ? (
+            <div>
+              <h1>Artikkelia ei löytynyt</h1>
+              <p>Valitettavasti etsimääsi artikkelia ei löytynyt.</p>
+              <p><Link href="/blog">Palaa blogiin</Link></p>
+            </div>
+          ) : (
+            <>
+              <article>
+                {post.featuredImage?.url && (
+                  <div style={{ 
+                    width: 'calc(100% + 2.5rem)',
+                    marginLeft: '-1.25rem',
+                    marginRight: '-1.25rem',
+                    aspectRatio: '16 / 9', 
+                    overflow: 'hidden', 
+                    background: 'var(--sand)', 
+                    marginBottom: 'var(--space-xl)' 
+                  }}>
+                    <img 
+                      src={post.featuredImage.url} 
+                      alt={post.featuredImage.alt || ''} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  </div>
+                )}
+                <header style={{ marginBottom: 'var(--space-xl)' }}>
+                  <p style={{ 
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.6875rem',
+                    fontWeight: 500,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase',
+                    color: 'var(--gold)',
+                    marginBottom: 'var(--space-md)'
+                  }}>
+                    {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('fi-FI') : ''}
+                  </p>
+                  <h1 style={{ 
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'clamp(2rem, 5vw, 2.75rem)',
+                    fontWeight: 400,
+                    lineHeight: 1.2,
+                    color: 'var(--text)',
+                    margin: 0
+                  }}>
+                    {post.title}
+                  </h1>
+                </header>
+                <section 
+                  className="prose" 
+                  dangerouslySetInnerHTML={{ 
+                    __html: mdToHtml(post.contentMd.replace(/^#\s+.*(?:\r?\n|$)/, '')) 
+                  }} 
+                />
+              </article>
+              
+              <BlogAnalytics 
+                id={post.id} 
+                slug={post.urlStub || post.id} 
+                title={post.title} 
+              />
 
-          <BlogSocialShare 
-            url={url} 
-            title={post?.title || human}
-            description={post?.seo?.metaDescription || ''}
-          />
+              <BlogSocialShare 
+                url={url} 
+                title={post.title}
+                description={extractDescription(post.contentMd, 155)}
+              />
+            </>
+          )}
 
           <BlogInternalLinks />
 
