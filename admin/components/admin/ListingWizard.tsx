@@ -411,15 +411,28 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                       const isl = pick('island', 'archipelago');
                       const countryC = pick('country');
 
+                      console.log('[Wizard] Picked components:', {
+                        adm1: text(adm1C),
+                        adm2: text(adm2C),
+                        adm3: text(adm3C),
+                        adm4: text(adm4C),
+                        locality: text(loc),
+                        island: text(isl),
+                        sublocality: text(subloc)
+                      });
+
                       const katuosoite = (text(streetAddr) || [text(routeC), text(streetNo)].filter(Boolean).join(' ')).trim();
                       setStreetAddress(katuosoite);
                       setRouteOnly(text(routeC));
                       setStreetNumber(text(streetNo));
                       if (pc) setPostalCode(text(pc));
                       setLocality(text(loc));
-                      setAdmin1(text(adm1C));
-                      setAdmin2(text(adm2C));
-                      setAdmin3(text(adm3C));
+                      
+                      // For Greece: adm3 is typically the regional unit (Περιφερειακή Ενότητα)
+                      // We need to query for the region (Περιφέρεια) separately or derive it
+                      setAdmin1(text(adm1C) || ''); // Alue (Περιφέρεια) - often missing
+                      setAdmin2(text(adm2C) || text(adm3C) || ''); // Seutu (Περιφερειακή Ενότητα)
+                      setAdmin3(text(adm3C) || ''); // Kunta (Δήμος)
                       setAdmin4(text(adm4C));
                       setCountry(text(countryC));
 
