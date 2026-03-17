@@ -91,7 +91,9 @@ export default function PointsOfInterestPicker({
     let aborted = false;
     const lat = center?.lat;
     const lng = center?.lng;
+    console.log('[POI] useEffect triggered:', { center, lat, lng, latType: typeof lat, lngType: typeof lng });
     if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      console.log('[POI] Invalid center, not fetching');
       setPois([]);
       return;
     }
