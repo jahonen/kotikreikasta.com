@@ -88,7 +88,6 @@ export default function PointsOfInterestPicker({
   };
 
   useEffect(() => {
-    let aborted = false;
     const lat = center?.lat;
     const lng = center?.lng;
     console.log('[POI] useEffect triggered:', { center, lat, lng, latType: typeof lat, lngType: typeof lng });
@@ -124,7 +123,7 @@ export default function PointsOfInterestPicker({
         if (!resp.ok) {
           const errorText = await resp.text().catch(() => '');
           console.error('[POI] API error:', resp.status, errorText);
-          if (!aborted) {
+          if (!ctrl.signal.aborted) {
             setPois([]);
             setLoading(false);
           }
@@ -143,15 +142,15 @@ export default function PointsOfInterestPicker({
             : undefined,
         })).filter((p: PoiItem) => p.place_id);
         console.log('[POI] Mapped POIs:', mapped.length, 'items', mapped);
-        if (!aborted) {
+        if (!ctrl.signal.aborted) {
           setPois(mapped);
           console.log('[POI] Set pois state');
         }
       } catch (e: any) {
         if (e?.name === 'AbortError') return;
-        if (!aborted) setPois([]);
+        if (!ctrl.signal.aborted) setPois([]);
       } finally {
-        if (!aborted) {
+        if (!ctrl.signal.aborted) {
           setLoading(false);
           console.log('[POI] Set loading to false');
         }
@@ -161,7 +160,10 @@ export default function PointsOfInterestPicker({
       }
     };
     run();
-    return () => { aborted = true; };
+    return () => {
+      console.log('[POI] Cleanup: aborting controller');
+      ctrl.abort();
+    };
   }, [center?.lat, center?.lng, radius]);
 
   const selectedList = useMemo(() => pois.filter((p) => selectedIds.has(p.place_id)), [pois, selectedIds]);
