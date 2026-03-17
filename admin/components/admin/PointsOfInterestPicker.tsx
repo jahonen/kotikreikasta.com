@@ -163,6 +163,7 @@ export default function PointsOfInterestPicker({
     return () => {
       console.log('[POI] Cleanup: aborting controller');
       ctrl.abort();
+      lastKeyRef.current = null;
     };
   }, [center?.lat, center?.lng, radius]);
 
