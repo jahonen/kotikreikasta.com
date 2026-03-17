@@ -386,6 +386,7 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
                     setLng(String(plng));
                     if (fa) setFormattedAddress(fa);
                     if (addressComponents && addressComponents.length) {
+                      console.log('[Wizard] Address components:', addressComponents);
                       const toSnakeCaseType = (t: string) => (!t ? t : t.includes('_') ? t.toLowerCase() : t.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, ''));
                       const toCamelCaseType = (t: string) => (!t ? t : !t.includes('_') ? t : t.replace(/_([a-z])/g, (_: any, c: string) => c.toUpperCase()));
                       const hasType = (c: any, type: string) => {
