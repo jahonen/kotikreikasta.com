@@ -163,14 +163,35 @@ export default function MapPicker({
         const results: any[] = Array.isArray(resp?.results) ? resp.results : [];
         const first = results[0];
         
-        // Extract address components from the first result
-        const addressComponents = Array.isArray(first?.address_components) 
-          ? first.address_components.map((comp: any) => ({
-              types: Array.isArray(comp?.types) ? comp.types : [],
-              longText: comp?.long_name || '',
-              shortText: comp?.short_name || '',
-            }))
-          : [];
+        console.log('[MapPicker] All geocode results:', results.map((r: any) => ({
+          formatted_address: r.formatted_address,
+          types: r.types,
+          address_components: r.address_components?.map((c: any) => ({
+            long_name: c.long_name,
+            types: c.types
+          }))
+        })));
+        
+        // Merge address components from all results to get complete administrative hierarchy
+        const allComponents = new Map<string, any>();
+        results.forEach((result: any) => {
+          if (Array.isArray(result?.address_components)) {
+            result.address_components.forEach((comp: any) => {
+              const types = Array.isArray(comp?.types) ? comp.types : [];
+              types.forEach((type: string) => {
+                if (!allComponents.has(type)) {
+                  allComponents.set(type, {
+                    types: types,
+                    longText: comp?.long_name || '',
+                    shortText: comp?.short_name || '',
+                  });
+                }
+              });
+            });
+          }
+        });
+        
+        const addressComponents = Array.from(allComponents.values());
         
         onChangeRef.current?.({ 
           ...pt, 
