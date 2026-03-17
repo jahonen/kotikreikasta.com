@@ -61,6 +61,114 @@
 - No verbose logging in production
 - Consider adding analytics events on user interactions (search select, drag, click) per project policy.
 
+## Blog Listing Page (stable)
+- Lifecycle tag: stable
+- Description: Comprehensive blog listing page at `/blog` with server-side rendering, search functionality, pagination, and breadcrumb navigation. Displays all published blog posts in a grid layout with featured images, excerpts, and dates.
+
+### Interface (required)
+- Inputs
+  - `searchParams`: `{ page?: string; q?: string }` - URL query parameters for pagination and search
+- Outputs
+  - Renders complete blog listing page with search, pagination, and breadcrumbs
+  - Server-side rendered for full SEO crawlability
+- Side effects
+  - Fetches all published blog posts from Firestore on server
+  - Generates JSON-LD structured data (Blog schema)
+  - Provides crawlable links to all blog posts
+
+### Behavior
+- Server-side rendering (SSR) ensures all content is in HTML response
+- Search functionality filters posts by title and excerpt
+- Pagination with 12 posts per page
+- Breadcrumb navigation for internal linking
+- Reuses blog card design from homepage for consistency
+- "Näytä kaikki artikkelit" CTA button on homepage links here
+
+### SEO Features
+- Comprehensive metadata with keywords and Open Graph tags
+- Canonical URL: `https://kotikreikasta.com/blog`
+- JSON-LD Blog schema with all posts
+- Breadcrumb navigation for internal linking
+- All blog post links are crawlable (no client-side JS required)
+- Included in sitemap.xml with priority 0.85
+
+### Dependencies
+- Firebase Firestore (server-side)
+- Next.js App Router with SSR
+
+### Testing
+- Test with curl to verify HTML contains all blog post links
+- Verify search functionality
+- Test pagination
+- Validate JSON-LD structured data
+
+### Observability
+- Server-side error logging for Firestore queries
+- No PII in logs
+
+## LatestBlogsServer (stable)
+- Lifecycle tag: stable
+- Description: Server-side rendered component for displaying latest blog posts on homepage. Replaces client-side `LatestBlogsClient` to provide crawlable links for SEO.
+
+### Interface (required)
+- Inputs
+  - `count?`: number - number of posts to display (default: 3)
+- Outputs
+  - Renders grid of blog post cards with links
+  - "Näytä kaikki artikkelit" button linking to `/blog`
+- Side effects
+  - Fetches latest published blog posts from Firestore on server
+
+### Behavior
+- Server-side rendering ensures all blog links are in HTML
+- Extracts excerpts from content, removing title duplication
+- Displays featured images, dates, titles, and excerpts
+- Provides crawlable link equity from homepage to blog posts
+- CTA button links to full blog listing page
+
+### SEO Features
+- All blog post links are crawlable (no JS required)
+- Provides link equity from homepage (priority 1.0) to blog posts
+- Replaces hash anchor `/#latest-blogs` with proper `/blog` link
+
+### Dependencies
+- Firebase Firestore (server-side)
+
+### Testing
+- Test with curl to verify blog links in HTML response
+- Verify no client-side JS required for links
+
+## BlogInternalLinks (stable)
+- Lifecycle tag: stable
+- Description: Internal linking component displayed at the end of each blog post. Provides contextual links to key service pages for SEO link equity and user navigation.
+
+### Interface (required)
+- Inputs
+  - none
+- Outputs
+  - Renders aside section with links to ostoprosessi, alueet, tasmahaku, konsierge, and /blog
+- Side effects
+  - none
+
+### Behavior
+- Displays 5 key internal links with icons and descriptions
+- Links to: Ostoprosessi, Alueet, Täsmähaku, Konsiergepalvelu, Kaikki artikkelit
+- Styled as cards in a vertical list
+- Responsive design
+
+### SEO Features
+- Provides contextual internal linking from every blog post
+- Distributes link equity to key service pages
+- Helps search engines understand site structure
+- Improves crawl depth and page discovery
+
+### Dependencies
+- None (pure React component)
+
+### Testing
+- Visual regression test for layout
+- Verify all links work correctly
+
 ## PointsOfInterestPicker (beta)
 - Lifecycle tag: beta
 - Description: Hakee lähellä olevat kiinnostavat kohteet (POI) Google Places API (New) -rajapinnan kautta ja näyttää ne valintaruudukossa suomalaisilla tyyppilabeleilla. Käytössä ListingWizardissa ja `/maptest`-sivulla. Integroituu `MapPicker`iin valitun sijainnin perusteella.

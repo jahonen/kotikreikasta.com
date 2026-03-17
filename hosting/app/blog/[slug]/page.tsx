@@ -3,6 +3,7 @@ import Link from "next/link";
 import NavBar from "../../../components/nav-bar";
 import Footer from "../../../components/Footer";
 import BlogPostClient from "../BlogPostClient";
+import BlogInternalLinks from "../../../components/BlogInternalLinks";
 import "../blog-content.scss";
 import ContactForm from "../../../components/ContactForm";
 import { getFirestore } from "../../../lib/firebase-admin-server";
@@ -157,12 +158,14 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
             <ol style={{ listStyle: 'none', display: 'flex', gap: 8, padding: 0, margin: 0, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
               <li><Link href="/">Etusivu</Link></li>
               <li aria-hidden="true">/</li>
-              <li><Link href="/#latest-blogs">Blogi</Link></li>
+              <li><Link href="/blog">Blogi</Link></li>
               <li aria-hidden="true">/</li>
               <li aria-current="page" style={{ color: 'inherit' }}>{slug.replace(/-/g, ' ')}</li>
             </ol>
           </nav>
           <BlogPostClient slug={slug} />
+
+          <BlogInternalLinks />
 
           <section style={{ marginTop: 48 }}>
             <h2 style={{ marginBottom: 12 }}>Ota yhteyttä</h2>

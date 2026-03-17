@@ -2,7 +2,7 @@ import NavBar from "../components/nav-bar";
 import Hero from "../components/Hero";
 import TrustBar from "../components/TrustBar";
 import NewsletterCta from "../components/NewsletterCta";
-import LatestBlogsClient from "../components/LatestBlogsClient";
+import LatestBlogsServer from "../components/LatestBlogsServer";
 import Footer from "../components/Footer";
 
 export default async function Page() {
@@ -85,7 +85,7 @@ export default async function Page() {
         <div className="container">
           <p className="section-label">Blogi</p>
           <h2 className="section-title">Asiantuntija-<em>artikkelit</em></h2>
-          <LatestBlogsClient count={3} />
+          <LatestBlogsServer count={3} />
         </div>
       </section>
 
