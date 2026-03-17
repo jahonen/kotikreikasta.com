@@ -151,7 +151,10 @@ export default function PointsOfInterestPicker({
         if (e?.name === 'AbortError') return;
         if (!aborted) setPois([]);
       } finally {
-        if (!aborted) setLoading(false);
+        if (!aborted) {
+          setLoading(false);
+          console.log('[POI] Set loading to false');
+        }
         if (abortRef.current === ctrl) {
           abortRef.current = null;
         }
@@ -176,6 +179,7 @@ export default function PointsOfInterestPicker({
     });
   };
 
+  console.log('[POI] Render:', { center: !!center, loading, poisCount: pois.length });
   return (
     <div>
       <div ref={containerRef} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden />
