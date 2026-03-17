@@ -115,7 +115,11 @@ export default function PointsOfInterestPicker({
           signal: ctrl.signal,
         });
         if (!resp.ok) {
-          setPois([]);
+          console.error('[POI] API error:', resp.status, await resp.text().catch(() => ''));
+          if (!aborted) {
+            setPois([]);
+            setLoading(false);
+          }
           return;
         }
         const data: any = await resp.json().catch(() => ({}));
