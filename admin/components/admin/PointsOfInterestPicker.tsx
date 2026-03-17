@@ -98,16 +98,20 @@ export default function PointsOfInterestPicker({
       return;
     }
     const key = `${lat.toFixed(6)}|${lng.toFixed(6)}|${radius}`;
+    console.log('[POI] Checking cache key:', key, 'vs last:', lastKeyRef.current);
     if (lastKeyRef.current === key) {
+      console.log('[POI] Same key as last fetch, skipping');
       return;
     }
     lastKeyRef.current = key;
+    console.log('[POI] New key, will fetch');
     if (abortRef.current) {
       try { abortRef.current.abort(); } catch {}
     }
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     const run = async () => {
+      console.log('[POI] Starting fetch to', PLACES_ENDPOINT, 'with', { center: { lat, lng }, radius });
       setLoading(true);
       try {
         const resp = await fetch(PLACES_ENDPOINT, {
@@ -116,8 +120,10 @@ export default function PointsOfInterestPicker({
           body: JSON.stringify({ center: { lat, lng }, radius }),
           signal: ctrl.signal,
         });
+        console.log('[POI] Fetch response:', resp.status, resp.ok);
         if (!resp.ok) {
-          console.error('[POI] API error:', resp.status, await resp.text().catch(() => ''));
+          const errorText = await resp.text().catch(() => '');
+          console.error('[POI] API error:', resp.status, errorText);
           if (!aborted) {
             setPois([]);
             setLoading(false);
