@@ -131,7 +131,9 @@ export default function PointsOfInterestPicker({
           return;
         }
         const data: any = await resp.json().catch(() => ({}));
+        console.log('[POI] Response data:', data);
         const list: any[] = Array.isArray(data?.places) ? data.places : [];
+        console.log('[POI] Places list:', list.length, 'items');
         const mapped: PoiItem[] = list.map((p: any) => ({
           place_id: p?.id || p?.name || '',
           name: p?.displayName?.text || p?.displayName || '',
@@ -140,7 +142,11 @@ export default function PointsOfInterestPicker({
             ? { lat: p.location.latitude, lng: p.location.longitude }
             : undefined,
         })).filter((p: PoiItem) => p.place_id);
-        if (!aborted) setPois(mapped);
+        console.log('[POI] Mapped POIs:', mapped.length, 'items', mapped);
+        if (!aborted) {
+          setPois(mapped);
+          console.log('[POI] Set pois state');
+        }
       } catch (e: any) {
         if (e?.name === 'AbortError') return;
         if (!aborted) setPois([]);
