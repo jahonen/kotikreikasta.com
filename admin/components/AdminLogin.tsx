@@ -65,39 +65,30 @@ export default function AdminLogin({ onSignedIn }: AdminLoginProps) {
         return;
       }
       
-      // Detect if we're on mobile or in a browser that doesn't support popups well
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // Use redirect on mobile for better compatibility
-        await signInWithRedirect(auth, provider);
-        // Loading state will persist until redirect completes
-      } else {
-        // Use popup on desktop
+      // Use popup for all devices - modern mobile browsers support it
+      try {
+        await signInWithPopup(auth, provider);
         try {
-          await signInWithPopup(auth, provider);
-          try {
-            const idToken = await auth.currentUser?.getIdToken(true);
-            if (idToken) {
-              await fetch('/api/auth/session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken }),
-                credentials: 'include'
-              });
-            }
-          } catch {}
-          onSignedIn?.();
-        } catch (popupErr: any) {
-          // If popup fails, fall back to redirect
-          if (popupErr?.code === 'auth/popup-blocked') {
-            await signInWithRedirect(auth, provider);
-          } else {
-            throw popupErr;
+          const idToken = await auth.currentUser?.getIdToken(true);
+          if (idToken) {
+            await fetch('/api/auth/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken }),
+              credentials: 'include'
+            });
           }
-        } finally {
-          setLoading(false);
+        } catch {}
+        onSignedIn?.();
+      } catch (popupErr: any) {
+        // If popup fails, fall back to redirect
+        if (popupErr?.code === 'auth/popup-blocked') {
+          await signInWithRedirect(auth, provider);
+        } else {
+          throw popupErr;
         }
+      } finally {
+        setLoading(false);
       }
     } catch (e: any) {
       console.error('Sign in error:', e);
