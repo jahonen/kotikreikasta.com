@@ -41,12 +41,13 @@ export async function getFirestore(): Promise<Firestore> {
   
   nativeFirestoreClient = new Firestore({
     projectId,
+    databaseId: '(default)',
     ignoreUndefinedProperties: true,
     // Force REST API instead of gRPC to avoid connection issues in serverless
     preferRest: true,
   });
   
-  console.log('[FIREBASE_ADMIN_SERVER] Native Firestore client initialized with REST API for project:', projectId);
+  console.log('[FIREBASE_ADMIN_SERVER] Native Firestore client initialized with REST API for project:', projectId, 'database: (default)');
   
   return nativeFirestoreClient;
 }
