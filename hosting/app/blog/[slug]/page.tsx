@@ -13,23 +13,10 @@ import { mdToHtml, extractDescription } from "../../../lib/blog-utils";
 // ISR: Revalidate every 3600 seconds (1 hour) or on-demand via revalidatePath
 export const revalidate = 3600;
 
-// Generate static params for all blog posts at build time
-export async function generateStaticParams() {
-  try {
-    const db = await getFirestore();
-    const snapshot = await db
-      .collection('blog_posts')
-      .where('status', '==', 'published')
-      .get();
-    
-    return snapshot.docs.map((doc) => ({
-      slug: doc.data().urlStub || doc.id,
-    }));
-  } catch (error) {
-    console.error('[BLOG_STATIC_PARAMS] Error:', error);
-    return [];
-  }
-}
+// Dynamic params: pages generated on-demand with ISR caching
+// Build-time generation disabled because Cloud Build doesn't have Firestore access
+// Pages will be generated on first request and cached with revalidate: 3600
+export const dynamicParams = true;
 
 async function getBlogPost(slug: string) {
   try {
