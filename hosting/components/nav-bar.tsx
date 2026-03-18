@@ -92,8 +92,8 @@ export default function NavBar(_props: NavBarProps) {
           <li><Link href="/alueet">Alueet</Link></li>
           <li><Link href="/tasmahaku">Täsmähaku</Link></li>
           <li><Link href="/konsierge">Konsierge</Link></li>
-          <li><Link href="/#listings">Kohteet</Link></li>
-          <li><Link href="/#latest-blogs">Blogi</Link></li>
+          <li><Link href="/listings">Kohteet</Link></li>
+          <li><Link href="/blog">Blogi</Link></li>
           <li><Link href="/#newsletter" className="nav-cta">Ota yhteyttä</Link></li>
         </ul>
       </nav>
@@ -124,12 +124,12 @@ export default function NavBar(_props: NavBarProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/#listings" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/listings" onClick={() => setMobileMenuOpen(false)}>
                   Kohteet
                 </Link>
               </li>
               <li>
-                <Link href="/#latest-blogs" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/blog" onClick={() => setMobileMenuOpen(false)}>
                   Blogi
                 </Link>
               </li>

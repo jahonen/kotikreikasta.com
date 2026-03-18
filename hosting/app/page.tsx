@@ -3,6 +3,7 @@ import Hero from "../components/Hero";
 import TrustBar from "../components/TrustBar";
 import NewsletterCta from "../components/NewsletterCta";
 import LatestBlogsServer from "../components/LatestBlogsServer";
+import LatestListingsServer from "../components/LatestListingsServer";
 import Footer from "../components/Footer";
 
 export default async function Page() {
@@ -59,19 +60,10 @@ export default async function Page() {
         <div className="container">
           <p className="section-label">Kohteet</p>
           <h2 className="section-title">Valikoituja <em>kohteita</em></h2>
-          <p style={{ 
-            fontFamily: 'var(--font-body)',
-            fontSize: '1.0625rem',
-            lineHeight: 1.7,
-            color: 'var(--text-mid)',
-            maxWidth: '720px',
-            marginBottom: 'var(--space-lg)'
-          }}>
-            Selaa valikoimaamme tai anna meidän etsiä juuri sinulle sopiva kiinteistö.
-          </p>
-          <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
-            <a href="#newsletter" className="btn-primary">
-              Näytä kohteet
+          <LatestListingsServer count={3} />
+          <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap', marginTop: '32px' }}>
+            <a href="/listings" className="btn-primary">
+              Näytä kaikki kohteet
             </a>
             <a href="/tasmahaku" className="btn-outline" style={{ color: 'var(--text)', borderColor: 'var(--gold)' }}>
               Täsmähaku-palvelu
