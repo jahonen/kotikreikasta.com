@@ -522,3 +522,206 @@
 - Analytics via ContactForm component
 - Lead tracking in Firestore
 - Admin notifications via Novu and SendGrid
+
+## ListingCard (stable)
+- Lifecycle tag: stable
+- Description: Reusable card component for displaying listing previews in grids. Used on front page (3 latest), listings page (all), and potentially in search results.
+
+### Interface (required)
+- Inputs
+  - `listing`: Listing object with all listing data
+- Outputs
+  - Renders clickable card linking to `/listings/[urlStub]`
+- Side effects
+  - None (pure presentational component)
+
+### Behavior
+- Displays listing with:
+  - Featured image with overlay gradient
+  - Type badge (e.g., "Omakotitalo")
+  - Condition badge if present (e.g., "Erinomainen kunto")
+  - Price and price per m²
+  - Location (locality · administrative_area_level_1)
+  - Title
+  - Specs grid (bedrooms, bathrooms, size, lot size, year built)
+  - Top 6 amenities with highlighting for key features
+  - Top 4 nearby POIs
+  - CTA button "KATSO KOHDE →"
+- Entire card is clickable Link component
+- Hover effects: slight scale up and shadow
+
+### Design
+- Card-based layout with image, badges, and content sections
+- Uses design system colors and typography
+- Responsive grid layout (auto-fill minmax pattern)
+- Highlight amenities: Vuoristonäköala, Merinäköala, Puutarha, Takka, Uima-allas
+
+### Dependencies
+- Next.js Link component
+- Listing type from types/listing.ts
+
+### Testing
+- Visual regression tests for card layout
+- Test with various listing data (with/without optional fields)
+- Verify link navigation works
+
+## ListingMap (stable)
+- Lifecycle tag: stable
+- Description: Read-only map component for displaying listing location on detail pages. Uses rounded coordinates (2 decimals) for privacy. Styled with same design as admin MapPicker.
+
+### Interface (required)
+- Inputs
+  - `lat`: number - latitude coordinate
+  - `lng`: number - longitude coordinate
+- Outputs
+  - Renders static Google Map with marker at rounded coordinates
+- Side effects
+  - Loads Google Maps JavaScript API
+  - Fetches Maps API key from `/api/maps/key`
+
+### Behavior
+- Rounds coordinates to 2 decimal places (e.g., 37.869781 → 37.87)
+- Centers map at rounded coordinates
+- Places marker at rounded coordinates
+- Map is read-only (no dragging, scrolling, or double-click zoom)
+- Zoom level: 13
+- Uses same map styling as admin MapPicker (warm earth tones)
+
+### Design
+- Height: 360px
+- Border radius: 4px
+- Border: 0.5px solid var(--border)
+- Background: var(--sand)
+- Map styles: warm earth tones matching site design
+
+### Dependencies
+- Google Maps JavaScript API
+- Secret Manager via `/api/maps/key` route
+
+### Testing
+- Verify coordinates are rounded to 2 decimals
+- Test map loads correctly
+- Verify marker placement
+- Test with various coordinate values
+
+## LatestListingsServer (stable)
+- Lifecycle tag: stable
+- Description: Server-side component for displaying latest listings on homepage. Fetches from Firestore on server for SEO crawlability.
+
+### Interface (required)
+- Inputs
+  - `count?`: number - number of listings to display (default: 3)
+- Outputs
+  - Renders grid of ListingCard components
+- Side effects
+  - Fetches latest published listings from Firestore on server
+
+### Behavior
+- Server-side rendering ensures all listing links are in HTML
+- Orders by updatedAt descending
+- Filters by status === 'published'
+- Maps Firestore data to Listing type
+- Handles bedrooms/bathrooms at root level (not in attributes)
+
+### SEO Features
+- All listing links are crawlable (no JS required)
+- Provides link equity from homepage to listing pages
+
+### Dependencies
+- Firebase Admin SDK (server-side)
+- ListingCard component
+- Listing type from types/listing.ts
+
+### Testing
+- Test with curl to verify listing links in HTML
+- Verify correct data mapping from Firestore
+
+## Listing Detail Page (stable)
+- Lifecycle tag: stable
+- Path: `hosting/app/listings/[slug]/page.tsx`
+- Description: Server-side rendered listing detail page with ISR. Displays full listing information with hero image, specs, amenities, nearby POIs, map, and contact form.
+
+### Interface (required)
+- Inputs
+  - `params.slug`: string - listing URL slug
+- Outputs
+  - Full HTML page with listing details, map, and contact form
+- Side effects
+  - Server-side Firebase Admin fetch
+  - ISR with 1 hour revalidation
+
+### Behavior
+- **Server Component**: Renders on server with ISR
+- **ISR**: Revalidates every 3600 seconds (1 hour)
+- **Dynamic Params**: Generates pages on-demand for new listings
+- **Metadata**: Generates SEO tags with listing details
+- Sections:
+  - Hero with featured image, badges, title, location, price
+  - Specs grid (bedrooms, bathrooms, size, lot size, year built)
+  - Amenities with highlighting
+  - Nearby POIs (up to 12)
+  - Location section with simplified address and map
+  - Contact form for lead generation
+
+### Location Display
+- Shows only: `locality, administrative_area_level_1` (e.g., "Porto Rafti, Attika")
+- Map displays with coordinates rounded to 2 decimals for privacy
+- No detailed street address shown publicly
+
+### Data Mapping
+- Bedrooms and bathrooms are at root level in Firestore (not in attributes)
+- Handles optional fields gracefully (lotSize, yearBuilt, condition)
+- Maps amenitiesList and appliancesList from root or attributes
+
+### Components Used
+- ListingMap (client) - Location map with rounded coordinates
+- ContactForm (client) - Lead generation
+
+### Dependencies
+- Firebase Admin SDK (server-side)
+- Next.js App Router with ISR
+- ListingMap component
+- ContactForm component
+
+### Testing
+- Test with curl to verify content in HTML
+- Verify map displays with rounded coordinates
+- Test contact form integration
+- Verify metadata generation
+
+## Listings Page (stable)
+- Lifecycle tag: stable
+- Path: `hosting/app/listings/page.tsx`
+- Description: Server-side rendered listings index page with ISR. Displays all published listings in grid layout.
+
+### Interface (required)
+- Inputs
+  - none
+- Outputs
+  - Full HTML page with all published listings
+- Side effects
+  - Server-side Firebase Admin fetch
+  - ISR with 1 hour revalidation
+
+### Behavior
+- **Server Component**: Renders on server with ISR
+- **ISR**: Revalidates every 3600 seconds (1 hour)
+- Fetches up to 100 published listings
+- Orders by updatedAt descending
+- Displays count of listings
+- Grid layout using ListingCard components
+
+### SEO Features
+- All listing links are crawlable
+- Metadata with description
+- Included in sitemap
+
+### Dependencies
+- Firebase Admin SDK (server-side)
+- ListingCard component
+- Listing type from types/listing.ts
+
+### Testing
+- Test with curl to verify all listings in HTML
+- Verify grid layout responsiveness
+- Test with various numbers of listings
