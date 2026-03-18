@@ -35,8 +35,6 @@ export async function getFirestore() {
   // Configure Firestore settings for Cloud Run environment
   firestoreInstance.settings({
     ignoreUndefinedProperties: true,
-    // Use REST API instead of gRPC to avoid connection issues
-    preferRest: true,
   });
   
   return firestoreInstance;
