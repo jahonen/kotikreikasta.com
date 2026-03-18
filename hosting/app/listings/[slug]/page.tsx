@@ -3,6 +3,7 @@ import Link from "next/link";
 import NavBar from "../../../components/nav-bar";
 import Footer from "../../../components/Footer";
 import ContactForm from "../../../components/ContactForm";
+import ListingMap from "../../../components/ListingMap";
 import { getFirestore } from "../../../lib/firebase-admin-server";
 import { Listing } from "../../../types/listing";
 import "./listing-detail.scss";
@@ -128,8 +129,8 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
                   <h1 className="listing-hero-title">{listing.title}</h1>
                   <div className="listing-hero-location">
                     <span className="location-dot"></span>
-                    {listing.location.locality && `${listing.location.locality} · `}
-                    {listing.location.administrative_area_level_2 || listing.location.administrative_area_level_1}
+                    {listing.location.locality}
+                    {listing.location.administrative_area_level_1 && ` · ${listing.location.administrative_area_level_1}`}
                   </div>
                   <div className="listing-hero-price">
                     <div className="price-main">{priceFormatted}</div>
@@ -207,12 +208,19 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
           <div className="listing-location-section">
             <h2 className="section-title">Sijainti</h2>
             <div className="location-details">
-              <p className="location-address">{listing.location.street_address}</p>
               <p className="location-city">
-                {listing.location.postal_code} {listing.location.locality}
+                {listing.location.locality}
+                {listing.location.administrative_area_level_1 && `, ${listing.location.administrative_area_level_1}`}
               </p>
-              <p className="location-country">{listing.location.country}</p>
             </div>
+            {listing.location.coordinates?.lat && listing.location.coordinates?.lng && (
+              <div style={{ marginTop: '24px' }}>
+                <ListingMap 
+                  lat={listing.location.coordinates.lat} 
+                  lng={listing.location.coordinates.lng} 
+                />
+              </div>
+            )}
           </div>
           
           <div className="listing-contact-section">

@@ -54,8 +54,8 @@ export default function ListingCard({ listing }: ListingCardProps) {
       <div className="card-body">
         <div className="card-location">
           <span className="card-location-dot"></span>
-          {listing.location.locality && `${listing.location.locality} · `}
-          {listing.location.administrative_area_level_2 || listing.location.administrative_area_level_1}
+          {listing.location.locality}
+          {listing.location.administrative_area_level_1 && ` · ${listing.location.administrative_area_level_1}`}
         </div>
 
         <div className="card-title">{listing.title}</div>
@@ -113,8 +113,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
         <div className="card-meta">
           <div className="card-meta-left">
-            {listing.location.street_address && `${listing.location.street_address} · `}
-            {listing.location.postal_code}
+            {listing.location.locality}
           </div>
           <div className="card-cta">
             KATSO KOHDE →
