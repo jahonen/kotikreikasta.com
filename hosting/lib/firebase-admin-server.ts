@@ -24,7 +24,13 @@ export function initializeFirebaseAdmin() {
   }
 }
 
+let firestoreInstance: admin.firestore.Firestore | null = null;
+
 export async function getFirestore() {
+  if (firestoreInstance) {
+    return firestoreInstance;
+  }
+  
   const app = initializeFirebaseAdmin();
   
   if (!app) {
@@ -33,10 +39,12 @@ export async function getFirestore() {
   
   const db = admin.firestore(app);
   
-  // Configure Firestore settings for Cloud Run compatibility
+  // Configure Firestore settings only once
   db.settings({
     ignoreUndefinedProperties: true,
   });
+  
+  firestoreInstance = db;
   
   console.log('[FIREBASE_ADMIN_SERVER] Firestore instance retrieved from Admin SDK');
   
