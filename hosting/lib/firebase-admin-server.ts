@@ -1,18 +1,29 @@
 import admin from 'firebase-admin';
+import { Firestore } from '@google-cloud/firestore';
+
+let adminInitialized = false;
+let firestoreInstance: Firestore | null = null;
 
 export function initializeFirebaseAdmin() {
+  if (adminInitialized) {
+    return admin.apps[0] || null;
+  }
+  
   if (admin.apps.length > 0) {
+    adminInitialized = true;
     return admin.apps[0];
   }
   
   try {
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
     
     const app = admin.initializeApp({
-      projectId: projectId || 'kotikreikasta',
+      projectId,
+      credential: admin.credential.applicationDefault(),
     });
     
-    console.log('[FIREBASE_ADMIN_SERVER] Admin SDK initialized for project:', projectId || 'kotikreikasta');
+    adminInitialized = true;
+    console.log('[FIREBASE_ADMIN_SERVER] Admin SDK initialized for project:', projectId);
     return app;
   } catch (e: any) {
     const msg = e?.message || String(e || '');
@@ -20,35 +31,28 @@ export function initializeFirebaseAdmin() {
       console.error('[FIREBASE_ADMIN_SERVER] Initialization failed:', e);
       throw e;
     }
+    adminInitialized = true;
     return admin.apps[0];
   }
 }
-
-let firestoreInstance: admin.firestore.Firestore | null = null;
 
 export async function getFirestore() {
   if (firestoreInstance) {
     return firestoreInstance;
   }
   
-  const app = initializeFirebaseAdmin();
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
   
-  if (!app) {
-    throw new Error('Firebase Admin app not initialized');
-  }
-  
-  const db = admin.firestore(app);
-  
-  // Configure Firestore settings only once
-  db.settings({
+  // Use native Firestore client with REST API to avoid gRPC connection issues in Cloud Run
+  firestoreInstance = new Firestore({
+    projectId,
+    preferRest: true,
     ignoreUndefinedProperties: true,
   });
   
-  firestoreInstance = db;
+  console.log('[FIREBASE_ADMIN_SERVER] Firestore instance created with REST API for project:', projectId);
   
-  console.log('[FIREBASE_ADMIN_SERVER] Firestore instance retrieved from Admin SDK');
-  
-  return db;
+  return firestoreInstance;
 }
 
 export async function getAuth() {
