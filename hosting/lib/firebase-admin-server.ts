@@ -1,5 +1,4 @@
 import admin from 'firebase-admin';
-import { Firestore } from '@google-cloud/firestore';
 
 let adminInitialized = false;
 
@@ -15,6 +14,7 @@ export function initializeFirebaseAdmin() {
         admin.initializeApp();
       }
       adminInitialized = true;
+      console.log('[FIREBASE_ADMIN_SERVER] Admin SDK initialized for project:', projectId || 'auto-detected');
     } catch (e: any) {
       const msg = e?.message || String(e || '');
       if (!/already exists/i.test(msg)) {
@@ -27,29 +27,18 @@ export function initializeFirebaseAdmin() {
   }
 }
 
-// Native Firestore client instance (singleton)
-let nativeFirestoreClient: Firestore | null = null;
-
-export async function getFirestore(): Promise<Firestore> {
-  if (nativeFirestoreClient) {
-    return nativeFirestoreClient;
-  }
+export async function getFirestore() {
+  initializeFirebaseAdmin();
+  const db = admin.firestore();
   
-  // Use native @google-cloud/firestore with REST API instead of gRPC
-  // This avoids gRPC connection issues in Cloud Run environments
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
-  
-  nativeFirestoreClient = new Firestore({
-    projectId,
-    databaseId: '(default)',
+  // Configure Firestore settings for Cloud Run compatibility
+  db.settings({
     ignoreUndefinedProperties: true,
-    // Force REST API instead of gRPC to avoid connection issues in serverless
-    preferRest: true,
   });
   
-  console.log('[FIREBASE_ADMIN_SERVER] Native Firestore client initialized with REST API for project:', projectId, 'database: (default)');
+  console.log('[FIREBASE_ADMIN_SERVER] Firestore instance retrieved from Admin SDK');
   
-  return nativeFirestoreClient;
+  return db;
 }
 
 export async function getAuth() {
