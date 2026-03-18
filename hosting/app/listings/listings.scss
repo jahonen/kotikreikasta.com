@@ -1,0 +1,76 @@
+.listings-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.listings-main {
+  flex: 1;
+  padding: 80px 0 60px;
+}
+
+.listings-header {
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.listings-header-left {
+  flex: 1;
+}
+
+.listings-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.listings-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.15;
+  margin: 0;
+
+  em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+}
+
+.listings-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// Container styles handled by global container class
+
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+.listings-empty {
+  padding: 60px 32px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .listings-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .listings-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,575 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --navy: #1A2B3C;
+    --navy-light: #243447;
+    --gold: #B8892A;
+    --gold-light: #D4A84B;
+    --gold-pale: #F0E4C8;
+    --cream: #F4EFE6;
+    --cream-dark: #EAE3D6;
+    --stone: #8C8478;
+    --text-primary: #1A2B3C;
+    --text-secondary: #5A5248;
+    --text-muted: #8C8478;
+    --white: #FFFFFF;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-ui: 'DM Sans', system-ui, sans-serif;
+    --success-bg: #EEF4EE;
+    --success-text: #2D6A4F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-ui);
+    background: var(--cream);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--gold); text-decoration: none; }
+
+  /* PAGE CHROME */
+  .page-header {
+    background: var(--navy);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .page-logo { font-family: var(--font-display); font-size: 16px; color: rgba(255,255,255,0.85); }
+  .page-nav { display: flex; gap: 24px; align-items: center; }
+  .page-nav-link { font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+  .page-nav-link.active { color: rgba(255,255,255,0.95); }
+  .page-nav-cta { background: var(--gold); color: var(--navy); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 16px; border-radius: 2px; }
+
+  .listing-page { padding: 40px 32px 80px; max-width: 1080px; margin: 0 auto; }
+
+  .listing-header { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .listing-header-left { }
+  .listing-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .listing-title-h1 { font-family: var(--font-display); font-size: 32px; font-weight: 400; color: var(--navy); line-height: 1.15; }
+  .listing-title-h1 em { font-style: italic; color: var(--gold-light); }
+  .listing-count { font-size: 12px; color: var(--text-muted); }
+
+  .listing-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 2px;
+    border: 0.5px solid var(--cream-dark);
+    background: var(--white);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .filter-btn.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+  /* CARD GRID */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+  }
+
+  /* === THE CARD === */
+  .listing-card {
+    background: var(--white);
+    border-radius: 4px;
+    border: 0.5px solid var(--cream-dark);
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    position: relative;
+  }
+  .listing-card:hover {
+    box-shadow: 0 8px 32px rgba(26,43,60,0.12);
+    transform: translateY(-2px);
+  }
+  .listing-card.featured {
+    border-color: var(--gold);
+  }
+
+  /* CARD IMAGE */
+  .card-image-wrap {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+    background: var(--navy-light);
+  }
+  .card-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+  .listing-card:hover .card-image-wrap img {
+    transform: scale(1.03);
+  }
+  .card-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(26,43,60,0.55) 0%, rgba(26,43,60,0.1) 40%, transparent 70%);
+  }
+
+  /* BADGES ON IMAGE */
+  .card-badges-top {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 2;
+  }
+  .card-type-badge {
+    background: rgba(26,43,60,0.75);
+    backdrop-filter: blur(4px);
+    color: rgba(255,255,255,0.9);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 2px;
+  }
+  .card-fav-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(4px);
+    border: 0.5px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    color: var(--white);
+    font-size: 13px;
+    user-select: none;
+  }
+  .card-fav-btn:hover { background: rgba(255,255,255,0.3); }
+  .card-fav-btn.saved { background: rgba(184,137,42,0.85); border-color: var(--gold); }
+
+  /* PRICE ON IMAGE */
+  .card-price-block {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 2;
+  }
+  .card-price {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .card-price-per-sqm {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+  }
+
+  /* CONDITION TAG ON IMAGE */
+  .card-condition {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 2;
+    background: rgba(45,106,79,0.85);
+    color: #C8F0D8;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 2px;
+  }
+
+  /* CARD BODY */
+  .card-body { padding: 18px 20px 20px; }
+
+  .card-location {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .card-location-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); opacity: 0.6; }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--navy);
+    line-height: 1.25;
+    margin-bottom: 14px;
+  }
+
+  /* SPECS ROW */
+  .card-specs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 14px;
+    border: 0.5px solid var(--cream-dark);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .card-spec {
+    flex: 1;
+    padding: 9px 6px;
+    text-align: center;
+    border-right: 0.5px solid var(--cream-dark);
+    background: var(--cream);
+  }
+  .card-spec:last-child { border-right: none; }
+  .card-spec-value {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--navy);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .card-spec-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* AMENITY TAGS */
+  .card-amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 16px;
+  }
+  .amenity-tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--cream);
+    border: 0.5px solid var(--cream-dark);
+    padding: 4px 9px;
+    border-radius: 2px;
+  }
+  .amenity-tag.highlight {
+    background: var(--gold-pale);
+    border-color: rgba(184,137,42,0.3);
+    color: var(--navy);
+    font-weight: 600;
+  }
+
+  /* NEARBY */
+  .card-nearby {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    background: var(--cream);
+    border-radius: 2px;
+    align-items: flex-start;
+  }
+  .card-nearby-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+    padding-top: 1px;
+    flex-shrink: 0;
+  }
+  .card-nearby-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .card-nearby-item {
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+  .card-nearby-item::after { content: '·'; margin-left: 4px; color: var(--stone); }
+  .card-nearby-item:last-child::after { display: none; }
+
+  /* META FOOTER */
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 0.5px solid var(--cream-dark);
+  }
+  .card-meta-left { font-size: 10px; color: var(--text-muted); }
+  .card-cta {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+    background: transparent;
+    border: 1.5px solid var(--navy);
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .card-cta:hover { background: var(--navy); color: var(--white); }
+
+  /* PLACEHOLDER CARDS */
+  .card-placeholder {
+    background: var(--white);
+    border-radius: 4px;
+    border: 0.5px solid var(--cream-dark);
+    overflow: hidden;
+    opacity: 0.5;
+  }
+  .placeholder-img {
+    height: 220px;
+    background: var(--cream-dark);
+  }
+  .placeholder-body { padding: 18px 20px; }
+  .placeholder-line { height: 10px; background: var(--cream-dark); border-radius: 2px; margin-bottom: 8px; }
+
+  /* ANNOTATIONS */
+  .annotation-layer {
+    position: relative;
+    margin-bottom: 48px;
+  }
+  .annotation-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 0.5px solid var(--cream-dark);
+  }
+
+  .design-notes {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .design-note {
+    background: var(--white);
+    border-radius: 4px;
+    border: 0.5px solid var(--cream-dark);
+    padding: 16px;
+  }
+  .design-note-num {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .design-note-title { font-size: 11px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+  .design-note-text { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+</style>
+
+<div class="page-header">
+  <div class="page-logo">Kotikreikasta.com</div>
+  <div class="page-nav">
+    <span class="page-nav-link">KOHTEET</span>
+    <span class="page-nav-link">ALUEET</span>
+    <span class="page-nav-link">OSTOPROSESSI</span>
+    <span class="page-nav-link" style="color:var(--gold-light);">KONSIERGE ★</span>
+    <span class="page-nav-cta">TILAA UUTISKIRJE</span>
+  </div>
+</div>
+
+<div class="listing-page">
+
+  <div class="listing-header">
+    <div class="listing-header-left">
+      <div class="listing-eyebrow">Kohteet</div>
+      <h1 class="listing-title-h1">Valikoituja kohteita <em>Kreikasta</em></h1>
+    </div>
+    <div class="listing-count">14 kohdetta</div>
+  </div>
+
+  <div class="listing-filters">
+    <div class="filter-btn active">Kaikki</div>
+    <div class="filter-btn">Attika</div>
+    <div class="filter-btn">Peloponnesos</div>
+    <div class="filter-btn">Kreeta</div>
+    <div class="filter-btn">≤ €300 000</div>
+    <div class="filter-btn">3+ mh</div>
+    <div class="filter-btn">Merinäköala</div>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- THE REAL CARD -->
+    <div class="listing-card featured" id="main-card">
+      <div class="card-image-wrap">
+        <img
+          src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80"
+          alt="Villa Tainpoy, Porto Rafti"
+          loading="lazy"
+        />
+        <div class="card-image-overlay"></div>
+
+        <div class="card-badges-top">
+          <div class="card-type-badge">Omakotitalo</div>
+          <div class="card-fav-btn" id="fav-btn" title="Tallenna kohde" onclick="toggleFav()">♡</div>
+        </div>
+
+        <div class="card-price-block">
+          <div class="card-price">€240 000</div>
+          <div class="card-price-per-sqm">€2 000 / m²</div>
+        </div>
+
+        <div class="card-condition">Hyvä kunto</div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-location">
+          <span class="card-location-dot"></span>
+          Porto Rafti &nbsp;·&nbsp; Anatoliki Attiki
+        </div>
+
+        <div class="card-title">Villa Tainpoy</div>
+
+        <div class="card-specs">
+          <div class="card-spec">
+            <div class="card-spec-value">3</div>
+            <div class="card-spec-label">Makuuh.</div>
+          </div>
+          <div class="card-spec">
+            <div class="card-spec-value">2</div>
+            <div class="card-spec-label">Kylpyh.</div>
+          </div>
+          <div class="card-spec">
+            <div class="card-spec-value">120</div>
+            <div class="card-spec-label">m² asuin</div>
+          </div>
+          <div class="card-spec">
+            <div class="card-spec-value">250</div>
+            <div class="card-spec-label">m² tontti</div>
+          </div>
+          <div class="card-spec">
+            <div class="card-spec-value">1990</div>
+            <div class="card-spec-label">Rakennettu</div>
+          </div>
+        </div>
+
+        <div class="card-amenities">
+          <span class="amenity-tag highlight">🏔 Vuoristonäköala</span>
+          <span class="amenity-tag highlight">🌿 Puutarha</span>
+          <span class="amenity-tag highlight">🔥 Takka</span>
+          <span class="amenity-tag">Parveke</span>
+          <span class="amenity-tag">Kellari</span>
+          <span class="amenity-tag">A/C</span>
+        </div>
+
+        <div class="card-nearby">
+          <div class="card-nearby-label">Lähellä</div>
+          <div class="card-nearby-items">
+            <span class="card-nearby-item">Ravintola Kalos Gialos</span>
+            <span class="card-nearby-item">Kiani Akti Hotel</span>
+            <span class="card-nearby-item">Kritikos-market</span>
+            <span class="card-nearby-item">Venesatama</span>
+          </div>
+        </div>
+
+        <div class="card-meta">
+          <div class="card-meta-left">Leof. El. Venizelou 194 · 190 03</div>
+          <button class="card-cta" onclick="sendPrompt('Tell me more about Villa Tainpoy in Porto Rafti')">KATSO KOHDE →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDER CARD 2 -->
+    <div class="card-placeholder">
+      <div class="placeholder-img"></div>
+      <div class="placeholder-body">
+        <div class="placeholder-line" style="width:50%; height:8px;"></div>
+        <div class="placeholder-line" style="width:80%; height:14px; margin-bottom:12px;"></div>
+        <div class="placeholder-line" style="width:100%; height:36px; margin-bottom:12px;"></div>
+        <div class="placeholder-line" style="width:70%;"></div>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDER CARD 3 -->
+    <div class="card-placeholder">
+      <div class="placeholder-img"></div>
+      <div class="placeholder-body">
+        <div class="placeholder-line" style="width:50%; height:8px;"></div>
+        <div class="placeholder-line" style="width:80%; height:14px; margin-bottom:12px;"></div>
+        <div class="placeholder-line" style="width:100%; height:36px; margin-bottom:12px;"></div>
+        <div class="placeholder-line" style="width:70%;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DESIGN DECISION RATIONALE -->
+  <div style="margin-top:48px; padding-top:32px; border-top:0.5px solid var(--cream-dark);">
+    <div class="annotation-title">ICP-kohtaiset suunnittelupäätökset</div>
+    <div class="design-notes">
+      <div class="design-note">
+        <div class="design-note-num">01</div>
+        <div class="design-note-title">Hinta kuvassa, ei tekstissä</div>
+        <div class="design-note-text">€240 000 on overlay-elementti suoraan kuvan päällä. Varakas ostaja haluaa nähdä hinnan ennen kuin investoi aikaa — ei löytää sitä tekstin lopusta. €2 000/m² ankkuroi hintatason ammattilaisille.</div>
+      </div>
+      <div class="design-note">
+        <div class="design-note-num">02</div>
+        <div class="design-note-title">Specs-rivi yhtenä nauhana</div>
+        <div class="design-note-text">3 mh / 2 kph / 120m² / 250m² tontti / 1990 — kaikki yhdellä silmäyksellä. Suomalainen ostaja vertaa tätä Suomen mökkihintoihin: sama raha, paljon enemmän neliöitä. Tämä kontrasti on vahvin myyntiargumentti.</div>
+      </div>
+      <div class="design-note">
+        <div class="design-note-num">03</div>
+        <div class="design-note-title">Highlight-tagit elämäntapavetoomukseen</div>
+        <div class="design-note-text">Vuoristonäköala, Puutarha ja Takka nostettu kultataustaisina — ne aktivoivat lomafantasian, ei pelkästään ominaisuuslistan. Kellari ja parveke jäävät neutraaleina. Hierarkia on tietoinen.</div>
+      </div>
+      <div class="design-note">
+        <div class="design-note-num">04</div>
+        <div class="design-note-title">Lähipalvelut luottamussignaalina</div>
+        <div class="design-note-text">Ravintola, hotelli, market ja venesatama kertovat: tässä on infrastruktuuri. Suomalainen ensiostaja pelkää eristäytymistä. Neljä POI-nimeä riittää — täydellinen lista on kiinteistön detaljisivulla.</div>
+      </div>
+      <div class="design-note">
+        <div class="design-note-num">05</div>
+        <div class="design-note-title">Hyvä kunto — vihreä badge</div>
+        <div class="design-note-text">"Hyvä" kunto on tärkein huolenaihetta torjuva tieto vieraan maan kiinteistössä. Vihreä väri kuvassa on välitön, visuaalinen signaali ennen kuin ostaja on lukenut sanaakaan. Remonttikulkujen pelko häipyy.</div>
+      </div>
+      <div class="design-note">
+        <div class="design-note-num">06</div>
+        <div class="design-note-title">CTA on napakka, ei myyvä</div>
+        <div class="design-note-text">"KATSO KOHDE →" eikä "OTA YHTEYTTÄ NYT!" Varakas ostaja reagoi negatiivisesti painostukseen. Nuoli-ikoni vihjaa lisätietoon, ei sitoumukseen. Hover-invertoi koko painikkeen — herkullinen, ei aggressiivinen.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleFav() {
+  const btn = document.getElementById('fav-btn');
+  const saved = btn.classList.toggle('saved');
+  btn.textContent = saved ? '♥' : '♡';
+}
+</script>
