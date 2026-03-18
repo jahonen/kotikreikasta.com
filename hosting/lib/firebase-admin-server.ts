@@ -1,7 +1,8 @@
 import admin from 'firebase-admin';
+import { Firestore } from '@google-cloud/firestore';
 
 let initialized = false;
-let firestoreInstance: FirebaseFirestore.Firestore | null = null;
+let firestoreInstance: Firestore | null = null;
 
 export function initializeFirebaseAdmin() {
   if (initialized) return;
@@ -10,10 +11,8 @@ export function initializeFirebaseAdmin() {
     try {
       const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
       
-      // Initialize with explicit database URL to avoid REST API issues
       admin.initializeApp({
         projectId,
-        databaseURL: `https://${projectId}.firebaseio.com`,
       });
       initialized = true;
       console.log('[FIREBASE_ADMIN_SERVER] Initialized with project:', projectId);
@@ -34,14 +33,16 @@ export async function getFirestore() {
     return firestoreInstance;
   }
   
-  initializeFirebaseAdmin();
-  const app = admin.apps[0];
-  firestoreInstance = admin.firestore(app);
+  // Use native @google-cloud/firestore instead of admin.firestore()
+  // This avoids gRPC connection issues in Cloud Run
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
   
-  // Configure Firestore settings for Cloud Run environment
-  firestoreInstance.settings({
+  firestoreInstance = new Firestore({
+    projectId,
     ignoreUndefinedProperties: true,
   });
+  
+  console.log('[FIREBASE_ADMIN_SERVER] Firestore initialized with native client');
   
   return firestoreInstance;
 }
