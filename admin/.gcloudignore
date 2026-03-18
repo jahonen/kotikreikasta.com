@@ -1,0 +1,34 @@
+# Ignore development and test files
+node_modules/
+.next/cache/
+.git/
+.gitignore
+*.md
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+__tests__/
+coverage/
+.env.local
+.env.development
+.env.test
+
+# Ignore documentation and samples
+docs/
+*.log
+*.map
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore build artifacts that will be regenerated
+.next/trace
+.next/cache
+
+# Keep these - they're needed for runtime
+!.next/
+!node_modules/
