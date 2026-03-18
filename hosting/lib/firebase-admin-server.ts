@@ -1,6 +1,8 @@
 import admin from 'firebase-admin';
+import { Firestore } from '@google-cloud/firestore';
 
 let initialized = false;
+let firestoreInstance: Firestore | null = null;
 
 export function initializeFirebaseAdmin() {
   if (initialized) return;
@@ -27,9 +29,22 @@ export function initializeFirebaseAdmin() {
 }
 
 export async function getFirestore() {
-  initializeFirebaseAdmin();
-  const app = admin.apps[0];
-  return admin.firestore(app);
+  if (firestoreInstance) {
+    return firestoreInstance;
+  }
+  
+  // Use native @google-cloud/firestore instead of admin.firestore()
+  // This avoids gRPC connection issues in Cloud Run
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
+  
+  firestoreInstance = new Firestore({
+    projectId,
+    ignoreUndefinedProperties: true,
+  });
+  
+  console.log('[FIREBASE_ADMIN_SERVER] Firestore initialized with native client for project:', projectId);
+  
+  return firestoreInstance;
 }
 
 export async function getAuth() {
