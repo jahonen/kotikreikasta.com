@@ -1,18 +1,15 @@
 import admin from 'firebase-admin';
 
 let initialized = false;
+let firestoreInstance: FirebaseFirestore.Firestore | null = null;
 
 export function initializeFirebaseAdmin() {
   if (initialized) return;
   
   if (!admin.apps.length) {
     try {
-      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
-      if (projectId) {
-        admin.initializeApp({ projectId });
-      } else {
-        admin.initializeApp();
-      }
+      const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
+      admin.initializeApp({ projectId });
       initialized = true;
     } catch (e: any) {
       const msg = e?.message || String(e || '');
@@ -27,9 +24,22 @@ export function initializeFirebaseAdmin() {
 }
 
 export async function getFirestore() {
+  if (firestoreInstance) {
+    return firestoreInstance;
+  }
+  
   initializeFirebaseAdmin();
   const app = admin.apps[0];
-  return admin.firestore(app);
+  firestoreInstance = admin.firestore(app);
+  
+  // Configure Firestore settings for Cloud Run environment
+  firestoreInstance.settings({
+    ignoreUndefinedProperties: true,
+    // Use REST API instead of gRPC to avoid connection issues
+    preferRest: true,
+  });
+  
+  return firestoreInstance;
 }
 
 export async function getAuth() {
