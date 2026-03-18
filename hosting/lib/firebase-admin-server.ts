@@ -1,8 +1,6 @@
 import admin from 'firebase-admin';
-import { Firestore } from '@google-cloud/firestore';
 
 let adminInitialized = false;
-let firestoreInstance: Firestore | null = null;
 
 export function initializeFirebaseAdmin() {
   if (adminInitialized) {
@@ -19,7 +17,7 @@ export function initializeFirebaseAdmin() {
     
     const app = admin.initializeApp({
       projectId,
-      credential: admin.credential.applicationDefault(),
+      databaseURL: `https://${projectId}.firebaseio.com`,
     });
     
     adminInitialized = true;
@@ -36,21 +34,21 @@ export function initializeFirebaseAdmin() {
   }
 }
 
+let firestoreInstance: admin.firestore.Firestore | null = null;
+
 export async function getFirestore() {
   if (firestoreInstance) {
     return firestoreInstance;
   }
   
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
+  const app = initializeFirebaseAdmin();
+  if (!app) {
+    throw new Error('Firebase Admin app not initialized');
+  }
   
-  // Use native Firestore client with REST API to avoid gRPC connection issues in Cloud Run
-  firestoreInstance = new Firestore({
-    projectId,
-    preferRest: true,
-    ignoreUndefinedProperties: true,
-  });
+  firestoreInstance = admin.firestore(app);
   
-  console.log('[FIREBASE_ADMIN_SERVER] Firestore instance created with REST API for project:', projectId);
+  console.log('[FIREBASE_ADMIN_SERVER] Firestore instance retrieved from Admin SDK');
   
   return firestoreInstance;
 }
