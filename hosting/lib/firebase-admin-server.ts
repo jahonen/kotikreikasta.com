@@ -9,8 +9,14 @@ export function initializeFirebaseAdmin() {
   if (!admin.apps.length) {
     try {
       const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
-      admin.initializeApp({ projectId });
+      
+      // Initialize with explicit database URL to avoid REST API issues
+      admin.initializeApp({
+        projectId,
+        databaseURL: `https://${projectId}.firebaseio.com`,
+      });
       initialized = true;
+      console.log('[FIREBASE_ADMIN_SERVER] Initialized with project:', projectId);
     } catch (e: any) {
       const msg = e?.message || String(e || '');
       if (!/already exists/i.test(msg)) {
