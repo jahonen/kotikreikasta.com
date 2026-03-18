@@ -1,0 +1,113 @@
+// Kohteet (Listings) page styles based on mockup
+
+.kohteet-page {
+  padding: 40px 32px 80px;
+  margin-top: 72px;
+  min-height: calc(100vh - 72px);
+}
+
+.kohteet-container {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+// Header
+.kohteet-header {
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.kohteet-header-left {
+  flex: 1;
+}
+
+.kohteet-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.kohteet-title-h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.15;
+
+  em {
+    font-style: italic;
+    color: var(--gold-light, #d4a84b);
+  }
+}
+
+.kohteet-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// Filters
+.kohteet-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 2px;
+  border: 0.5px solid var(--border);
+  background: var(--white);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--navy);
+    color: var(--navy);
+  }
+
+  &.active {
+    background: var(--navy);
+    color: var(--white);
+    border-color: var(--navy);
+  }
+}
+
+// Grid
+.kohteet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Empty state
+.kohteet-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
+}

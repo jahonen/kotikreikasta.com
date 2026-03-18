@@ -292,6 +292,144 @@
 - Verify breadcrumb shows actual title
 - Check JSON-LD schema has keywords
 
+## ListingCard (stable)
+- Lifecycle tag: stable
+- Path: `hosting/components/ListingCard.tsx`
+- Description: Reusable card component for displaying property listings. Based on mockup design with luxury aesthetic, displays key property information with hover effects and responsive layout.
+
+### Interface (required)
+- Inputs
+  - `listing`: Listing object with property details
+  - `featured?`: boolean - adds gold border if true
+  - `onClick?`: () => void - optional click handler (overrides Link behavior)
+- Outputs
+  - Renders property card with image, price, specs, amenities, nearby POIs
+  - Links to `/kohteet/[slug]` by default
+- Side effects
+  - None (pure presentational component)
+
+### Behavior
+- Displays property with featured image overlay
+- Shows price prominently on image with price per sqm
+- Type badge (Omakotitalo, etc.) in top left
+- Condition badge (Hyvä kunto) in bottom right if available
+- Specs row: bedrooms, bathrooms, size, lot size, year built
+- Amenities with highlighted tags for premium features
+- Nearby POIs (max 4) with type labels
+- Hover effects: shadow, lift, image zoom
+- Responsive grid layout
+
+### Design Features
+- **Price on Image**: Large display font with shadow for readability
+- **Highlighted Amenities**: Gold background for premium features (Vuoristonäköala, Merinäköala, Puutarha, Takka, Uima-allas, Sauna)
+- **Condition Badge**: Green badge for "Hyvä kunto" provides trust signal
+- **POI Mapping**: Translates Google Places types to Finnish labels
+- **CTA Button**: "KATSO KOHDE →" with hover invert effect
+
+### Dependencies
+- Next.js Link for navigation
+- ListingCard.scss for styling
+- Follows mockup design system (Cormorant Garamond + DM Sans)
+
+### Testing
+- Test with various listing data (with/without optional fields)
+- Verify hover effects work correctly
+- Test responsive layout on mobile
+- Verify amenity highlighting logic
+- Test POI type mapping
+
+## Kohteet Page (stable)
+- Lifecycle tag: stable
+- Path: `hosting/app/kohteet/page.tsx`
+- Description: Server-side rendered listings page displaying all published properties. Fetches from Firestore, includes filters and grid layout.
+
+### Interface (required)
+- Inputs
+  - None (page component)
+- Outputs
+  - Full page with property grid
+  - SEO metadata and Open Graph tags
+- Side effects
+  - Server-side Firestore fetch for published listings
+
+### Behavior
+- **SSR**: Fetches all published listings on server
+- **ISR**: Revalidates every 3600 seconds (1 hour)
+- **Sorting**: Orders by createdAt descending (newest first)
+- **Filters**: Shows unique regions (max 5) as filter buttons
+- **Grid**: 3-column responsive grid (2 on tablet, 1 on mobile)
+- **Empty State**: Shows message if no listings found
+
+### SEO Features
+- Comprehensive metadata with keywords
+- Open Graph tags for social sharing
+- Canonical URL
+- Sitemap inclusion (priority 0.85, weekly updates)
+
+### Components Used
+- ListingCard - Reusable card component
+- NavBar - Site navigation
+- Footer - Site footer
+
+### Dependencies
+- Firebase Admin SDK (server-side)
+- Next.js App Router with ISR
+
+### Testing
+- Test with 0, 1, and many listings
+- Verify SSR works (curl test)
+- Test responsive grid layout
+- Verify filter buttons display correctly
+
+## Listing Detail Page (stable)
+- Lifecycle tag: stable
+- Path: `hosting/app/kohteet/[slug]/page.tsx`
+- Description: Server-side rendered individual property detail page with full information, contact form, and SEO optimization.
+
+### Interface (required)
+- Inputs
+  - `params.slug`: string - listing URL slug or document ID
+- Outputs
+  - Full property detail page with hero image, specs, amenities, contact form
+  - SEO metadata and Open Graph tags
+- Side effects
+  - Server-side Firestore fetch
+  - Static generation at build time via generateStaticParams
+
+### Behavior
+- **SSR**: Fetches listing data on server
+- **Static Generation**: Pre-renders all published listings at build time
+- **ISR**: Revalidates every 3600 seconds
+- **Breadcrumb**: Etusivu / Kohteet / [title]
+- **Hero Image**: Large featured image at top
+- **Specs Grid**: Responsive grid of key specifications
+- **Contact Form**: Embedded with listing context
+
+### SEO Features
+- Dynamic metadata based on listing data
+- Description includes key specs and price
+- OG image from listing featured image
+- Keywords include location and property type
+- Canonical URL
+- Sitemap inclusion (priority 0.7, monthly updates)
+
+### Components Used
+- ContactForm - Lead generation (type: 'listing')
+- NavBar - Site navigation
+- Footer - Site footer
+
+### Dependencies
+- Firebase Admin SDK (server-side)
+- Next.js App Router with generateStaticParams
+- ContactForm component
+
+### Testing
+- Test with curl to verify SSR
+- Test 404 handling for non-existent listings
+- Verify contact form works with listing context
+- Test social sharing previews
+- Verify breadcrumb navigation
+
 ## Blog Utilities (stable)
 - Lifecycle tag: stable
 - Path: `hosting/lib/blog-utils.ts`

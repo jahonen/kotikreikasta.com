@@ -11,8 +11,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/alueet`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE_URL}/tasmahaku`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: `${BASE_URL}/kohteet`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
     { url: `${BASE_URL}/konsierge`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE_URL}/listings`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE_URL}/palveluehdot`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
@@ -39,9 +39,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     }).filter(entry => entry.url.includes('/blog/'));
 
-    return [...baseEntries, ...blogEntries];
+    // Fetch all published listings
+    const listingsSnapshot = await db.collection('listings')
+      .where('status', '==', 'published')
+      .get();
+
+    const listingEntries: MetadataRoute.Sitemap = listingsSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      const urlStub = data.urlStub || doc.id;
+      const updatedAt = data.updatedAt?.toDate?.() || now;
+      
+      return {
+        url: `${BASE_URL}/kohteet/${urlStub}`,
+        lastModified: updatedAt,
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      };
+    });
+
+    return [...baseEntries, ...blogEntries, ...listingEntries];
   } catch (error) {
-    console.error('[SITEMAP] Error fetching blog posts:', error);
+    console.error('[SITEMAP] Error fetching blog posts or listings:', error);
     return baseEntries;
   }
 }
