@@ -116,9 +116,9 @@ export default function ListingCard({ listing }: ListingCardProps) {
             {listing.location.street_address && `${listing.location.street_address} · `}
             {listing.location.postal_code}
           </div>
-          <button className="card-cta" onClick={(e) => e.preventDefault()}>
+          <div className="card-cta">
             KATSO KOHDE →
-          </button>
+          </div>
         </div>
       </div>
     </Link>
