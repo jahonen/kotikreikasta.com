@@ -34,7 +34,8 @@ export async function getFirestore() {
   }
   
   // Use native @google-cloud/firestore instead of admin.firestore()
-  // This avoids gRPC connection issues in Cloud Run
+  // This avoids gRPC connection issues in Cloud Run environments
+  // Native client uses REST API which is more reliable than gRPC in serverless
   const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'kotikreikasta';
   
   firestoreInstance = new Firestore({
@@ -42,7 +43,7 @@ export async function getFirestore() {
     ignoreUndefinedProperties: true,
   });
   
-  console.log('[FIREBASE_ADMIN_SERVER] Firestore initialized with native client for project:', projectId);
+  console.log('[FIREBASE_ADMIN_SERVER] Native Firestore client initialized for project:', projectId);
   
   return firestoreInstance;
 }
