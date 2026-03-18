@@ -30,7 +30,6 @@ async function getPublishedListings(): Promise<Listing[]> {
     const snapshot = await db
       .collection('listings')
       .where('status', '==', 'published')
-      .orderBy('createdAt', 'desc')
       .get();
 
     return snapshot.docs.map((doc) => {
