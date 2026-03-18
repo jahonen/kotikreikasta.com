@@ -4,6 +4,9 @@ import NavBar from "../../components/nav-bar";
 import Footer from "../../components/Footer";
 import { getFirestore } from "../../lib/firebase-admin-server";
 
+// ISR: Revalidate every 3600 seconds (1 hour)
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Blogi — Asiantuntija-artikkelit Kreikan kiinteistöistä | Kotikreikasta",
   description: "Lue asiantuntija-artikkelit Kreikan kiinteistömarkkinoista, ostoprosessista, verotuksesta ja asumisesta. Kattava opas suomalaisille Kreikan kiinteistöjen ostajille.",
