@@ -15,13 +15,28 @@ import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import { Novu } from "@novu/node";
 import sgMail from "@sendgrid/mail";
 
-// Social media consumers
+// Social media consumers (legacy)
 export { publishToBluesky } from "./consumers/bluesky";
 export { testBlueskyPost } from "./consumers/bluesky-test";
 export { testXPost } from "./consumers/x-test";
 export { testFacebookPost } from "./consumers/facebook-test";
 export { testThreadsPost } from "./consumers/threads-test";
 export { refreshThreadsToken } from "./consumers/threads-token-refresh";
+
+// Social media publishers (Pub/Sub-based)
+export { blueskyPublisher } from "./consumers/bluesky-pubsub";
+export { xPublisher } from "./consumers/x-pubsub";
+export { facebookPublisher } from "./consumers/facebook-pubsub";
+export { threadsPublisher } from "./consumers/threads-pubsub";
+
+// Firestore triggers for auto-publishing
+export { onBlogPostPublished, onListingPublished } from "./triggers/content-published";
+
+// Schedulers
+export { socialMediaScheduler } from "./schedulers/social-media-scheduler";
+
+// API endpoints
+export { enqueueSocialPublish } from "./api/enqueue-social-publish";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
