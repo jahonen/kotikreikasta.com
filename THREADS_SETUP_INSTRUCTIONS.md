@@ -133,25 +133,52 @@ Long-lived tokens expire after **60 days**. To refresh:
 2. Exchange for long-lived token (Step 3 above)
 3. Update the secret (commands above)
 
-### Automated Refresh (Recommended for Production)
+### Automated Refresh (✅ CONFIGURED)
 
-Create a Cloud Function that runs weekly to refresh the token:
+**Status:** ✅ Automated token refresh is configured and running
 
-```typescript
-// Refresh token before it expires
-async function refreshThreadsToken() {
-  const currentToken = await getSecret('THREADS_ACCESS_TOKEN');
-  
-  const response = await fetch(
-    `https://graph.threads.net/refresh_access_token?grant_type=th_refresh_token&access_token=${currentToken}`
-  );
-  
-  const { access_token } = await response.json();
-  await updateSecret('THREADS_ACCESS_TOKEN', access_token);
-}
+The `refreshThreadsToken` Cloud Function automatically refreshes the Threads access token:
+
+**Schedule:** 7th of every month at 9:00 AM Helsinki time
+
+**What it does:**
+1. Fetches current token from Secret Manager
+2. Calls Threads API to refresh the token
+3. Updates `THREADS_ACCESS_TOKEN` secret with new token (60 days validity)
+4. Sends detailed email report to `cto@kotikreikasta.com`
+
+**Email Report Includes:**
+- ✅ Success: Refresh timestamp, new expiration date, token preview
+- ❌ Failure: Error details, manual refresh instructions
+
+**Cloud Scheduler Job:**
+```
+Name: threads-token-refresh
+Schedule: 0 9 7 * * (7th of every month at 9:00 AM)
+Timezone: Europe/Helsinki
+Function: https://europe-west1-kotikreikasta.cloudfunctions.net/refreshThreadsToken
 ```
 
-Schedule with Cloud Scheduler to run weekly.
+**Manual Trigger:**
+```bash
+# Trigger refresh manually (for testing or emergency refresh)
+curl -X POST https://europe-west1-kotikreikasta.cloudfunctions.net/refreshThreadsToken \
+  -H "Authorization: Bearer $(gcloud auth print-identity-token)"
+```
+
+**View Scheduler Job:**
+```bash
+gcloud scheduler jobs describe threads-token-refresh \
+  --location=europe-west1 \
+  --project=kotikreikasta
+```
+
+**View Logs:**
+```bash
+gcloud logging read 'resource.type=cloud_function AND resource.labels.function_name=refreshThreadsToken' \
+  --limit=10 \
+  --project=kotikreikasta
+```
 
 ## Important Notes
 
@@ -205,16 +232,19 @@ Schedule with Cloud Scheduler to run weekly.
 
 ## Current Configuration
 
-- **Function URL**: https://europe-west1-kotikreikasta.cloudfunctions.net/testThreadsPost
+- **Test Function URL**: https://europe-west1-kotikreikasta.cloudfunctions.net/testThreadsPost
+- **Refresh Function URL**: https://europe-west1-kotikreikasta.cloudfunctions.net/refreshThreadsToken
 - **User ID**: `26734590522814214` (Kotikreikasta.com)
 - **Token Status**: ✅ Long-lived token configured (60 days)
 - **Test Status**: ✅ Working - Successfully posted test message
+- **Automated Refresh**: ✅ Configured - Runs 7th of every month at 9:00 AM Helsinki time
+- **Email Reports**: ✅ Configured - Sends to cto@kotikreikasta.com
 
 ## Next Steps
 
 For production use, consider:
-1. Implementing automated token refresh (Cloud Function + Cloud Scheduler)
-2. Adding retry logic for transient failures
+1. ✅ ~~Implementing automated token refresh~~ **DONE** - Cloud Function + Cloud Scheduler configured
+2. Adding retry logic for transient failures in posting
 3. Implementing rate limit tracking
 4. Adding post scheduling capabilities
-5. Monitoring token expiration dates
+5. ✅ ~~Monitoring token expiration dates~~ **DONE** - Email reports on every refresh
