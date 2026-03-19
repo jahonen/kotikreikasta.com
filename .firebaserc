@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "kotikreikasta"
-  }
+  },
+  "targets": {
+    "kotikreikasta": {
+      "hosting": {
+        "kotikreikasta": [
+          "hosting"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
