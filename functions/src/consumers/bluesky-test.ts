@@ -32,12 +32,47 @@ async function fetchBlueskyCredentials(): Promise<{ identifier: string; password
 }
 
 /**
+ * Authenticate with Bluesky and get session token
+ */
+async function authenticateBluesky(
+  credentials: { identifier: string; password: string }
+): Promise<string> {
+  const authEndpoint = 'https://bsky.social/xrpc/com.atproto.server.createSession';
+  
+  const response = await fetch(authEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      identifier: credentials.identifier,
+      password: credentials.password,
+    }),
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    functions.logger.error('Bluesky auth failed', { 
+      status: response.status, 
+      error: errorText 
+    });
+    throw new Error(`bluesky_auth_error_${response.status}`);
+  }
+  
+  const data = await response.json();
+  return data.accessJwt;
+}
+
+/**
  * Post to Bluesky API
  */
 async function postToBluesky(
   text: string,
   credentials: { identifier: string; password: string }
 ): Promise<string> {
+  // First, authenticate to get session token
+  const accessToken = await authenticateBluesky(credentials);
+  
   const endpoint = 'https://bsky.social/xrpc/com.atproto.repo.createRecord';
   
   const body = {
@@ -53,7 +88,7 @@ async function postToBluesky(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Basic ${Buffer.from(`${credentials.identifier}:${credentials.password}`).toString('base64')}`,
+      'Authorization': `Bearer ${accessToken}`,
     },
     body: JSON.stringify(body),
   });
