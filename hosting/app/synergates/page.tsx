@@ -1,15 +1,109 @@
+import type { Metadata } from "next";
 import NavBar from "../../components/nav-bar";
 import Footer from "../../components/Footer";
 import styles from './synergates.module.scss';
 
-export const metadata = { 
+export const metadata: Metadata = { 
   title: "Για Συνεργάτες — Kotikreikasta",
-  description: "Συνεργαστείτε με την Kotikreikasta και αποκτήστε πρόσβαση στη φινλανδική αγορά ακινήτων"
+  description: "Συνεργαστείτε με την Kotikreikasta και αποκτήστε πρόσβαση στη φινλανδική αγορά ακινήτων. Αποκλειστική περιοχή, αποφασισμένοι αγοραστές, χωρίς δέσμευση αποκλειστικότητας.",
+  keywords: [
+    "συνεργασία ακινήτων",
+    "φινλανδική αγορά",
+    "real estate partnership Greece",
+    "Finnish buyers Greece",
+    "συνεργάτες ακινήτων Ελλάδα",
+    "exclusive territory real estate",
+    "qualified buyers Finland"
+  ],
+  alternates: {
+    canonical: "https://kotikreikasta.com/synergates"
+  },
+  openGraph: {
+    type: "website",
+    locale: "el_GR",
+    url: "https://kotikreikasta.com/synergates",
+    siteName: "Kotikreikasta.com",
+    title: "Για Συνεργάτες — Kotikreikasta",
+    description: "Συνεργαστείτε με την Kotikreikasta και αποκτήστε πρόσβαση στη φινλανδική αγορά ακινήτων. Αποκλειστική περιοχή, αποφασισμένοι αγοραστές, χωρίς δέσμευση αποκλειστικότητας.",
+    images: [
+      {
+        url: "https://kotikreikasta.com/etuovi_kreikkaan.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Kotikreikasta Partnership Program"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@kotikreikasta",
+    creator: "@kotikreikasta",
+    title: "Για Συνεργάτες — Kotikreikasta",
+    description: "Συνεργαστείτε με την Kotikreikasta και αποκτήστε πρόσβαση στη φινλανδική αγορά ακινήτων.",
+    images: ["https://kotikreikasta.com/etuovi_kreikkaan.jpg"]
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function SynergatesPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Για Συνεργάτες — Kotikreikasta",
+    "description": "Συνεργαστείτε με την Kotikreikasta και αποκτήστε πρόσβαση στη φινλανδική αγορά ακινήτων. Αποκλειστική περιοχή, αποφασισμένοι αγοραστές, χωρίς δέσμευση αποκλειστικότητας.",
+    "url": "https://kotikreikasta.com/synergates",
+    "inLanguage": "el",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Kotikreikasta.com",
+      "url": "https://kotikreikasta.com"
+    },
+    "about": {
+      "@type": "Service",
+      "name": "Real Estate Partnership Program",
+      "provider": {
+        "@type": "RealEstateAgent",
+        "name": "Kotikreikasta.com",
+        "url": "https://kotikreikasta.com",
+        "email": "anna@kotikreikasta.com",
+        "areaServed": {
+          "@type": "Country",
+          "name": "Greece"
+        }
+      },
+      "serviceType": "Real Estate Partnership",
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Greek Real Estate Professionals"
+      }
+    },
+    "mainEntity": {
+      "@type": "Offer",
+      "name": "Exclusive Territory Partnership",
+      "description": "Partnership program providing access to qualified Finnish buyers seeking Greek properties",
+      "offeredBy": {
+        "@type": "Organization",
+        "name": "Kotikreikasta.com"
+      }
+    }
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <NavBar />
       <main className={styles.partnersPage}>
         <div className={styles.hero}>
