@@ -18,6 +18,7 @@ import sgMail from "@sendgrid/mail";
 // Social media consumers
 export { publishToBluesky } from "./consumers/bluesky";
 export { testBlueskyPost } from "./consumers/bluesky-test";
+export { testXPost } from "./consumers/x-test";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript

@@ -1,16 +1,27 @@
-# TODO: Admin UI Integration for Social Media Test Function
+# TODO: Admin UI Integration for Social Media Test Functions
 
 ## Feature Request
-Add a button/interface in the admin UI to trigger test posts to social media platforms.
+Add buttons/interface in the admin UI to trigger test posts to social media platforms.
 
 ## Implementation Details
 
 ### Backend (Already Complete)
+
+#### Bluesky
 - ✅ Cloud Function: `testBlueskyPost`
 - ✅ URL: `https://europe-west1-kotikreikasta.cloudfunctions.net/testBlueskyPost`
 - ✅ Method: POST
-- ✅ Authentication: Service account (cloud-scheduler-invoker)
+- ✅ Authentication: User account or service account
 - ✅ Response: `{ ok: true, message: 'Test post successful', postId: string, text: string }`
+- ✅ Status: **Working** - Successfully posts to Bluesky
+
+#### X (Twitter)
+- ✅ Cloud Function: `testXPost`
+- ✅ URL: `https://europe-west1-kotikreikasta.cloudfunctions.net/testXPost`
+- ✅ Method: POST
+- ✅ Authentication: User account or service account
+- ✅ Response: `{ ok: true, message: 'Test post successful', tweetId: string, text: string, url: string }`
+- ⚠️ Status: **Deployed** - Requires X API credentials in Secret Manager (see `X_SETUP_INSTRUCTIONS.md`)
 
 ### Frontend (To Be Implemented)
 
@@ -38,72 +49,110 @@ Add a button/interface in the admin UI to trigger test posts to social media pla
 
 import { useState } from 'react';
 
-export default function SocialTestPage() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+type Platform = 'bluesky' | 'x';
 
-  const handleTestPost = async () => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
+export default function SocialTestPage() {
+  const [loading, setLoading] = useState<Platform | null>(null);
+  const [results, setResults] = useState<Record<Platform, any>>({} as any);
+  const [errors, setErrors] = useState<Record<Platform, string>>({} as any);
+
+  const handleTestPost = async (platform: Platform) => {
+    setLoading(platform);
+    setErrors({ ...errors, [platform]: '' });
+    setResults({ ...results, [platform]: null });
+
+    const endpoints = {
+      bluesky: 'https://europe-west1-kotikreikasta.cloudfunctions.net/testBlueskyPost',
+      x: 'https://europe-west1-kotikreikasta.cloudfunctions.net/testXPost',
+    };
 
     try {
-      const response = await fetch(
-        'https://europe-west1-kotikreikasta.cloudfunctions.net/testBlueskyPost',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch(endpoints[platform], {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
 
       const data = await response.json();
-      setResult(data);
+      setResults({ ...results, [platform]: data });
     } catch (err: any) {
-      setError(err.message || 'Tuntematon virhe');
+      setErrors({ ...errors, [platform]: err.message || 'Tuntematon virhe' });
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Sosiaalisen median testaus</h1>
+      <h1 className="text-2xl font-bold mb-6">Sosiaalisen median testaus</h1>
       
-      <div className="mb-6">
-        <button
-          onClick={handleTestPost}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? 'Julkaistaan...' : 'Testaa Bluesky-julkaisu 🇬🇷'}
-        </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Bluesky */}
+        <div className="border rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-3">Bluesky</h2>
+          <button
+            onClick={() => handleTestPost('bluesky')}
+            disabled={loading === 'bluesky'}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 w-full"
+          >
+            {loading === 'bluesky' ? 'Julkaistaan...' : 'Testaa Bluesky 🇬🇷'}
+          </button>
+          
+          {results.bluesky && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+              <p className="font-semibold text-green-800 text-sm">✅ Onnistui!</p>
+              <p className="text-xs text-gray-600 mt-1">{results.bluesky.text}</p>
+              <p className="text-xs text-gray-500">Post ID: {results.bluesky.postId}</p>
+            </div>
+          )}
+          
+          {errors.bluesky && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+              <p className="font-semibold text-red-800 text-sm">❌ Epäonnistui</p>
+              <p className="text-xs text-gray-600 mt-1">{errors.bluesky}</p>
+            </div>
+          )}
+        </div>
+
+        {/* X (Twitter) */}
+        <div className="border rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-3">X (Twitter)</h2>
+          <button
+            onClick={() => handleTestPost('x')}
+            disabled={loading === 'x'}
+            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50 w-full"
+          >
+            {loading === 'x' ? 'Julkaistaan...' : 'Testaa X 🇬🇷'}
+          </button>
+          
+          {results.x && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+              <p className="font-semibold text-green-800 text-sm">✅ Onnistui!</p>
+              <p className="text-xs text-gray-600 mt-1">{results.x.text}</p>
+              <a 
+                href={results.x.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Katso twiitti →
+              </a>
+            </div>
+          )}
+          
+          {errors.x && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+              <p className="font-semibold text-red-800 text-sm">❌ Epäonnistui</p>
+              <p className="text-xs text-gray-600 mt-1">{errors.x}</p>
+            </div>
+          )}
+        </div>
       </div>
-
-      {result && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded">
-          <p className="font-semibold text-green-800">✅ Julkaisu onnistui!</p>
-          <p className="text-sm text-gray-600 mt-2">
-            Viesti: {result.text}
-          </p>
-          <p className="text-sm text-gray-600">
-            Post ID: {result.postId}
-          </p>
-        </div>
-      )}
-
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded">
-          <p className="font-semibold text-red-800">❌ Julkaisu epäonnistui</p>
-          <p className="text-sm text-gray-600 mt-2">{error}</p>
-        </div>
-      )}
     </div>
   );
 }
@@ -113,7 +162,8 @@ export default function SocialTestPage() {
 Add link to main admin navigation or marketing page.
 
 ## Future Enhancements
-- [ ] Add test functions for X, Facebook, Threads
+- [x] Add test function for X (Twitter) - **DONE**
+- [ ] Add test functions for Facebook, Threads
 - [ ] Allow custom test message input
 - [ ] Show recent test posts history
 - [ ] Add "Delete test post" functionality
