@@ -57,12 +57,39 @@ async function fetchBlueskyCredentials(): Promise<{ identifier: string; password
 }
 
 /**
+ * Parse time string "HH:MM" to minutes since midnight
+ */
+function parseTimeToMinutes(timeStr: string): number {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+/**
+ * Check if current time is within a time window
+ */
+function isTimeInWindow(now: Date, window: { window: string; tz: string }): boolean {
+  // Parse window format "07:00–08:30"
+  const [startStr, endStr] = window.window.split('–').map(s => s.trim());
+  
+  // Convert current time to target timezone (EEST = UTC+3)
+  // For simplicity, we'll work in UTC and adjust
+  const tzOffset = window.tz === 'EEST' ? 3 : 0;
+  const nowUTC = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const nowInTz = (nowUTC + (tzOffset * 60)) % (24 * 60);
+  
+  const windowStart = parseTimeToMinutes(startStr);
+  const windowEnd = parseTimeToMinutes(endStr);
+  
+  return nowInTz >= windowStart && nowInTz <= windowEnd;
+}
+
+/**
  * Check if current time is within a posting window
  */
 function isWithinPostingWindow(schedule: PlatformSchedule): boolean {
   const now = new Date();
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const currentDay = dayNames[now.getDay()];
+  const currentDay = dayNames[now.getUTCDay()]; // Use UTC day for consistency
   
   const todaySchedule = schedule.schedule.find(s => s.day === currentDay);
   if (!todaySchedule) {
@@ -70,8 +97,60 @@ function isWithinPostingWindow(schedule: PlatformSchedule): boolean {
     return false;
   }
   
-  // For MVP, we'll post at the start of the window
-  // In production, we could randomize within the window
+  // Check primary window
+  if (isTimeInWindow(now, todaySchedule.primary)) {
+    functions.logger.info('Within primary posting window', { 
+      day: currentDay, 
+      window: todaySchedule.primary.window 
+    });
+    return true;
+  }
+  
+  // Check secondary window if exists
+  if (todaySchedule.secondary && isTimeInWindow(now, todaySchedule.secondary)) {
+    functions.logger.info('Within secondary posting window', { 
+      day: currentDay, 
+      window: todaySchedule.secondary.window 
+    });
+    return true;
+  }
+  
+  functions.logger.info('Not within any posting window', { 
+    day: currentDay,
+    currentTimeUTC: `${now.getUTCHours()}:${now.getUTCMinutes()}`
+  });
+  return false;
+}
+
+/**
+ * Check rate limiting - ensure we don't post too frequently
+ */
+async function checkRateLimit(platform: string, minMinutes: number): Promise<boolean> {
+  const db = getFirestore();
+  const now = Timestamp.now();
+  const minAgo = Timestamp.fromMillis(now.toMillis() - (minMinutes * 60 * 1000));
+  
+  // Check if we've posted recently
+  const recentPosts = await db.collection('publication_queue')
+    .where('platforms', 'array-contains', platform)
+    .where('status', '==', 'published')
+    .where('publishedAt', '>', minAgo)
+    .limit(1)
+    .get();
+  
+  if (!recentPosts.empty) {
+    const lastPost = recentPosts.docs[0].data();
+    const lastPostTime = lastPost.publishedAt as Timestamp;
+    const minutesAgo = Math.floor((now.toMillis() - lastPostTime.toMillis()) / 60000);
+    
+    functions.logger.info('Rate limit check: too soon', { 
+      platform,
+      minutesSinceLastPost: minutesAgo,
+      minRequired: minMinutes
+    });
+    return false;
+  }
+  
   return true;
 }
 
@@ -364,6 +443,15 @@ export const publishToBluesky = functions
       if (!isWithinPostingWindow(schedule)) {
         functions.logger.info('Not within posting window, skipping');
         res.status(200).json({ ok: true, message: 'not_in_window' });
+        return;
+      }
+      
+      // Check rate limiting
+      const minMinutes = schedule.postingBehavior.minMinutesBetweenPosts;
+      const canPost = await checkRateLimit(platform, minMinutes);
+      if (!canPost) {
+        functions.logger.info('Rate limit exceeded, skipping');
+        res.status(200).json({ ok: true, message: 'rate_limited' });
         return;
       }
       
