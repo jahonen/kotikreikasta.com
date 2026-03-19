@@ -167,15 +167,25 @@ export async function POST(req: NextRequest) {
       publishedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    console.log('[PUBLISH] Adding to publication queue');
+    console.log('[PUBLISH] Adding to publication queue with social media delay');
+    const now = admin.firestore.Timestamp.now();
+    const delayHours = 12 + Math.floor(Math.random() * 13); // 12-24 hours random
+    const publishAfter = new admin.firestore.Timestamp(
+      now.seconds + (delayHours * 3600),
+      now.nanoseconds
+    );
+    
     await db.collection('publication_queue').add({
-      type: 'blog_post',
-      action: 'publish',
-      blogId: id,
-      createdBy: uid,
+      contentType: 'blog_post',
+      contentId: id,
+      platforms: ['bluesky', 'x'],
+      status: 'pending',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      seo,
+      publishAfter,
+      delayHours,
+      retryCount: 0,
     });
+    console.log('[PUBLISH] Queue item created with delay', { delayHours, publishAfter: publishAfter.toDate() });
 
     // Trigger ISR revalidation on the public site
     console.log('[PUBLISH] Triggering ISR revalidation');

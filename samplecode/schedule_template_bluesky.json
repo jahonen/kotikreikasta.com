@@ -1,0 +1,93 @@
+{
+  "platform": "bluesky",
+  "schedule": [
+    {
+      "day": "Tuesday",
+      "primary": {
+        "window": "07:00–08:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Wednesday",
+      "primary": {
+        "window": "07:15–08:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Thursday",
+      "primary": {
+        "window": "15:30–17:00",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Friday",
+      "primary": {
+        "window": "07:00–08:15",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "14:00–16:00",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Saturday",
+      "primary": {
+        "window": "09:00–11:00",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "19:30–21:00",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Sunday",
+      "primary": {
+        "window": "09:30–11:30",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "15:00–16:30",
+        "tz": "EEST"
+      }
+    }
+  ],
+  "evergreenRules": {
+    "minDaysBetweenShares": 90,
+    "maxSharesPerContent": 5,
+    "prioritizeNew": true,
+    "minContentAge": 30,
+    "enabled": true
+  },
+  "postingBehavior": {
+    "randomizeWithinWindow": true,
+    "minMinutesBetweenPosts": 180,
+    "retryOnFailure": true,
+    "maxRetries": 3,
+    "retryDelayMinutes": 15
+  },
+  "contentPreferences": {
+    "preferredTypes": ["blog_post", "listing"],
+    "maxCharacters": 300,
+    "includeHashtags": true,
+    "includeEmojis": true,
+    "includeImages": true,
+    "maxImages": 4
+  },
+  "publishDelay": {
+    "enabled": true,
+    "blogPosts": {
+      "minHours": 12,
+      "maxHours": 24
+    },
+    "listings": {
+      "minHours": 3,
+      "maxHours": 6
+    },
+    "strategy": "random_within_range"
+  }
+}

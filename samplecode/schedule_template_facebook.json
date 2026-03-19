@@ -1,0 +1,71 @@
+{
+  "platform": "facebook",
+  "schedule": [
+    {
+      "day": "Monday",
+      "primary": {
+        "window": "13:00–14:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Wednesday",
+      "primary": {
+        "window": "12:00–13:30",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "19:00–20:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Friday",
+      "primary": {
+        "window": "11:00–12:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Saturday",
+      "primary": {
+        "window": "10:00–12:00",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "18:00–20:00",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Sunday",
+      "primary": {
+        "window": "11:00–13:00",
+        "tz": "EEST"
+      }
+    }
+  ],
+  "evergreenRules": {
+    "minDaysBetweenShares": 150,
+    "maxSharesPerContent": 3,
+    "prioritizeNew": true,
+    "minContentAge": 60,
+    "enabled": true
+  },
+  "postingBehavior": {
+    "randomizeWithinWindow": true,
+    "minMinutesBetweenPosts": 360,
+    "retryOnFailure": true,
+    "maxRetries": 3,
+    "retryDelayMinutes": 30
+  },
+  "contentPreferences": {
+    "preferredTypes": ["listing", "blog_post"],
+    "maxCharacters": 63206,
+    "includeHashtags": false,
+    "includeEmojis": true,
+    "includeImages": true,
+    "maxImages": 10,
+    "preferLongerContent": true
+  }
+}

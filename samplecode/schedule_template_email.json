@@ -1,0 +1,53 @@
+{
+  "platform": "email",
+  "schedule": [
+    {
+      "day": "Sunday",
+      "primary": {
+        "window": "10:00–10:30",
+        "tz": "EEST",
+        "type": "weekly_digest"
+      }
+    }
+  ],
+  "evergreenRules": {
+    "minDaysBetweenShares": 180,
+    "maxSharesPerContent": 2,
+    "prioritizeNew": true,
+    "minContentAge": 90,
+    "enabled": false,
+    "note": "Email uses digest format, not individual evergreen resharing"
+  },
+  "postingBehavior": {
+    "randomizeWithinWindow": false,
+    "retryOnFailure": true,
+    "maxRetries": 5,
+    "retryDelayMinutes": 10
+  },
+  "contentPreferences": {
+    "preferredTypes": ["blog_post", "listing"],
+    "digestFormat": {
+      "enabled": true,
+      "maxItemsPerDigest": 5,
+      "minItemsPerDigest": 2,
+      "includeListings": true,
+      "includeBlogPosts": true,
+      "listingLimit": 3,
+      "blogPostLimit": 2
+    },
+    "immediatePublish": {
+      "enabled": false,
+      "note": "Blog posts are NOT sent immediately, only in weekly digest"
+    },
+    "includeImages": true,
+    "includeUnsubscribeLink": true,
+    "gdprCompliant": true
+  },
+  "sendgridConfig": {
+    "templateId": "d-xxxxxxxxxxxxxxxxxxxxxxxx",
+    "unsubscribeGroupId": 12345,
+    "fromEmail": "noreply@kotikreikasta.com",
+    "fromName": "Kotikreikasta.com",
+    "replyTo": "info@kotikreikasta.com"
+  }
+}

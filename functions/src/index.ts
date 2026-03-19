@@ -15,6 +15,9 @@ import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import { Novu } from "@novu/node";
 import sgMail from "@sendgrid/mail";
 
+// Social media consumers
+export { publishToBluesky } from "./consumers/bluesky";
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -174,7 +177,7 @@ export const onLeadCreated = functions
     functions.logger.info("onLeadCreated:done", { id });
   });
 
-// MVP publication queue processor (alpha)
+// Publication queue processor - sets blog/listing status to published when queue item created
 export const processPublicationQueue = functions
   .runWith({ serviceAccount: "kotikreikasta@appspot.gserviceaccount.com" })
   .region("europe-west1")
@@ -184,56 +187,72 @@ export const processPublicationQueue = functions
     const id = ctx.params.id as string;
     const payload = snap.data() as any;
 
-    functions.logger.info("processPublicationQueue:start", { id, payloadSummary: { type: payload?.type, action: payload?.action, blogId: payload?.blogId } });
-
-    const statusDocRef = db.doc(snap.ref.path);
-    const mark = async (fields: Record<string, any>) => {
-      try {
-        await statusDocRef.set({ ...fields, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-      } catch (e: any) {
-        functions.logger.warn("processPublicationQueue:status_update_failed", { id, error: e?.message || String(e) });
-      }
-    };
+    functions.logger.info("processPublicationQueue:start", { 
+      id, 
+      contentType: payload?.contentType, 
+      contentId: payload?.contentId 
+    });
 
     try {
-      const type = String(payload?.type || "");
-      const action = String(payload?.action || "");
+      const contentType = String(payload?.contentType || "");
+      const contentId = String(payload?.contentId || "");
 
-      if (type === "blog_post" && action === "publish") {
-        const blogId = String(payload?.blogId || "");
-        if (!blogId) throw new Error("missing_blogId");
-
-        const blogRef = db.doc(`blog_posts/${blogId}`);
-        const blogSnap = await blogRef.get();
-        if (!blogSnap.exists) throw new Error("blog_not_found");
-
-        const data = blogSnap.data() || {};
-        const alreadyPublished = data.status === "published";
-        if (alreadyPublished) {
-          await mark({ status: "done", note: "already_published" });
-          functions.logger.info("processPublicationQueue:skip_already_published", { id, blogId });
-          return;
-        }
-
-        await blogRef.set({
-          status: "published",
-          updatedAt: FieldValue.serverTimestamp(),
-          publishedAt: data.publishedAt || FieldValue.serverTimestamp(),
-        }, { merge: true });
-
-        // TODO: path/tag revalidation can be called here via a signed fetch to Next.js if needed.
-
-        await mark({ status: "done" });
-        functions.logger.info("processPublicationQueue:done", { id, blogId });
+      if (!contentType || !contentId) {
+        functions.logger.warn("processPublicationQueue:missing_fields", { id, contentType, contentId });
         return;
       }
 
-      // Unknown payload; mark as ignored
-      await mark({ status: "ignored", error: "unsupported_type_or_action" });
-      functions.logger.warn("processPublicationQueue:ignored", { id, payload });
+      // Set content status to published
+      if (contentType === "blog_post") {
+        const blogRef = db.doc(`blog_posts/${contentId}`);
+        const blogSnap = await blogRef.get();
+        
+        if (!blogSnap.exists) {
+          functions.logger.error("processPublicationQueue:content_not_found", { id, contentId });
+          return;
+        }
+
+        const data = blogSnap.data() || {};
+        const alreadyPublished = data.status === "published";
+        
+        if (!alreadyPublished) {
+          await blogRef.set({
+            status: "published",
+            updatedAt: FieldValue.serverTimestamp(),
+            publishedAt: data.publishedAt || FieldValue.serverTimestamp(),
+          }, { merge: true });
+          
+          functions.logger.info("processPublicationQueue:blog_published", { id, contentId });
+        }
+      } else if (contentType === "listing") {
+        const listingRef = db.doc(`listings/${contentId}`);
+        const listingSnap = await listingRef.get();
+        
+        if (!listingSnap.exists) {
+          functions.logger.error("processPublicationQueue:content_not_found", { id, contentId });
+          return;
+        }
+
+        const data = listingSnap.data() || {};
+        const alreadyPublished = data.status === "published";
+        
+        if (!alreadyPublished) {
+          await listingRef.set({
+            status: "published",
+            updatedAt: FieldValue.serverTimestamp(),
+            publishedAt: data.publishedAt || FieldValue.serverTimestamp(),
+          }, { merge: true });
+          
+          functions.logger.info("processPublicationQueue:listing_published", { id, contentId });
+        }
+      }
+
+      functions.logger.info("processPublicationQueue:done", { id, contentType, contentId });
     } catch (e: any) {
-      await mark({ status: "error", error: e?.message || String(e) });
-      functions.logger.error("processPublicationQueue:error", { id, error: e?.message || String(e) });
+      functions.logger.error("processPublicationQueue:error", { 
+        id, 
+        error: e?.message || String(e) 
+      });
     }
   });
 

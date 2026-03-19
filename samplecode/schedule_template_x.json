@@ -1,0 +1,101 @@
+{
+  "platform": "x",
+  "schedule": [
+    {
+      "day": "Monday",
+      "primary": {
+        "window": "08:00–09:00",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "17:00–18:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Tuesday",
+      "primary": {
+        "window": "12:00–13:00",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Wednesday",
+      "primary": {
+        "window": "08:30–09:30",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "16:00–17:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Thursday",
+      "primary": {
+        "window": "11:00–12:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Friday",
+      "primary": {
+        "window": "08:00–09:00",
+        "tz": "EEST"
+      },
+      "secondary": {
+        "window": "15:00–16:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Saturday",
+      "primary": {
+        "window": "10:00–11:30",
+        "tz": "EEST"
+      }
+    },
+    {
+      "day": "Sunday",
+      "primary": {
+        "window": "10:30–12:00",
+        "tz": "EEST"
+      }
+    }
+  ],
+  "evergreenRules": {
+    "minDaysBetweenShares": 120,
+    "maxSharesPerContent": 4,
+    "prioritizeNew": true,
+    "minContentAge": 45,
+    "enabled": true
+  },
+  "postingBehavior": {
+    "randomizeWithinWindow": true,
+    "minMinutesBetweenPosts": 240,
+    "retryOnFailure": true,
+    "maxRetries": 3,
+    "retryDelayMinutes": 20
+  },
+  "contentPreferences": {
+    "preferredTypes": ["blog_post", "listing"],
+    "maxCharacters": 280,
+    "includeHashtags": true,
+    "includeEmojis": false,
+    "includeImages": true,
+    "maxImages": 4,
+    "threadingEnabled": false
+  },
+  "publishDelay": {
+    "enabled": true,
+    "blogPosts": {
+      "minHours": 12,
+      "maxHours": 24
+    },
+    "listings": {
+      "minHours": 3,
+      "maxHours": 6
+    },
+    "strategy": "random_within_range"
+  }
+}
