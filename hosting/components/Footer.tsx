@@ -27,6 +27,7 @@ export default function Footer() {
             <li><Link href="/privacy">Tietosuoja</Link></li>
             <li><Link href="/palveluehdot">Palveluehdot</Link></li>
             <li><a href="#latest-blogs">Blogi</a></li>
+            <li><Link href="/synergates">For Partners</Link></li>
           </ul>
         </div>
         <div className="footer-col">
