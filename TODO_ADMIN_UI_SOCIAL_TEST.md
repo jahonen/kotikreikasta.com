@@ -31,6 +31,14 @@ Add buttons/interface in the admin UI to trigger test posts to social media plat
 - ✅ Response: `{ ok: true, message: 'Test post successful', postId: string, text: string, url: string }`
 - ✅ Status: **Working** - Successfully posts to Facebook Page using System User token
 
+#### Threads
+- ✅ Cloud Function: `testThreadsPost`
+- ✅ URL: `https://europe-west1-kotikreikasta.cloudfunctions.net/testThreadsPost`
+- ✅ Method: POST
+- ✅ Authentication: User account or service account
+- ✅ Response: `{ ok: true, message: 'Test post successful', threadId: string, text: string, url: string }`
+- ✅ Status: **Working** - Successfully posts to Threads using long-lived user access token (60 days)
+
 ### Frontend (To Be Implemented)
 
 **Location:** `admin/app/markkinointi/page.tsx` or new page `admin/app/social/page.tsx`
@@ -57,7 +65,7 @@ Add buttons/interface in the admin UI to trigger test posts to social media plat
 
 import { useState } from 'react';
 
-type Platform = 'bluesky' | 'x' | 'facebook';
+type Platform = 'bluesky' | 'x' | 'facebook' | 'threads';
 
 export default function SocialTestPage() {
   const [loading, setLoading] = useState<Platform | null>(null);
@@ -73,6 +81,7 @@ export default function SocialTestPage() {
       bluesky: 'https://europe-west1-kotikreikasta.cloudfunctions.net/testBlueskyPost',
       x: 'https://europe-west1-kotikreikasta.cloudfunctions.net/testXPost',
       facebook: 'https://europe-west1-kotikreikasta.cloudfunctions.net/testFacebookPost',
+      threads: 'https://europe-west1-kotikreikasta.cloudfunctions.net/testThreadsPost',
     };
 
     try {
@@ -100,7 +109,7 @@ export default function SocialTestPage() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Sosiaalisen median testaus</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Bluesky */}
         <div className="border rounded-lg p-4">
           <h2 className="text-lg font-semibold mb-3">Bluesky</h2>
@@ -195,6 +204,40 @@ export default function SocialTestPage() {
             </div>
           )}
         </div>
+
+        {/* Threads */}
+        <div className="border rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-3">Threads</h2>
+          <button
+            onClick={() => handleTestPost('threads')}
+            disabled={loading === 'threads'}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 w-full"
+          >
+            {loading === 'threads' ? 'Julkaistaan...' : 'Testaa Threads 🇬🇷'}
+          </button>
+          
+          {results.threads && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+              <p className="font-semibold text-green-800 text-sm">✅ Onnistui!</p>
+              <p className="text-xs text-gray-600 mt-1">{results.threads.text}</p>
+              <a 
+                href={results.threads.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Katso julkaisu →
+              </a>
+            </div>
+          )}
+          
+          {errors.threads && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+              <p className="font-semibold text-red-800 text-sm">❌ Epäonnistui</p>
+              <p className="text-xs text-gray-600 mt-1">{errors.threads}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -207,7 +250,7 @@ Add link to main admin navigation or marketing page.
 ## Future Enhancements
 - [x] Add test function for X (Twitter) - **DONE**
 - [x] Add test function for Facebook - **DONE**
-- [ ] Add test function for Threads
+- [x] Add test function for Threads - **DONE**
 - [ ] Allow custom test message input
 - [ ] Show recent test posts history
 - [ ] Add "Delete test post" functionality

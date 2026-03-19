@@ -20,6 +20,7 @@ export { publishToBluesky } from "./consumers/bluesky";
 export { testBlueskyPost } from "./consumers/bluesky-test";
 export { testXPost } from "./consumers/x-test";
 export { testFacebookPost } from "./consumers/facebook-test";
+export { testThreadsPost } from "./consumers/threads-test";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
