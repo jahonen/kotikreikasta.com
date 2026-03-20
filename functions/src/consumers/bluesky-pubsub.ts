@@ -11,6 +11,7 @@ import {
   formatPostWithLink 
 } from '../utils/vertex-ai-content';
 import { trackSocialShare } from '../utils/firestore-tracking';
+import { fetchAndOptimizeImage } from '../utils/image-optimizer';
 
 const secretClient = new SecretManagerServiceClient();
 
@@ -305,85 +306,37 @@ async function fetchOGMetadata(url: string): Promise<any | null> {
   }
 }
 
-/**
- * Convert HEIC/HEIF images to JPEG for Bluesky compatibility
- * Bluesky supports: image/jpeg, image/png, image/webp
- */
-async function convertImageIfNeeded(
-  imageBuffer: ArrayBuffer,
-  contentType: string
-): Promise<{ buffer: ArrayBuffer; contentType: string }> {
-  // HEIC/HEIF images are not supported by Bluesky, need conversion
-  // For now, we'll reject HEIC and log a warning
-  // In production, you'd use a library like sharp or imagemagick
-  const unsupportedFormats = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
-  
-  if (unsupportedFormats.includes(contentType.toLowerCase())) {
-    functions.logger.warn('HEIC/HEIF image detected - not supported by Bluesky', { contentType });
-    // Return null to skip this image
-    throw new Error('HEIC/HEIF format not supported');
-  }
-  
-  // Bluesky supports: JPEG, PNG, WebP
-  const supportedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  if (!supportedFormats.includes(contentType.toLowerCase())) {
-    functions.logger.warn('Unsupported image format for Bluesky', { contentType });
-    throw new Error(`Unsupported format: ${contentType}`);
-  }
-  
-  return { buffer: imageBuffer, contentType };
-}
 
 /**
  * Upload image blob to Bluesky and get blob reference
+ * Automatically optimizes and converts images (including HEIC to JPEG)
  */
 async function uploadImageBlob(
   imageUrl: string,
   accessToken: string
 ): Promise<any | null> {
   try {
-    functions.logger.info('Fetching image for upload', { imageUrl });
+    // Fetch and optimize image using our image optimizer
+    // This handles HEIC conversion, resizing, and optimization
+    const optimized = await fetchAndOptimizeImage(imageUrl, 'socialMedia');
     
-    // Fetch image
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      functions.logger.warn('Failed to fetch image', { imageUrl, status: imageResponse.status });
-      return null;
-    }
-    
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const originalContentType = imageResponse.headers.get('content-type') || 'image/jpeg';
-    
-    functions.logger.info('Image fetched', {
-      imageUrl,
-      contentType: originalContentType,
-      size: imageBuffer.byteLength,
+    functions.logger.info('Image optimized for Bluesky', {
+      originalUrl: imageUrl,
+      size: optimized.size,
+      width: optimized.width,
+      height: optimized.height,
+      format: optimized.format,
+      contentType: optimized.contentType,
     });
-    
-    // Convert image if needed (reject HEIC/HEIF)
-    let contentType: string;
-    let finalBuffer: ArrayBuffer;
-    
-    try {
-      const converted = await convertImageIfNeeded(imageBuffer, originalContentType);
-      contentType = converted.contentType;
-      finalBuffer = converted.buffer;
-    } catch (conversionError: any) {
-      functions.logger.error('Image conversion/validation failed', {
-        imageUrl,
-        error: conversionError?.message,
-      });
-      return null;
-    }
     
     // Upload to Bluesky
     const uploadResponse = await fetch('https://bsky.social/xrpc/com.atproto.repo.uploadBlob', {
       method: 'POST',
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': optimized.contentType,
         'Authorization': `Bearer ${accessToken}`,
       },
-      body: finalBuffer,
+      body: optimized.buffer as any, // Buffer is compatible with fetch body
     });
     
     if (!uploadResponse.ok) {
