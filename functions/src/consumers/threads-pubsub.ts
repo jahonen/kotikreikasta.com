@@ -137,9 +137,15 @@ async function fetchThreadsCredentials(): Promise<ThreadsCredentials> {
 
 async function postToThreads(
   text: string,
+  link: string,
   credentials: ThreadsCredentials
 ): Promise<{ postId: string; postUrl?: string }> {
-  // Step 1: Create media container
+  functions.logger.info('Creating Threads post', {
+    textLength: text.length,
+    hasLink: !!link,
+  });
+  
+  // Step 1: Create media container with link attachment for OG preview
   const createResponse = await fetch(
     `https://graph.threads.net/v1.0/${credentials.userId}/threads`,
     {
@@ -150,6 +156,7 @@ async function postToThreads(
       body: JSON.stringify({
         media_type: 'TEXT',
         text: text,
+        link_attachment: link, // Add link for OG preview card
         access_token: credentials.accessToken,
       }),
     }
@@ -274,7 +281,8 @@ export const threadsPublisher = functions
         'Vertex AI content generation'
       );
       
-      const finalPost = `${generatedContent.text}\n\n${trackedUrl}`;
+      // Don't include URL in text - it will be shown in the link preview card
+      const finalText = generatedContent.text;
       
       const credentials = await retryWithBackoff(
         () => fetchThreadsCredentials(),
@@ -283,7 +291,7 @@ export const threadsPublisher = functions
       );
       
       const { postId, postUrl } = await retryWithBackoff(
-        () => postToThreads(finalPost, credentials),
+        () => postToThreads(finalText, trackedUrl, credentials),
         undefined,
         'Post to Threads'
       );
@@ -295,8 +303,8 @@ export const threadsPublisher = functions
         {
           postId,
           postUrl,
-          text: finalPost,
-          characterCount: finalPost.length,
+          text: finalText,
+          characterCount: finalText.length,
           success: true,
         }
       );
