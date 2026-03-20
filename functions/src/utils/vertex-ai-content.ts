@@ -151,15 +151,22 @@ export async function generateSocialContent(
     
     // Calculate token budget from character limit
     // Finnish text: ~1 token = 3.5 characters
+    // Gemini 2.0 uses "thinking" tokens which count against output limit
+    // We need to account for ~1000-1500 thinking tokens
     const charLimit = PLATFORM_LIMITS[platform] - trackedUrl.length - 2;
     const estimatedTokens = Math.ceil(charLimit / 3.5);
-    const safeTokenBudget = Math.floor(estimatedTokens * 0.9); // 10% safety margin (increased from 20%)
+    
+    // Add buffer for thinking tokens (Gemini 2.0 feature)
+    // For short posts, add 500 tokens; for long posts, add 1500 tokens
+    const thinkingBuffer = estimatedTokens > 500 ? 1500 : 500;
+    const totalTokenBudget = estimatedTokens + thinkingBuffer;
     
     functions.logger.info('Token budget calculation', {
       platform,
       charLimit,
       estimatedTokens,
-      safeTokenBudget,
+      thinkingBuffer,
+      totalTokenBudget,
       urlLength: trackedUrl.length,
     });
     
@@ -173,11 +180,12 @@ export async function generateSocialContent(
         parts: [{ text: prompt }]
       }],
       generationConfig: {
-        maxOutputTokens: Math.max(safeTokenBudget, 100), // Minimum 100 tokens
+        maxOutputTokens: Math.max(totalTokenBudget, 200), // Minimum 200 tokens
         temperature: 0.7,
         topP: 0.8,
         topK: 40,
         candidateCount: 1,
+        responseMimeType: 'text/plain', // Ensure plain text output
       },
     };
     

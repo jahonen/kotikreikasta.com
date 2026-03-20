@@ -28,6 +28,7 @@ export { blueskyPublisher } from "./consumers/bluesky-pubsub";
 export { xPublisher } from "./consumers/x-pubsub";
 export { facebookPublisher } from "./consumers/facebook-pubsub";
 export { threadsPublisher } from "./consumers/threads-pubsub";
+export { testContentGeneration } from './test-content-generation';
 
 // Firestore triggers for auto-publishing
 export { onBlogPostPublished, onListingPublished } from "./triggers/content-published";
