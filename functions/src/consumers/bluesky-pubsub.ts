@@ -223,10 +223,13 @@ function createLinkFacets(text: string): any[] {
  */
 async function fetchOGMetadata(url: string): Promise<any | null> {
   try {
+    functions.logger.info('Fetching OG metadata', { url });
+    
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; Kotikreikasta-Bot/1.0)',
       },
+      redirect: 'follow',
     });
     
     if (!response.ok) {
@@ -235,13 +238,36 @@ async function fetchOGMetadata(url: string): Promise<any | null> {
     }
     
     const html = await response.text();
+    functions.logger.info('Fetched HTML', { url, htmlLength: html.length });
     
-    // Extract OG tags
-    const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["']/i)?.[1];
-    const ogDescription = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i)?.[1];
-    const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["']/i)?.[1];
+    // Extract OG tags with multiple patterns
+    const extractOGTag = (property: string): string | null => {
+      // Try property="og:..." pattern
+      let match = html.match(new RegExp(`<meta[^>]*property=["']og:${property}["'][^>]*content=["']([^"']*)["']`, 'i'));
+      if (match) return match[1];
+      
+      // Try content first, then property
+      match = html.match(new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*property=["']og:${property}["']`, 'i'));
+      if (match) return match[1];
+      
+      return null;
+    };
+    
+    const ogTitle = extractOGTag('title');
+    const ogDescription = extractOGTag('description');
+    const ogImage = extractOGTag('image');
+    
+    functions.logger.info('Extracted OG tags', {
+      url,
+      hasTitle: !!ogTitle,
+      hasDescription: !!ogDescription,
+      hasImage: !!ogImage,
+      title: ogTitle?.substring(0, 50),
+      image: ogImage?.substring(0, 100),
+    });
     
     if (!ogTitle && !ogDescription && !ogImage) {
+      functions.logger.warn('No OG tags found', { url });
       return null;
     }
     
@@ -251,7 +277,7 @@ async function fetchOGMetadata(url: string): Promise<any | null> {
       image: ogImage || '',
     };
   } catch (error: any) {
-    functions.logger.warn('Error fetching OG metadata', { url, error: error?.message });
+    functions.logger.error('Error fetching OG metadata', { url, error: error?.message, stack: error?.stack?.substring(0, 200) });
     return null;
   }
 }
@@ -307,12 +333,11 @@ async function postToBluesky(
   accessToken: string,
   repo: string
 ): Promise<{ postId: string; postUrl?: string }> {
-  const facets = createLinkFacets(text);
-  
-  // Fetch OG metadata for embed card
+  // Fetch OG metadata for embed card first
   const ogMetadata = await fetchOGMetadata(url);
   
   let embed: any = undefined;
+  let finalText = text;
   
   if (ogMetadata) {
     functions.logger.info('Creating Bluesky embed card', {
@@ -333,6 +358,9 @@ async function postToBluesky(
       const imageBlob = await uploadImageBlob(ogMetadata.image, accessToken);
       if (imageBlob) {
         external.thumb = imageBlob;
+        functions.logger.info('Image uploaded to Bluesky', { imageUrl: ogMetadata.image });
+      } else {
+        functions.logger.warn('Failed to upload image', { imageUrl: ogMetadata.image });
       }
     }
     
@@ -340,15 +368,28 @@ async function postToBluesky(
       $type: 'app.bsky.embed.external',
       external,
     };
+    
+    // Remove URL from text since we have an embed card
+    // The embed card will show the link
+    finalText = text.replace(/\n\nhttps?:\/\/[^\s]+$/i, '').trim();
+    functions.logger.info('Removed URL from text for embed', { originalLength: text.length, newLength: finalText.length });
   }
+  
+  const facets = createLinkFacets(finalText);
   
   const record = {
     $type: 'app.bsky.feed.post',
-    text,
+    text: finalText,
     facets: facets.length > 0 ? facets : undefined,
     embed,
     createdAt: new Date().toISOString(),
   };
+  
+  functions.logger.info('Posting to Bluesky', {
+    textLength: finalText.length,
+    hasFacets: facets.length > 0,
+    hasEmbed: !!embed,
+  });
   
   const response = await fetch('https://bsky.social/xrpc/com.atproto.repo.createRecord', {
     method: 'POST',
