@@ -219,6 +219,24 @@ function createLinkFacets(text: string): any[] {
 }
 
 /**
+ * Decode HTML entities in a string
+ */
+function decodeHTMLEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+  };
+  
+  return text.replace(/&[a-z]+;|&#\d+;/gi, (match) => {
+    return entities[match.toLowerCase()] || match;
+  });
+}
+
+/**
  * Fetch OG metadata for URL to create embed card
  */
 async function fetchOGMetadata(url: string): Promise<any | null> {
@@ -257,29 +275,63 @@ async function fetchOGMetadata(url: string): Promise<any | null> {
     const ogDescription = extractOGTag('description');
     const ogImage = extractOGTag('image');
     
+    // Decode HTML entities in extracted values
+    const decodedTitle = ogTitle ? decodeHTMLEntities(ogTitle) : '';
+    const decodedDescription = ogDescription ? decodeHTMLEntities(ogDescription) : '';
+    const decodedImage = ogImage ? decodeHTMLEntities(ogImage) : '';
+    
     functions.logger.info('Extracted OG tags', {
       url,
-      hasTitle: !!ogTitle,
-      hasDescription: !!ogDescription,
-      hasImage: !!ogImage,
-      title: ogTitle?.substring(0, 50),
-      image: ogImage?.substring(0, 100),
+      hasTitle: !!decodedTitle,
+      hasDescription: !!decodedDescription,
+      hasImage: !!decodedImage,
+      title: decodedTitle?.substring(0, 50),
+      image: decodedImage?.substring(0, 100),
     });
     
-    if (!ogTitle && !ogDescription && !ogImage) {
+    if (!decodedTitle && !decodedDescription && !decodedImage) {
       functions.logger.warn('No OG tags found', { url });
       return null;
     }
     
     return {
-      title: ogTitle || '',
-      description: ogDescription || '',
-      image: ogImage || '',
+      title: decodedTitle,
+      description: decodedDescription,
+      image: decodedImage,
     };
   } catch (error: any) {
     functions.logger.error('Error fetching OG metadata', { url, error: error?.message, stack: error?.stack?.substring(0, 200) });
     return null;
   }
+}
+
+/**
+ * Convert HEIC/HEIF images to JPEG for Bluesky compatibility
+ * Bluesky supports: image/jpeg, image/png, image/webp
+ */
+async function convertImageIfNeeded(
+  imageBuffer: ArrayBuffer,
+  contentType: string
+): Promise<{ buffer: ArrayBuffer; contentType: string }> {
+  // HEIC/HEIF images are not supported by Bluesky, need conversion
+  // For now, we'll reject HEIC and log a warning
+  // In production, you'd use a library like sharp or imagemagick
+  const unsupportedFormats = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
+  
+  if (unsupportedFormats.includes(contentType.toLowerCase())) {
+    functions.logger.warn('HEIC/HEIF image detected - not supported by Bluesky', { contentType });
+    // Return null to skip this image
+    throw new Error('HEIC/HEIF format not supported');
+  }
+  
+  // Bluesky supports: JPEG, PNG, WebP
+  const supportedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!supportedFormats.includes(contentType.toLowerCase())) {
+    functions.logger.warn('Unsupported image format for Bluesky', { contentType });
+    throw new Error(`Unsupported format: ${contentType}`);
+  }
+  
+  return { buffer: imageBuffer, contentType };
 }
 
 /**
@@ -290,6 +342,8 @@ async function uploadImageBlob(
   accessToken: string
 ): Promise<any | null> {
   try {
+    functions.logger.info('Fetching image for upload', { imageUrl });
+    
     // Fetch image
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
@@ -298,7 +352,29 @@ async function uploadImageBlob(
     }
     
     const imageBuffer = await imageResponse.arrayBuffer();
-    const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    const originalContentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    
+    functions.logger.info('Image fetched', {
+      imageUrl,
+      contentType: originalContentType,
+      size: imageBuffer.byteLength,
+    });
+    
+    // Convert image if needed (reject HEIC/HEIF)
+    let contentType: string;
+    let finalBuffer: ArrayBuffer;
+    
+    try {
+      const converted = await convertImageIfNeeded(imageBuffer, originalContentType);
+      contentType = converted.contentType;
+      finalBuffer = converted.buffer;
+    } catch (conversionError: any) {
+      functions.logger.error('Image conversion/validation failed', {
+        imageUrl,
+        error: conversionError?.message,
+      });
+      return null;
+    }
     
     // Upload to Bluesky
     const uploadResponse = await fetch('https://bsky.social/xrpc/com.atproto.repo.uploadBlob', {
@@ -307,7 +383,7 @@ async function uploadImageBlob(
         'Content-Type': contentType,
         'Authorization': `Bearer ${accessToken}`,
       },
-      body: imageBuffer,
+      body: finalBuffer,
     });
     
     if (!uploadResponse.ok) {
