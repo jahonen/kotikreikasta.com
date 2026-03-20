@@ -154,6 +154,40 @@ export const onListingPublished = functions
         platforms: ['bluesky', 'x', 'facebook', 'threads'],
       });
       
+      // Trigger ISR revalidation on the public site
+      try {
+        const revalidateSecret = process.env.REVALIDATE_SECRET || 'default-secret-change-me';
+        const publicSiteUrl = process.env.PUBLIC_SITE_URL || 'https://kotikreikasta.com';
+        const revalidateRes = await fetch(`${publicSiteUrl}/api/revalidate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            path: `/listings/${urlStub}`,
+            type: 'listing',
+            secret: revalidateSecret 
+          }),
+        });
+        
+        if (revalidateRes.ok) {
+          const revalidateData = await revalidateRes.json();
+          functions.logger.info('ISR revalidation succeeded', {
+            paths: revalidateData.paths,
+            listingPath: `/listings/${urlStub}`
+          });
+        } else {
+          functions.logger.warn('ISR revalidation returned error', {
+            status: revalidateRes.status,
+            statusText: revalidateRes.statusText
+          });
+        }
+      } catch (revalidateErr: any) {
+        functions.logger.warn('ISR revalidation failed', {
+          error: revalidateErr?.message,
+          listingId
+        });
+        // Don't fail the publish if revalidation fails
+      }
+      
     } catch (error: any) {
       functions.logger.error('Failed to mark listing for publishing', {
         error: error?.message,

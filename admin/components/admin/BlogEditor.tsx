@@ -1,12 +1,14 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { collection, doc, getDoc, serverTimestamp, updateDoc, deleteField } from 'firebase/firestore';
 import { getDbClient, getAuthClient, getStorageClient } from '../../lib/firebase-client';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LoadingButton from '../ui/LoadingButton';
 
 export default function BlogEditor({ initialId }: { initialId?: string }) {
+  const router = useRouter();
   const [description, setDescription] = useState('');
   const [docId, setDocId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -62,7 +64,12 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
     try {
       setGenerating(true);
       const auth = await getAuthClient();
-      const token = await auth?.currentUser?.getIdToken(true);
+      if (!auth?.currentUser) {
+        throw new Error('Ei kirjauduttu sisään');
+      }
+      const token = await auth.currentUser.getIdToken(true);
+      console.log('[DRAFT] Starting draft generation', { descriptionLength: description.length, hasToken: !!token });
+      
       const res = await fetch('/api/blogs/draft', {
         method: 'POST',
         headers: {
@@ -72,14 +79,31 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
         body: JSON.stringify({ description }),
         credentials: 'include',
       });
+      
+      console.log('[DRAFT] Response received', { status: res.status, ok: res.ok });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('[DRAFT] Error response', { status: res.status, text });
+        let data: any = {};
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`HTTP ${res.status}: ${text.substring(0, 100)}`);
+        }
+        throw new Error(data?.error || data?.detail || `HTTP ${res.status}`);
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || data?.detail || 'draft_failed');
+      console.log('[DRAFT] Draft created successfully', { id: data.id });
+      
       setDocId(data.id);
       setTitle(data.title || '');
       setContentMd(data.contentMd || '');
       setMessage('Luonnos luotu. Voit muokata sisältöä ja lisätä nostokuvan.');
     } catch (e: any) {
-      setMessage(`Luonnoksen luonti epäonnistui: ${e?.message || 'virhe'}`);
+      console.error('[DRAFT] Draft generation failed', { error: e?.message, stack: e?.stack });
+      setMessage(`Luonnoksen luonti epäonnistui: ${e?.message || 'verkkovirhe'}`);
     } finally {
       setGenerating(false);
     }
@@ -170,7 +194,12 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
     setMessage(null);
     try {
       const auth = await getAuthClient();
-      const token = await auth?.currentUser?.getIdToken(true);
+      if (!auth?.currentUser) {
+        throw new Error('Ei kirjauduttu sisään');
+      }
+      const token = await auth.currentUser.getIdToken(true);
+      console.log('[PUBLISH] Starting publish', { docId, titleLength: title.length, hasImage: !!imageUrl });
+      
       const res = await fetch('/api/blogs/publish', {
         method: 'POST',
         headers: {
@@ -180,14 +209,43 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
         body: JSON.stringify({ id: docId, title, contentMd, imageUrl }),
         credentials: 'include',
       });
+      
+      console.log('[PUBLISH] Response received', { status: res.status, ok: res.ok });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('[PUBLISH] Error response', { status: res.status, text });
+        let data: any = {};
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`HTTP ${res.status}: ${text.substring(0, 100)}`);
+        }
+        throw new Error(data?.error || data?.detail || `HTTP ${res.status}`);
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || data?.detail || 'publish_failed');
-      setMessage('Artikkeli julkaistu jonoon.');
+      console.log('[PUBLISH] Published successfully', { id: data.id });
+      
+      setMessage('Artikkeli julkaistu! Sosiaalisen median julkaisu tapahtuu automaattisesti.');
+      
+      // Redirect to blogs list after 1 second
+      setTimeout(() => {
+        router.push('/blogs');
+      }, 1000);
     } catch (e: any) {
-      setMessage(`Julkaisu epäonnistui: ${e?.message || 'virhe'}`);
+      console.error('[PUBLISH] Publish failed', { error: e?.message, stack: e?.stack });
+      setMessage(`Julkaisu epäonnistui: ${e?.message || 'verkkovirhe'}`);
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveAndExit = async () => {
+    await saveDraft();
+    setTimeout(() => {
+      router.push('/blogs');
+    }, 500);
   };
 
   const showCreate = !docId;
@@ -278,8 +336,9 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
             </div>
           </fieldset>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <LoadingButton type="button" className="btn-primary" onClick={saveDraft} loading={saving} aria-label="Tallenna luonnos">Tallenna luonnos</LoadingButton>
+            <LoadingButton type="button" className="btn-secondary" onClick={saveAndExit} loading={saving} aria-label="Jatka myöhemmin">Jatka myöhemmin</LoadingButton>
             <LoadingButton type="button" className="btn-primary" onClick={publish} loading={saving} aria-label="Julkaise">Julkaise</LoadingButton>
           </div>
         </form>

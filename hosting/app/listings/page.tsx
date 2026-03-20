@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   description: 'Valikoituja kiinteistökohteita Kreikasta. Löydä unelmiesi koti auringon maasta.',
 };
 
-export const revalidate = 3600;
+// ISR: Revalidate every 1800 seconds (30 minutes)
+export const revalidate = 1800;
 
 async function getListings(): Promise<Listing[]> {
   try {

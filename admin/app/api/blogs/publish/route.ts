@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
         ogTitle: seo.ogTitle,
         ogDescription: seo.ogDescription,
       },
-      status: 'queued',
+      status: 'published',
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       publishedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
@@ -194,17 +194,33 @@ export async function POST(req: NextRequest) {
       try {
         const revalidateSecret = process.env.REVALIDATE_SECRET || 'default-secret-change-me';
         const publicSiteUrl = process.env.PUBLIC_SITE_URL || 'https://kotikreikasta.com';
-        await fetch(`${publicSiteUrl}/api/revalidate`, {
+        const revalidateRes = await fetch(`${publicSiteUrl}/api/revalidate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             path: `/blog/${urlStub}`,
+            type: 'blog',
             secret: revalidateSecret 
           }),
         });
-        console.log('[PUBLISH] ISR revalidation triggered for', `/blog/${urlStub}`);
-      } catch (revalidateErr) {
-        console.error('[PUBLISH] ISR revalidation failed:', revalidateErr);
+        
+        if (revalidateRes.ok) {
+          const revalidateData = await revalidateRes.json();
+          console.log('[PUBLISH] ISR revalidation succeeded', {
+            paths: revalidateData.paths,
+            blogPath: `/blog/${urlStub}`
+          });
+        } else {
+          console.error('[PUBLISH] ISR revalidation returned error', {
+            status: revalidateRes.status,
+            statusText: revalidateRes.statusText
+          });
+        }
+      } catch (revalidateErr: any) {
+        console.error('[PUBLISH] ISR revalidation failed', {
+          error: revalidateErr?.message,
+          urlStub
+        });
         // Don't fail the publish if revalidation fails
       }
     }

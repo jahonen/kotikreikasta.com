@@ -30,8 +30,7 @@ const navItems: { href: string; label: string; icon: string }[] = [
   { href: '/blogs', label: 'Blogit', icon: '✍️' },
   { href: '/team', label: 'Tiimi', icon: '👥' },
   { href: '/partners', label: 'Kumppanit', icon: '🤝' },
-  { href: '/marketing', label: 'Markkinointi', icon: '📊' },
-  { href: '/service-requests', label: 'Palvelupyynnöt', icon: '🛠️' },
+  { href: '/markkinointi', label: 'Markkinointi', icon: '📊' },
 ];
 
 export default function AdminShell({ onSignOut, onToast, subscriberId, children }: AdminShellProps) {

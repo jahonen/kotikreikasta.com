@@ -4,8 +4,8 @@ import NavBar from "../../components/nav-bar";
 import Footer from "../../components/Footer";
 import { getFirestore } from "../../lib/firebase-admin-server";
 
-// ISR: Revalidate every 3600 seconds (1 hour)
-export const revalidate = 3600;
+// ISR: Revalidate every 1800 seconds (30 minutes)
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "Blogi — Asiantuntija-artikkelit Kreikan kiinteistöistä | Kotikreikasta",
