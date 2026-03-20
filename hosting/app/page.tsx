@@ -6,6 +6,9 @@ import LatestBlogsServer from "../components/LatestBlogsServer";
 import LatestListingsServer from "../components/LatestListingsServer";
 import Footer from "../components/Footer";
 
+// ISR: Revalidate every 1800 seconds (30 minutes)
+export const revalidate = 1800;
+
 export default async function Page() {
   return (
     <>
