@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
         ogTitle: seo.ogTitle,
         ogDescription: seo.ogDescription,
       },
-      status: 'queued',
+      status: 'published',
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       publishedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
