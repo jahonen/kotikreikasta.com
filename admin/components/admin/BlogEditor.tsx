@@ -1,12 +1,14 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { collection, doc, getDoc, serverTimestamp, updateDoc, deleteField } from 'firebase/firestore';
 import { getDbClient, getAuthClient, getStorageClient } from '../../lib/firebase-client';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LoadingButton from '../ui/LoadingButton';
 
 export default function BlogEditor({ initialId }: { initialId?: string }) {
+  const router = useRouter();
   const [description, setDescription] = useState('');
   const [docId, setDocId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -226,12 +228,24 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
       console.log('[PUBLISH] Published successfully', { id: data.id });
       
       setMessage('Artikkeli julkaistu! Sosiaalisen median julkaisu tapahtuu automaattisesti.');
+      
+      // Redirect to blogs list after 1 second
+      setTimeout(() => {
+        router.push('/blogs');
+      }, 1000);
     } catch (e: any) {
       console.error('[PUBLISH] Publish failed', { error: e?.message, stack: e?.stack });
       setMessage(`Julkaisu epäonnistui: ${e?.message || 'verkkovirhe'}`);
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveAndExit = async () => {
+    await saveDraft();
+    setTimeout(() => {
+      router.push('/blogs');
+    }, 500);
   };
 
   const showCreate = !docId;
@@ -322,8 +336,9 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
             </div>
           </fieldset>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <LoadingButton type="button" className="btn-primary" onClick={saveDraft} loading={saving} aria-label="Tallenna luonnos">Tallenna luonnos</LoadingButton>
+            <LoadingButton type="button" className="btn-secondary" onClick={saveAndExit} loading={saving} aria-label="Jatka myöhemmin">Jatka myöhemmin</LoadingButton>
             <LoadingButton type="button" className="btn-primary" onClick={publish} loading={saving} aria-label="Julkaise">Julkaise</LoadingButton>
           </div>
         </form>
