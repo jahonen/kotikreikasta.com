@@ -31,6 +31,69 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "scheduledFor", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "blog_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "socialMediaStatus.bluesky.published", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.bluesky.queued", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.bluesky.queuedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "blog_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "socialMediaStatus.x.published", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.x.queued", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.x.queuedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "blog_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "socialMediaStatus.threads.published", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.threads.queued", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.threads.queuedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "listings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "socialMediaStatus.bluesky.published", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.bluesky.queued", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.bluesky.queuedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "listings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "socialMediaStatus.x.published", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.x.queued", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.x.queuedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "listings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "socialMediaStatus.facebook.published", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.facebook.queued", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.facebook.queuedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "listings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "socialMediaStatus.threads.published", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.threads.queued", "order": "ASCENDING" },
+        { "fieldPath": "socialMediaStatus.threads.queuedAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

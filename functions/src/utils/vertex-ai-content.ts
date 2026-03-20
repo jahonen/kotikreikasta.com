@@ -153,7 +153,15 @@ export async function generateSocialContent(
     // Finnish text: ~1 token = 3.5 characters
     const charLimit = PLATFORM_LIMITS[platform] - trackedUrl.length - 2;
     const estimatedTokens = Math.ceil(charLimit / 3.5);
-    const safeTokenBudget = Math.floor(estimatedTokens * 0.8); // 20% safety margin
+    const safeTokenBudget = Math.floor(estimatedTokens * 0.9); // 10% safety margin (increased from 20%)
+    
+    functions.logger.info('Token budget calculation', {
+      platform,
+      charLimit,
+      estimatedTokens,
+      safeTokenBudget,
+      urlLength: trackedUrl.length,
+    });
     
     const requestBody = {
       systemInstruction: {
@@ -165,7 +173,7 @@ export async function generateSocialContent(
         parts: [{ text: prompt }]
       }],
       generationConfig: {
-        maxOutputTokens: Math.max(safeTokenBudget, 50), // Minimum 50 tokens
+        maxOutputTokens: Math.max(safeTokenBudget, 100), // Minimum 100 tokens
         temperature: 0.7,
         topP: 0.8,
         topK: 40,
@@ -192,9 +200,21 @@ export async function generateSocialContent(
     }
     
     const data = await response.json();
+    
+    // Log full response for debugging
+    functions.logger.info('Vertex AI response', {
+      candidateCount: data.candidates?.length || 0,
+      finishReason: data.candidates?.[0]?.finishReason,
+      safetyRatings: data.candidates?.[0]?.safetyRatings,
+      tokenCount: data.usageMetadata,
+    });
+    
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
     if (!generatedText) {
+      functions.logger.error('No content generated', { 
+        response: JSON.stringify(data).substring(0, 500) 
+      });
       throw new Error('No content generated');
     }
     
