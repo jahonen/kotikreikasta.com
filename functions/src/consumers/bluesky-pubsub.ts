@@ -219,19 +219,134 @@ function createLinkFacets(text: string): any[] {
 }
 
 /**
- * Post to Bluesky with rich text facets
+ * Fetch OG metadata for URL to create embed card
+ */
+async function fetchOGMetadata(url: string): Promise<any | null> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; Kotikreikasta-Bot/1.0)',
+      },
+    });
+    
+    if (!response.ok) {
+      functions.logger.warn('Failed to fetch URL for OG metadata', { url, status: response.status });
+      return null;
+    }
+    
+    const html = await response.text();
+    
+    // Extract OG tags
+    const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["']/i)?.[1];
+    const ogDescription = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i)?.[1];
+    const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["']/i)?.[1];
+    
+    if (!ogTitle && !ogDescription && !ogImage) {
+      return null;
+    }
+    
+    return {
+      title: ogTitle || '',
+      description: ogDescription || '',
+      image: ogImage || '',
+    };
+  } catch (error: any) {
+    functions.logger.warn('Error fetching OG metadata', { url, error: error?.message });
+    return null;
+  }
+}
+
+/**
+ * Upload image blob to Bluesky and get blob reference
+ */
+async function uploadImageBlob(
+  imageUrl: string,
+  accessToken: string
+): Promise<any | null> {
+  try {
+    // Fetch image
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      functions.logger.warn('Failed to fetch image', { imageUrl, status: imageResponse.status });
+      return null;
+    }
+    
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    
+    // Upload to Bluesky
+    const uploadResponse = await fetch('https://bsky.social/xrpc/com.atproto.repo.uploadBlob', {
+      method: 'POST',
+      headers: {
+        'Content-Type': contentType,
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: imageBuffer,
+    });
+    
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      functions.logger.warn('Failed to upload image blob', { status: uploadResponse.status, error: errorText });
+      return null;
+    }
+    
+    const data = await uploadResponse.json();
+    return data.blob;
+  } catch (error: any) {
+    functions.logger.warn('Error uploading image blob', { imageUrl, error: error?.message });
+    return null;
+  }
+}
+
+/**
+ * Post to Bluesky with rich text facets and embed card
  */
 async function postToBluesky(
   text: string,
+  url: string,
   accessToken: string,
   repo: string
 ): Promise<{ postId: string; postUrl?: string }> {
   const facets = createLinkFacets(text);
   
+  // Fetch OG metadata for embed card
+  const ogMetadata = await fetchOGMetadata(url);
+  
+  let embed: any = undefined;
+  
+  if (ogMetadata) {
+    functions.logger.info('Creating Bluesky embed card', {
+      hasTitle: !!ogMetadata.title,
+      hasDescription: !!ogMetadata.description,
+      hasImage: !!ogMetadata.image,
+    });
+    
+    // Create external embed
+    const external: any = {
+      uri: url,
+      title: ogMetadata.title || 'Kotikreikasta.com',
+      description: ogMetadata.description || '',
+    };
+    
+    // Upload image if available
+    if (ogMetadata.image) {
+      const imageBlob = await uploadImageBlob(ogMetadata.image, accessToken);
+      if (imageBlob) {
+        external.thumb = imageBlob;
+      }
+    }
+    
+    embed = {
+      $type: 'app.bsky.embed.external',
+      external,
+    };
+  }
+  
   const record = {
     $type: 'app.bsky.feed.post',
     text,
     facets: facets.length > 0 ? facets : undefined,
+    embed,
     createdAt: new Date().toISOString(),
   };
   
@@ -265,7 +380,11 @@ async function postToBluesky(
     ? `https://bsky.app/profile/kotikreikasta.bsky.social/post/${postId.split('/').pop()}`
     : '';
   
-  functions.logger.info('Posted to Bluesky', { postId, textLength: text.length });
+  functions.logger.info('Posted to Bluesky', { 
+    postId, 
+    textLength: text.length,
+    hasEmbed: !!embed,
+  });
   
   return { postId, postUrl };
 }
@@ -366,9 +485,9 @@ export const blueskyPublisher = functions
         'Create Bluesky session'
       );
       
-      // Post to Bluesky
+      // Post to Bluesky with embed card
       const { postId, postUrl } = await retryWithBackoff(
-        () => postToBluesky(finalPost, accessToken, credentials.identifier),
+        () => postToBluesky(finalPost, trackedUrl, accessToken, credentials.identifier),
         undefined,
         'Post to Bluesky'
       );

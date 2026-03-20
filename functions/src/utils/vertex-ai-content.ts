@@ -151,14 +151,15 @@ export async function generateSocialContent(
     
     // Calculate token budget from character limit
     // Finnish text: ~1 token = 3.5 characters
-    // Gemini 2.0 uses "thinking" tokens which count against output limit
-    // We need to account for ~1000-1500 thinking tokens
+    // Gemini 2.0 Flash uses "thinking" tokens which count against output limit
+    // Empirical data shows thinking tokens can be 2000-3000 for complex prompts
     const charLimit = PLATFORM_LIMITS[platform] - trackedUrl.length - 2;
     const estimatedTokens = Math.ceil(charLimit / 3.5);
     
-    // Add buffer for thinking tokens (Gemini 2.0 feature)
-    // For short posts, add 500 tokens; for long posts, add 1500 tokens
-    const thinkingBuffer = estimatedTokens > 500 ? 1500 : 500;
+    // Add generous buffer for thinking tokens (Gemini 2.0 Flash feature)
+    // Thinking tokens vary by complexity but can be substantial
+    // Use 3x multiplier to ensure we never truncate the actual content
+    const thinkingBuffer = Math.max(estimatedTokens * 2, 2500);
     const totalTokenBudget = estimatedTokens + thinkingBuffer;
     
     functions.logger.info('Token budget calculation', {
