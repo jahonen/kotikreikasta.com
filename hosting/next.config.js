@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
   // Ensure server-only native libs are not bundled into route chunks
   serverExternalPackages: [
     'firebase-admin',

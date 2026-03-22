@@ -1,11 +1,8 @@
 {
   "hosting": [
     {
-      "source": "hosting",
+      "public": "hosting/public",
       "site": "kotikreikasta",
-      "frameworksBackend": {
-        "region": "europe-west1"
-      },
       "rewrites": [
         {
           "source": "/api/maps/key",
@@ -23,10 +20,9 @@
         },
         {
           "source": "**",
-          "function": {
-            "functionId": "ssrkotikreikasta",
-            "region": "europe-west1",
-            "pinTag": true
+          "run": {
+            "serviceId": "kotikreikasta-hosting",
+            "region": "europe-west1"
           }
         }
       ],
@@ -45,14 +41,11 @@
     {
       "source": "admin",
       "site": "kotikreikasta-admin",
-      "frameworksBackend": {
-        "region": "europe-west1"
-      },
       "rewrites": [
         {
           "source": "**",
-          "function": {
-            "functionId": "ssrkotikreikastaadmin",
+          "run": {
+            "serviceId": "ssrkotikreikastaadmin",
             "region": "europe-west1"
           }
         }
