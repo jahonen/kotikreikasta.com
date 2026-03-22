@@ -121,16 +121,37 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
 
   const onUploadFeatured = async () => {
     try {
-      const storage = await getStorageClient();
-      if (!storage) throw new Error('Storage ei ole käytettävissä');
       if (!featuredSrc || !croppedAreaPixels) throw new Error('Valitse kuva ja rajaa se ennen latausta');
       const blob = await getCroppedBlob(featuredSrc, croppedAreaPixels);
-      const path = `listings/featured-${Date.now()}.jpg`;
-      const r = ref(storage, path);
-      await uploadBytes(r, blob);
-      const url = await getDownloadURL(r);
-      setFeaturedImageUrl(url);
+      
+      console.log('[LISTING_WIZARD] Uploading and optimizing featured image');
+
+      // Upload via optimized API endpoint
+      const formData = new FormData();
+      formData.append('file', blob, 'featured.jpg');
+      formData.append('path', 'listings');
+      formData.append('preset', 'listingImage');
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || error.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('[LISTING_WIZARD] Featured image uploaded and optimized', {
+        url: data.url,
+        compressionRatio: `${((1 - data.metadata.optimizedSize / data.metadata.originalSize) * 100).toFixed(1)}%`,
+      });
+
+      setFeaturedImageUrl(data.url);
     } catch (e) {
+      console.error('[LISTING_WIZARD] Featured image upload failed', e);
       // ignore UI error
     }
   };
@@ -138,18 +159,39 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   const onAddGalleryFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     try {
-      const storage = await getStorageClient();
-      if (!storage) return;
+      console.log('[LISTING_WIZARD] Uploading and optimizing gallery images', { count: files.length });
+
       const uploads: Promise<string>[] = [];
       Array.from(files).forEach((file) => {
-        const r = ref(storage, `listings/gallery-${Date.now()}-${file.name}`);
-        uploads.push(
-          uploadBytes(r, file).then(() => getDownloadURL(r))
-        );
+        const upload = (async () => {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('path', 'listings');
+          formData.append('preset', 'listingImage');
+
+          const response = await fetch('/api/upload-image', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || error.error || `HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.url;
+        })();
+        
+        uploads.push(upload);
       });
+
       const urls = await Promise.all(uploads);
+      console.log('[LISTING_WIZARD] Gallery images uploaded and optimized', { count: urls.length });
       setGallery((prev) => [...prev, ...urls]);
-    } catch {
+    } catch (e) {
+      console.error('[LISTING_WIZARD] Gallery upload failed', e);
       // ignore
     }
   };

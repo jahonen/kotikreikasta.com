@@ -114,20 +114,44 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
       setMessage('Luo ensin luonnos.');
       return;
     }
-    const storage = await getStorageClient();
-    if (!storage) {
-      setMessage('Tallennuspalvelu ei ole saatavilla.');
-      return;
-    }
+    
     setImageUploading(true);
     try {
-      const path = `blog-images/${docId}/${Date.now()}-${file.name}`;
-      const r = ref(storage, path);
-      await uploadBytes(r, file, { contentType: file.type });
-      const url = await getDownloadURL(r);
-      setImageUrl(url);
-      setMessage('Nostokuva ladattu. Muista tallentaa luonnos.');
+      console.log('[BLOG_EDITOR] Uploading and optimizing image', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      });
+
+      // Upload via optimized API endpoint
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('path', `blog-images/${docId}`);
+      formData.append('preset', 'blogThumbnail');
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || error.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('[BLOG_EDITOR] Image uploaded and optimized', {
+        url: data.url,
+        originalSize: data.metadata.originalSize,
+        optimizedSize: data.metadata.optimizedSize,
+        compressionRatio: `${((1 - data.metadata.optimizedSize / data.metadata.originalSize) * 100).toFixed(1)}%`,
+      });
+
+      setImageUrl(data.url);
+      setMessage(`Nostokuva ladattu ja optimoitu (${data.metadata.width}x${data.metadata.height}). Muista tallentaa luonnos.`);
     } catch (e: any) {
+      console.error('[BLOG_EDITOR] Image upload failed', e);
       setMessage(`Kuvan lataus epäonnistui: ${e?.message || 'virhe'}`);
     } finally {
       setImageUploading(false);

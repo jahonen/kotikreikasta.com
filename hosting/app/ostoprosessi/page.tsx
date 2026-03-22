@@ -48,44 +48,45 @@ export default function OstoprosessiPage() {
               background: 'var(--white)',
               border: '1px solid var(--border)',
               borderRadius: '4px',
-              padding: 'var(--space-2xl)',
+              padding: 'clamp(1.5rem, 4vw, 2.5rem)',
               boxShadow: 'var(--shadow-sm)'
             }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 'var(--space-lg)',
-                marginBottom: 'var(--space-lg)'
+                gap: 'clamp(1rem, 3vw, 1.5rem)',
+                flexDirection: 'row'
               }}>
                 <div style={{
-                  fontSize: '3rem',
+                  fontSize: 'clamp(2.5rem, 6vw, 3rem)',
                   fontFamily: 'var(--font-display)',
                   fontWeight: 300,
                   color: 'var(--gold)',
                   lineHeight: 1,
-                  minWidth: '60px'
+                  minWidth: 'clamp(50px, 10vw, 60px)',
+                  flexShrink: 0
                 }}>
                   1
                 </div>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: '1.75rem',
+                    fontSize: 'clamp(1.375rem, 3.5vw, 1.75rem)',
                     fontWeight: 400,
                     color: 'var(--text)',
                     marginBottom: 'var(--space-md)',
                     lineHeight: 1.3
                   }}>
-                    Ota yhteyttä Kotikreikasta.com-tiimiin
+                    Löydä
                   </h2>
                   <p style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: '1rem',
+                    fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                     lineHeight: 1.7,
                     color: 'var(--text-mid)',
                     margin: 0
                   }}>
-                    Meillä on valmius auttaa sinua kaikissa ostoprosessin vaiheissa. Aloitamme sopivan kiinteistön etsinnän ja hoidamme kreikkalaisen verotunnuksen (ΑΦΜ) hankkimisen puolestasi. Meidän tiimimme avustaa myös pankkitilin avaamisessa Kreikassa, mikä on tarpeen kaupan maksuliikenteessä.
+                    Tutustu kohteisiin ja alueeseen. Kotikreikasta.com esittelee sinulle Kreikan kiinteistömarkkinat, alueen erityispiirteet ja sopivat kohteet suomeksi. Kartoitat yhdessä kanssamme tarpeitasi vastaavat vaihtoehdot.
                   </p>
                 </div>
               </div>
@@ -96,44 +97,45 @@ export default function OstoprosessiPage() {
               background: 'var(--white)',
               border: '1px solid var(--border)',
               borderRadius: '4px',
-              padding: 'var(--space-2xl)',
+              padding: 'clamp(1.5rem, 4vw, 2.5rem)',
               boxShadow: 'var(--shadow-sm)'
             }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 'var(--space-lg)',
-                marginBottom: 'var(--space-lg)'
+                gap: 'clamp(1rem, 3vw, 1.5rem)',
+                flexDirection: 'row'
               }}>
                 <div style={{
-                  fontSize: '3rem',
+                  fontSize: 'clamp(2.5rem, 6vw, 3rem)',
                   fontFamily: 'var(--font-display)',
                   fontWeight: 300,
                   color: 'var(--gold)',
                   lineHeight: 1,
-                  minWidth: '60px'
+                  minWidth: 'clamp(50px, 10vw, 60px)',
+                  flexShrink: 0
                 }}>
                   2
                 </div>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: '1.75rem',
+                    fontSize: 'clamp(1.375rem, 3.5vw, 1.75rem)',
                     fontWeight: 400,
                     color: 'var(--text)',
                     marginBottom: 'var(--space-md)',
                     lineHeight: 1.3
                   }}>
-                    Valitse kiinteistö ja tarkista sen laillinen status
+                    Valmistaudu
                   </h2>
                   <p style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: '1rem',
+                    fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                     lineHeight: 1.7,
                     color: 'var(--text-mid)',
                     margin: 0
                   }}>
-                    Meidän paikalliset kumppanivälittäjät ja asiantuntijat auttavat sinua löytämään sopivan kiinteistön. Varmistamme, että kiinteistöllä ei ole velkoja tai laillisia esteitä, ja tarkistamme sen omistusoikeuden ja rasitteet Kreikan kiinteistörekisteristä (Κτηματολόγιο).
+                    Ennen kuin mitään sitovaa tapahtuu, hankitaan kaikki kaupanteon edellytykset kuntoon: kreikkalainen veronumero (AFM), valtakirja paikalliselle asianajajalle, kreikkalainen pankkitili sekä selkeä laskelma kaikista kaupan kustannuksista.
                   </p>
                 </div>
               </div>
@@ -144,44 +146,45 @@ export default function OstoprosessiPage() {
               background: 'var(--white)',
               border: '1px solid var(--border)',
               borderRadius: '4px',
-              padding: 'var(--space-2xl)',
+              padding: 'clamp(1.5rem, 4vw, 2.5rem)',
               boxShadow: 'var(--shadow-sm)'
             }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 'var(--space-lg)',
-                marginBottom: 'var(--space-lg)'
+                gap: 'clamp(1rem, 3vw, 1.5rem)',
+                flexDirection: 'row'
               }}>
                 <div style={{
-                  fontSize: '3rem',
+                  fontSize: 'clamp(2.5rem, 6vw, 3rem)',
                   fontFamily: 'var(--font-display)',
                   fontWeight: 300,
                   color: 'var(--gold)',
                   lineHeight: 1,
-                  minWidth: '60px'
+                  minWidth: 'clamp(50px, 10vw, 60px)',
+                  flexShrink: 0
                 }}>
                   3
                 </div>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: '1.75rem',
+                    fontSize: 'clamp(1.375rem, 3.5vw, 1.75rem)',
                     fontWeight: 400,
                     color: 'var(--text)',
                     marginBottom: 'var(--space-md)',
                     lineHeight: 1.3
                   }}>
-                    Hyödynnä meidän luotettavaa asianajajaverkostoamme
+                    Tarkista
                   </h2>
                   <p style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: '1rem',
+                    fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                     lineHeight: 1.7,
                     color: 'var(--text-mid)',
                     margin: 0
                   }}>
-                    Meidän tiimimme työskentelee yhdessä paikallisten asianajajien kanssa, jotka hoitavat kaupan dokumentit ja varmistavat, että kaikki paperit ovat kunnossa. He edustavat sinua notaarin edessä, jotta kauppa etenee sujuvasti ja turvallisesti.
+                    Itsenäinen asianajaja tekee kohteesta lakisääteisen due diligence -tarkastuksen: omistushistoria, rasitteet, rakennusluvat, yhtiövastikevelat. Kauppaan edetään vasta kun tarkastus on puhdas.
                   </p>
                 </div>
               </div>
@@ -192,44 +195,45 @@ export default function OstoprosessiPage() {
               background: 'var(--white)',
               border: '1px solid var(--border)',
               borderRadius: '4px',
-              padding: 'var(--space-2xl)',
+              padding: 'clamp(1.5rem, 4vw, 2.5rem)',
               boxShadow: 'var(--shadow-sm)'
             }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 'var(--space-lg)',
-                marginBottom: 'var(--space-lg)'
+                gap: 'clamp(1rem, 3vw, 1.5rem)',
+                flexDirection: 'row'
               }}>
                 <div style={{
-                  fontSize: '3rem',
+                  fontSize: 'clamp(2.5rem, 6vw, 3rem)',
                   fontFamily: 'var(--font-display)',
                   fontWeight: 300,
                   color: 'var(--gold)',
                   lineHeight: 1,
-                  minWidth: '60px'
+                  minWidth: 'clamp(50px, 10vw, 60px)',
+                  flexShrink: 0
                 }}>
                   4
                 </div>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: '1.75rem',
+                    fontSize: 'clamp(1.375rem, 3.5vw, 1.75rem)',
                     fontWeight: 400,
                     color: 'var(--text)',
                     marginBottom: 'var(--space-md)',
                     lineHeight: 1.3
                   }}>
-                    Allekirjoita kauppakirja notaarin edessä
+                    Tee kauppa
                   </h2>
                   <p style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: '1rem',
+                    fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                     lineHeight: 1.7,
                     color: 'var(--text-mid)',
                     margin: 0
                   }}>
-                    Me järjestämme notaarin toimistossa tapaamisen, jossa allekirjoitetaan kauppakirja (συμβόλαιο αγοράς). Hoidamme myös siirtoveron (yleensä 3 %) ja muut kauppaan liittyvät maksut puolestasi.
+                    Paikallinen kiinteistönvälittäjä johtaa kaupanteon: hintaneuvottelu, esisopimus, käsiraha, kauppakirja notaarin luona ja lainhuudon kirjaaminen. Asianajajasi on läsnä ja toimii kanssasi.
                   </p>
                 </div>
               </div>
@@ -240,44 +244,45 @@ export default function OstoprosessiPage() {
               background: 'var(--white)',
               border: '1px solid var(--border)',
               borderRadius: '4px',
-              padding: 'var(--space-2xl)',
+              padding: 'clamp(1.5rem, 4vw, 2.5rem)',
               boxShadow: 'var(--shadow-sm)'
             }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 'var(--space-lg)',
-                marginBottom: 'var(--space-lg)'
+                gap: 'clamp(1rem, 3vw, 1.5rem)',
+                flexDirection: 'row'
               }}>
                 <div style={{
-                  fontSize: '3rem',
+                  fontSize: 'clamp(2.5rem, 6vw, 3rem)',
                   fontFamily: 'var(--font-display)',
                   fontWeight: 300,
                   color: 'var(--gold)',
                   lineHeight: 1,
-                  minWidth: '60px'
+                  minWidth: 'clamp(50px, 10vw, 60px)',
+                  flexShrink: 0
                 }}>
                   5
                 </div>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: '1.75rem',
+                    fontSize: 'clamp(1.375rem, 3.5vw, 1.75rem)',
                     fontWeight: 400,
                     color: 'var(--text)',
                     marginBottom: 'var(--space-md)',
                     lineHeight: 1.3
                   }}>
-                    Rekisteröi omistusoikeus ja aloita lomanvietto
+                    Ota haltuun
                   </h2>
                   <p style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: '1rem',
+                    fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                     lineHeight: 1.7,
                     color: 'var(--text-mid)',
                     margin: 0
                   }}>
-                    Me huolehdimme kiinteistön omistusoikeuden rekisteröinnistä ja autamme tarvittaessa sähkö-, vesi- ja internetliittymien hankinnassa. Voit keskittyä lomanviettoon, kun me hoidamme kaikki käytännön asiat.
+                    Kaupan jälkeen huolehditaan käytännön asioista: sähkö- ja vesisopimukset, kiinteistöveron rekisteröinti, tarvittaessa lyhytaikaisen vuokrauksen luvat sekä opastus Suomen verottajaa koskevissa velvoitteissa.
                   </p>
                 </div>
               </div>
