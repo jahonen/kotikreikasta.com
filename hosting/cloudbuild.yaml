@@ -4,7 +4,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$COMMIT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA'
       - '-t'
       - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:latest'
       - '.'
@@ -14,7 +14,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$COMMIT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -29,7 +29,7 @@ steps:
       - 'deploy'
       - 'kotikreikasta-hosting'
       - '--image'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$COMMIT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA'
       - '--region'
       - 'europe-west1'
       - '--platform'
@@ -47,7 +47,7 @@ steps:
       - 'NODE_ENV=production,GCLOUD_PROJECT=$PROJECT_ID,FIREBASE_CONFIG={"projectId":"kotikreikasta","storageBucket":"kotikreikasta.firebasestorage.app"}'
 
 images:
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$COMMIT_SHA'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA'
   - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:latest'
 
 options:
