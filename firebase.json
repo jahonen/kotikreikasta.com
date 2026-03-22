@@ -3,6 +3,9 @@
     {
       "source": "hosting",
       "site": "kotikreikasta",
+      "frameworksBackend": {
+        "region": "europe-west1"
+      },
       "rewrites": [
         {
           "source": "/api/maps/key",
@@ -42,6 +45,9 @@
     {
       "source": "admin",
       "site": "kotikreikasta-admin",
+      "frameworksBackend": {
+        "region": "europe-west1"
+      },
       "rewrites": [
         {
           "source": "**",

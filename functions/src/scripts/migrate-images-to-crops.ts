@@ -11,7 +11,9 @@ import sharp from 'sharp';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
-  admin.initializeApp();
+  admin.initializeApp({
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'kotikreikasta.appspot.com',
+  });
 }
 
 const db = admin.firestore();
