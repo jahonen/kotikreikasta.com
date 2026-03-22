@@ -125,16 +125,21 @@ export async function POST(request: NextRequest) {
     const bucket = getBucket();
     const originalPath = `${path}/${docId}/original.jpg`;
     const originalRef = bucket.file(originalPath);
+    
+    // Generate a download token for public access
+    const downloadToken = require('crypto').randomBytes(32).toString('hex');
+    
     await originalRef.save(optimizedOriginal, {
       metadata: {
         contentType: 'image/jpeg',
         metadata: {
           originalName: file.name,
+          firebaseStorageDownloadTokens: downloadToken,
         },
       },
     });
-    await originalRef.makePublic();
-    const originalUrl = `https://storage.googleapis.com/${bucket.name}/${originalPath}`;
+    
+    const originalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(originalPath)}?alt=media&token=${downloadToken}`;
 
     console.log('[UPLOAD_CROPS] Original uploaded', { url: originalUrl });
 
@@ -159,18 +164,22 @@ export async function POST(request: NextRequest) {
 
       const cropPath = `${path}/${docId}/${ratio.replace(':', '-')}.jpg`;
       const cropRef = bucket.file(cropPath);
+      
+      // Generate a download token for public access
+      const cropToken = require('crypto').randomBytes(32).toString('hex');
+      
       await cropRef.save(croppedBuffer, {
         metadata: {
           contentType: 'image/jpeg',
           metadata: {
             aspectRatio: ratio,
             originalName: file.name,
+            firebaseStorageDownloadTokens: cropToken,
           },
         },
       });
-      await cropRef.makePublic();
       
-      cropUrls[ratio] = `https://storage.googleapis.com/${bucket.name}/${cropPath}`;
+      cropUrls[ratio] = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(cropPath)}?alt=media&token=${cropToken}`;
       
       console.log('[UPLOAD_CROPS] Crop uploaded', {
         ratio,
