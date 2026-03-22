@@ -27,6 +27,14 @@
             "serviceId": "places-nearby",
             "region": "europe-west1"
           }
+        },
+        {
+          "source": "**",
+          "function": {
+            "functionId": "ssrkotikreikasta",
+            "region": "europe-west1",
+            "pinTag": true
+          }
         }
       ],
       "headers": [
