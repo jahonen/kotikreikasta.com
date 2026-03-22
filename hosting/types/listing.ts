@@ -38,7 +38,21 @@ export interface ListingAttributes {
 export interface ListingMedia {
   featured?: {
     url: string;
+    crops?: {
+      '16:9'?: string;
+      '4:3'?: string;
+      '1:1'?: string;
+      '3:4'?: string;
+      '9:16'?: string;
+    };
   };
+  gallery?: Array<{
+    url: string;
+    caption?: string;
+    crops?: {
+      '1:1'?: string;
+    };
+  }>;
   images?: Array<{
     url: string;
     caption?: string;

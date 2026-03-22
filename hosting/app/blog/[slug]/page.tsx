@@ -7,8 +7,9 @@ import BlogSocialShare from "../../../components/BlogSocialShare";
 import BlogAnalytics from "../../../components/BlogAnalytics";
 import "../blog-content.scss";
 import ContactForm from "../../../components/ContactForm";
-import { getFirestore } from "../../../lib/firebase-admin-server";
-import { mdToHtml, extractDescription } from "../../../lib/blog-utils";
+import { getFirestore } from '../../../lib/firebase-admin-server';
+import { mdToHtml, extractDescription } from '../../../lib/blog-utils';
+import { getOptimalCrop } from '../../../lib/image-utils';
 
 // ISR: Revalidate every 3600 seconds (1 hour) or on-demand via revalidatePath
 export const revalidate = 3600;
@@ -70,10 +71,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const keywords = seo.keywords || [];
   const ogTitle = seo.ogTitle || metaTitle;
   const ogDescription = seo.ogDescription || metaDescription;
-  const imageUrl = post.featuredImage?.url || 'https://kotikreikasta.com/og-image.jpg';
+  
+  // Use optimal crop for OG and Twitter images (16:9 for landscape)
+  const ogImageUrl = getOptimalCrop(post.featuredImage, 'og') || 'https://kotikreikasta.com/og-image.jpg';
+  const twitterImageUrl = getOptimalCrop(post.featuredImage, 'twitter') || 'https://kotikreikasta.com/og-image.jpg';
   const imageAlt = post.featuredImage?.alt || metaTitle;
-  const imageWidth = post.featuredImage?.width || 1200;
-  const imageHeight = post.featuredImage?.height || 630;
   
   return {
     title: metaTitle,
@@ -89,9 +91,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       siteName: 'Kotikreikasta',
       images: [
         {
-          url: imageUrl,
-          width: imageWidth,
-          height: imageHeight,
+          url: ogImageUrl,
+          width: 2868,
+          height: 1613,
           alt: imageAlt,
         },
       ],
@@ -105,7 +107,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: 'summary_large_image',
       title: ogTitle,
       description: ogDescription,
-      images: [imageUrl],
+      images: [twitterImageUrl],
       creator: '@kotikreikasta',
       site: '@kotikreikasta',
     },

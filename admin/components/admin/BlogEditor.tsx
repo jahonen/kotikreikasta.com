@@ -6,6 +6,8 @@ import { collection, doc, getDoc, serverTimestamp, updateDoc, deleteField } from
 import { getDbClient, getAuthClient, getStorageClient } from '../../lib/firebase-client';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LoadingButton from '../ui/LoadingButton';
+import ImageCropEditor from './ImageCropEditor';
+import { uploadImageWithCrops } from '../../lib/crop-utils';
 
 export default function BlogEditor({ initialId }: { initialId?: string }) {
   const router = useRouter();
@@ -16,6 +18,9 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
   const [categories, setCategories] = useState(''); // comma-separated
   const [imageUploading, setImageUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageCrops, setImageCrops] = useState<Record<string, string>>({});
+  const [showCropEditor, setShowCropEditor] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -43,6 +48,7 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
         setCategories(Array.isArray(data.categories) ? data.categories.map((c: any) => String(c)).join(', ') : '');
         setImageUrl(data.featuredImage?.url || '');
         setImageAlt(data.featuredImage?.alt || '');
+        setImageCrops(data.featuredImage?.crops || {});
         setMetaTitle(String(data.seo?.metaTitle || ''));
         setMetaDescription(String(data.seo?.metaDescription || ''));
         setKeywordsCsv(Array.isArray(data.seo?.keywords) ? data.seo.keywords.map((k: any)=> String(k)).join(', ') : '');
@@ -109,52 +115,47 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
     }
   };
 
-  const onUploadImage = async (file: File) => {
+  const onSelectImage = (file: File) => {
     if (!docId) {
       setMessage('Luo ensin luonnos.');
       return;
     }
+    setSelectedImageFile(file);
+    setShowCropEditor(true);
+  };
+
+  const onSaveCrops = async (crops: Record<string, any>) => {
+    if (!selectedImageFile || !docId) return;
     
     setImageUploading(true);
     try {
-      console.log('[BLOG_EDITOR] Uploading and optimizing image', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
+      console.log('[BLOG_EDITOR] Uploading image with crops', {
+        fileName: selectedImageFile.name,
+        fileSize: selectedImageFile.size,
       });
 
-      // Upload via optimized API endpoint
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('path', `blog-images/${docId}`);
-      formData.append('preset', 'blogThumbnail');
+      const result = await uploadImageWithCrops(
+        selectedImageFile,
+        crops,
+        'blog-images',
+        docId
+      );
 
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
+      console.log('[BLOG_EDITOR] Image uploaded with crops', {
+        original: result.original,
+        crops: result.crops,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || error.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('[BLOG_EDITOR] Image uploaded and optimized', {
-        url: data.url,
-        originalSize: data.metadata.originalSize,
-        optimizedSize: data.metadata.optimizedSize,
-        compressionRatio: `${((1 - data.metadata.optimizedSize / data.metadata.originalSize) * 100).toFixed(1)}%`,
-      });
-
-      setImageUrl(data.url);
-      setMessage(`Nostokuva ladattu ja optimoitu (${data.metadata.width}x${data.metadata.height}). Muista tallentaa luonnos.`);
+      setImageUrl(result.original);
+      setImageCrops(result.crops);
+      setMessage('Nostokuva ladattu ja rajattu. Muista tallentaa luonnos.');
     } catch (e: any) {
       console.error('[BLOG_EDITOR] Image upload failed', e);
       setMessage(`Kuvan lataus epäonnistui: ${e?.message || 'virhe'}`);
     } finally {
       setImageUploading(false);
+      setShowCropEditor(false);
+      setSelectedImageFile(null);
     }
   };
 
@@ -188,7 +189,11 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
         patch.categories = cats;
       }
       if (imageUrl) {
-        patch['featuredImage'] = { url: imageUrl, ...(imageAlt ? { alt: imageAlt } : {}) };
+        patch['featuredImage'] = { 
+          url: imageUrl, 
+          ...(imageAlt ? { alt: imageAlt } : {}),
+          ...(Object.keys(imageCrops).length > 0 ? { crops: imageCrops } : {})
+        };
       }
       patch['seo.metaTitle'] = metaTitle.trim() ? metaTitle.trim() : deleteField();
       patch['seo.metaDescription'] = metaDescription.trim() ? metaDescription.trim() : deleteField();
@@ -318,7 +323,7 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
             <div style={{ display: 'grid', gap: 8 }}>
               <div style={{ display: 'grid', gap: 6 }}>
                 <label htmlFor="featuredImage" style={{ fontWeight: 600 }}>Valitse kuva</label>
-                <input id="featuredImage" type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadImage(f); }} />
+                <input id="featuredImage" type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onSelectImage(f); }} />
                 {imageUploading && <div role="status" aria-live="polite">Ladataan kuvaa…</div>}
               </div>
               {imageUrl && (
@@ -369,6 +374,19 @@ export default function BlogEditor({ initialId }: { initialId?: string }) {
       )}
 
       {message && <div role="status" aria-live="polite" style={{ marginTop: '0.75rem' }}>{message}</div>}
+      
+      {selectedImageFile && (
+        <ImageCropEditor
+          open={showCropEditor}
+          onClose={() => {
+            setShowCropEditor(false);
+            setSelectedImageFile(null);
+          }}
+          onSave={onSaveCrops}
+          imageFile={selectedImageFile}
+          title="Rajaa blogin nostokuva"
+        />
+      )}
     </section>
   );
 }

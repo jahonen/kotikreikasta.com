@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import Cropper from 'react-easy-crop';
 import { getDbClient, getStorageClient } from '../../lib/firebase-client';
 import { slugify } from '../../lib/utils/slugify';
 import MapPicker from './MapPicker';
 import PointsOfInterestPicker, { type PoiItem } from './PointsOfInterestPicker';
+import ImageCropEditor from './ImageCropEditor';
+import { uploadImageWithCrops } from '../../lib/crop-utils';
 
 type Props = {
   open: boolean;
@@ -67,132 +68,93 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
   const [description, setDescription] = useState('');
 
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
-  const [gallery, setGallery] = useState<string[]>([]);
+  const [featuredImageCrops, setFeaturedImageCrops] = useState<Record<string, string>>({});
+  const [gallery, setGallery] = useState<Array<{ url: string; crops?: { '1:1'?: string } }>>([]);
   const [streetViewUrl, setStreetViewUrl] = useState('');
 
-  const [featuredSrc, setFeaturedSrc] = useState<string>('');
-  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [showFeaturedCropEditor, setShowFeaturedCropEditor] = useState(false);
+  const [showGalleryCropEditor, setShowGalleryCropEditor] = useState(false);
+  const [selectedFeaturedFile, setSelectedFeaturedFile] = useState<File | null>(null);
+  const [selectedGalleryFile, setSelectedGalleryFile] = useState<File | null>(null);
+  const [uploadingFeatured, setUploadingFeatured] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
-  const onCropComplete = (_: any, croppedPixels: any) => {
-    setCroppedAreaPixels(croppedPixels);
+  const onSelectFeaturedImage = (file: File) => {
+    setSelectedFeaturedFile(file);
+    setShowFeaturedCropEditor(true);
   };
 
-  async function getCroppedBlob(imageSrc: string, crop: { x: number; y: number; width: number; height: number }): Promise<Blob> {
-    return new Promise<Blob>((resolve, reject) => {
-      const image = new Image();
-      image.crossOrigin = 'anonymous';
-      image.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.floor(crop.width));
-        canvas.height = Math.max(1, Math.floor(crop.height));
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error('Canvas ei ole tuettu'));
-        ctx.drawImage(
-          image,
-          Math.floor(crop.x),
-          Math.floor(crop.y),
-          Math.floor(crop.width),
-          Math.floor(crop.height),
-          0,
-          0,
-          Math.floor(crop.width),
-          Math.floor(crop.height)
-        );
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Kuvan luonti epäonnistui'));
-        }, 'image/jpeg', 0.9);
-      };
-      image.onerror = (e) => reject(e);
-      image.src = imageSrc;
-    });
-  }
-
-  const onFeaturedFileChange = async (file: File | null) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFeaturedSrc(String(reader.result || ''));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const onUploadFeatured = async () => {
+  const onSaveFeaturedCrops = async (crops: Record<string, any>) => {
+    if (!selectedFeaturedFile) return;
+    
+    setUploadingFeatured(true);
     try {
-      if (!featuredSrc || !croppedAreaPixels) throw new Error('Valitse kuva ja rajaa se ennen latausta');
-      const blob = await getCroppedBlob(featuredSrc, croppedAreaPixels);
-      
-      console.log('[LISTING_WIZARD] Uploading and optimizing featured image');
+      console.log('[LISTING_WIZARD] Uploading featured image with crops');
 
-      // Upload via optimized API endpoint
-      const formData = new FormData();
-      formData.append('file', blob, 'featured.jpg');
-      formData.append('path', 'listings');
-      formData.append('preset', 'listingImage');
+      // Generate temporary ID for storage path
+      const tempId = `temp-${Date.now()}`;
+      const result = await uploadImageWithCrops(
+        selectedFeaturedFile,
+        crops,
+        'listings',
+        tempId
+      );
 
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
+      console.log('[LISTING_WIZARD] Featured image uploaded with crops', {
+        original: result.original,
+        crops: result.crops,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || error.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('[LISTING_WIZARD] Featured image uploaded and optimized', {
-        url: data.url,
-        compressionRatio: `${((1 - data.metadata.optimizedSize / data.metadata.originalSize) * 100).toFixed(1)}%`,
-      });
-
-      setFeaturedImageUrl(data.url);
+      setFeaturedImageUrl(result.original);
+      setFeaturedImageCrops(result.crops);
     } catch (e) {
       console.error('[LISTING_WIZARD] Featured image upload failed', e);
-      // ignore UI error
+    } finally {
+      setUploadingFeatured(false);
+      setShowFeaturedCropEditor(false);
+      setSelectedFeaturedFile(null);
     }
   };
 
-  const onAddGalleryFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const onSelectGalleryImage = (file: File) => {
+    setSelectedGalleryFile(file);
+    setShowGalleryCropEditor(true);
+  };
+
+  const onSaveGalleryCrop = async (crops: Record<string, any>) => {
+    if (!selectedGalleryFile) return;
+    
+    setUploadingGallery(true);
     try {
-      console.log('[LISTING_WIZARD] Uploading and optimizing gallery images', { count: files.length });
+      console.log('[LISTING_WIZARD] Uploading gallery image with 1:1 crop');
 
-      const uploads: Promise<string>[] = [];
-      Array.from(files).forEach((file) => {
-        const upload = (async () => {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('path', 'listings');
-          formData.append('preset', 'listingImage');
+      // Generate temporary ID for storage path
+      const tempId = `temp-${Date.now()}`;
+      const result = await uploadImageWithCrops(
+        selectedGalleryFile,
+        crops,
+        'listings',
+        tempId
+      );
 
-          const response = await fetch('/api/upload-image', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || error.error || `HTTP ${response.status}`);
-          }
-
-          const data = await response.json();
-          return data.url;
-        })();
-        
-        uploads.push(upload);
+      console.log('[LISTING_WIZARD] Gallery image uploaded with crops', {
+        original: result.original,
+        crops: result.crops,
       });
 
-      const urls = await Promise.all(uploads);
-      console.log('[LISTING_WIZARD] Gallery images uploaded and optimized', { count: urls.length });
-      setGallery((prev) => [...prev, ...urls]);
+      setGallery((prev) => [
+        ...prev,
+        {
+          url: result.original,
+          crops: { '1:1': result.crops['1:1'] },
+        },
+      ]);
     } catch (e) {
-      console.error('[LISTING_WIZARD] Gallery upload failed', e);
-      // ignore
+      console.error('[LISTING_WIZARD] Gallery image upload failed', e);
+    } finally {
+      setUploadingGallery(false);
+      setShowGalleryCropEditor(false);
+      setSelectedGalleryFile(null);
     }
   };
 
@@ -288,7 +250,6 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
       const db = await getDbClient();
       if (!db) throw new Error('Palvelu ei ole käytettävissä.');
       const stubBase = slugify(name || 'kohde');
-      const galleryArr = (gallery || []).filter(Boolean).map((url) => ({ url }));
       const payload: any = {
         title: name,
         type,
@@ -328,8 +289,11 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         },
         description: description || undefined,
         media: {
-          featured: featuredImageUrl ? { url: featuredImageUrl } : undefined,
-          gallery: galleryArr.length ? galleryArr : undefined,
+          featured: featuredImageUrl ? {
+            url: featuredImageUrl,
+            ...(Object.keys(featuredImageCrops).length > 0 ? { crops: featuredImageCrops } : {})
+          } : undefined,
+          gallery: gallery.length ? gallery : undefined,
           streetViewUrl: streetViewUrl || undefined,
         },
         extras: {
@@ -568,41 +532,26 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Nostokuva</label>
-                <input type="file" accept="image/*" onChange={(e) => onFeaturedFileChange(e.target.files?.[0] || null)} />
-                {featuredSrc ? (
-                  <div style={{ position: 'relative', width: '100%', height: 280, marginTop: 8, background: '#111' }}>
-                    <Cropper
-                      image={featuredSrc}
-                      crop={crop}
-                      zoom={zoom}
-                      aspect={16 / 9}
-                      onCropChange={setCrop}
-                      onZoomChange={setZoom}
-                      onCropComplete={onCropComplete}
-                    />
+                <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onSelectFeaturedImage(f); }} />
+                {uploadingFeatured && <div style={{ marginTop: 8, color: '#555' }}>Ladataan ja rajataan kuvaa...</div>}
+                {featuredImageUrl && (
+                  <div style={{ marginTop: 8 }}>
+                    <img src={featuredImageUrl} alt="nostokuva" style={{ maxWidth: '100%', borderRadius: 8 }} />
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#555' }}>Tallennettu {Object.keys(featuredImageCrops).length} rajausta</div>
                   </div>
-                ) : null}
-                {featuredSrc ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                    <label style={{ fontSize: 12 }}>Zoom</label>
-                    <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
-                    <button className="btn-primary" type="button" onClick={onUploadFeatured}>Lataa rajattu kuva</button>
-                  </div>
-                ) : null}
-                {featuredImageUrl ? (
-                  <div style={{ marginTop: 8, color: '#555' }}>Tallennettu nostokuva: {featuredImageUrl}</div>
-                ) : null}
+                )}
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Galleria</label>
-                <input type="file" accept="image/*" multiple onChange={(e) => onAddGalleryFiles(e.target.files)} />
-                {gallery.length ? (
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Galleria (1:1 rajaus)</label>
+                <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onSelectGalleryImage(f); }} />
+                {uploadingGallery && <div style={{ marginTop: 8, color: '#555' }}>Ladataan ja rajataan kuvaa...</div>}
+                {gallery.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                    {gallery.map((url) => (
-                      <img key={url} src={url} alt="gallery" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 4, border: '1px solid #eee' }} />
+                    {gallery.map((item, idx) => (
+                      <img key={idx} src={item.crops?.['1:1'] || item.url} alt="gallery" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 4, border: '1px solid #eee' }} />
                     ))}
                   </div>
-                ) : null}
+                )}
               </div>
               <input className="input" placeholder="Street View -linkki (valinnainen)" value={streetViewUrl} onChange={(e) => setStreetViewUrl(e.target.value)} />
             </div>
@@ -648,6 +597,32 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
           </div>
         </div>
       </div>
+
+      {selectedFeaturedFile && (
+        <ImageCropEditor
+          open={showFeaturedCropEditor}
+          onClose={() => {
+            setShowFeaturedCropEditor(false);
+            setSelectedFeaturedFile(null);
+          }}
+          onSave={onSaveFeaturedCrops}
+          imageFile={selectedFeaturedFile}
+          title="Rajaa kohteen nostokuva"
+        />
+      )}
+
+      {selectedGalleryFile && (
+        <ImageCropEditor
+          open={showGalleryCropEditor}
+          onClose={() => {
+            setShowGalleryCropEditor(false);
+            setSelectedGalleryFile(null);
+          }}
+          onSave={onSaveGalleryCrop}
+          imageFile={selectedGalleryFile}
+          title="Rajaa galleriakuva (1:1)"
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import ContactForm from "../../../components/ContactForm";
 import ListingMap from "../../../components/ListingMap";
 import { getFirestore } from "../../../lib/firebase-admin-server";
 import { Listing } from "../../../types/listing";
+import { getOptimalCrop } from "../../../lib/image-utils";
 import "./listing-detail.scss";
 
 export const revalidate = 3600;
@@ -70,13 +71,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const priceFormatted = new Intl.NumberFormat('fi-FI', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(listing.price);
   const description = `${listing.type} ${listing.location.locality ? `kohteessa ${listing.location.locality}` : ''}. ${listing.attributes.bedrooms} makuuhuonetta, ${listing.attributes.bathrooms} kylpyhuonetta, ${listing.size} m². Hinta: ${priceFormatted}.`;
   
+  // Use optimal crop for OG images (16:9 for landscape)
+  const ogImageUrl = getOptimalCrop(listing.media.featured, 'og');
+  
   return {
     title: `${listing.title} - ${listing.location.locality || 'Kreikka'} - Kotikreikasta`,
     description,
     openGraph: {
       title: listing.title,
       description,
-      images: listing.media.featured?.url ? [listing.media.featured.url] : [],
+      images: ogImageUrl ? [ogImageUrl] : [],
       type: 'website',
     },
   };
