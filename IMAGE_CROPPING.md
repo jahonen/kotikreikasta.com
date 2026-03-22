@@ -2,15 +2,23 @@
 
 ## Overview
 
-This feature provides a reusable image cropping component that generates 5 different aspect ratio crops for every uploaded image, ensuring optimal display across all platforms and contexts.
+The image cropping feature allows content creators to define optimal crops for 5 different aspect ratios, each generated in 3 sizes:
 
-## Aspect Ratios
+### Aspect Ratios
+- **16:9** - Landscape (ideal for OG images, Twitter cards, hero sections)
+- **4:3** - Standard (ideal for preview cards)
+- **1:1** - Square (ideal for Instagram, small previews)
+- **3:4** - Portrait (ideal for mobile stories)
+- **9:16** - Vertical (ideal for mobile stories, reels)
 
-- **16:9 (Landscape)** - OG images, Twitter cards, hero sections (2868x1613px)
-- **4:3 (Standard)** - Preview cards, traditional displays (2868x2151px)
-- **1:1 (Square)** - Instagram, thumbnails, grid layouts (2868x2868px)
-- **3:4 (Portrait)** - Mobile hero, Pinterest (2151x2868px)
-- **9:16 (Vertical)** - Stories, TikTok, mobile-first (1613x2868px)
+### Image Sizes (per aspect ratio)
+- **Full** (2868px max) - High quality for hero sections, cards, and main content display
+- **OG** (1200px max) - Optimized for social media OG metadata (compliant with platform requirements)
+- **Thumbnail** (400px max) - Small previews for performance optimization
+
+**Total: 15 versions per image** (5 aspect ratios × 3 sizes)
+
+Each crop is generated server-side with automatic EXIF rotation correction and stored in Firebase Storage with download tokens for public access.
 
 ## Components
 
@@ -68,16 +76,36 @@ FormData {
 ```
 
 **Response:**
-```typescript
+```json
 {
-  success: true,
-  original: string, // Original image URL
-  crops: {
-    '16:9': string,
-    '4:3': string,
-    '1:1': string,
-    '3:4': string,
-    '9:16': string
+  "success": true,
+  "original": "https://firebasestorage.googleapis.com/...",
+  "crops": {
+    "16:9": {
+      "full": "https://firebasestorage.googleapis.com/.../16-9.jpg",
+      "og": "https://firebasestorage.googleapis.com/.../16-9-og.jpg",
+      "thumbnail": "https://firebasestorage.googleapis.com/.../16-9-thumb.jpg"
+    },
+    "4:3": {
+      "full": "https://firebasestorage.googleapis.com/.../4-3.jpg",
+      "og": "https://firebasestorage.googleapis.com/.../4-3-og.jpg",
+      "thumbnail": "https://firebasestorage.googleapis.com/.../4-3-thumb.jpg"
+    },
+    "1:1": {
+      "full": "https://firebasestorage.googleapis.com/.../1-1.jpg",
+      "og": "https://firebasestorage.googleapis.com/.../1-1-og.jpg",
+      "thumbnail": "https://firebasestorage.googleapis.com/.../1-1-thumb.jpg"
+    },
+    "3:4": {
+      "full": "https://firebasestorage.googleapis.com/.../3-4.jpg",
+      "og": "https://firebasestorage.googleapis.com/.../3-4-og.jpg",
+      "thumbnail": "https://firebasestorage.googleapis.com/.../3-4-thumb.jpg"
+    },
+    "9:16": {
+      "full": "https://firebasestorage.googleapis.com/.../9-16.jpg",
+      "og": "https://firebasestorage.googleapis.com/.../9-16-og.jpg",
+      "thumbnail": "https://firebasestorage.googleapis.com/.../9-16-thumb.jpg"
+    }
   }
 }
 ```
@@ -126,22 +154,45 @@ const thumbImage = getOptimalCrop(featuredImage, 'gallery');
 
 ## Firestore Schema
 
-### Blog Posts
+**Collection:** `blogs` or `listings`
+
 ```typescript
 {
   featuredImage: {
     url: string,
     alt?: string,
     crops?: {
-      '16:9'?: string,
-      '4:3'?: string,
-      '1:1'?: string,
-      '3:4'?: string,
-      '9:16'?: string
+      '16:9'?: {
+        full: string,
+        og: string,
+        thumbnail: string
+      },
+      '4:3'?: {
+        full: string,
+        og: string,
+        thumbnail: string
+      },
+      '1:1'?: {
+        full: string,
+        og: string,
+        thumbnail: string
+      },
+      '3:4'?: {
+        full: string,
+        og: string,
+        thumbnail: string
+      },
+      '9:16'?: {
+        full: string,
+        og: string,
+        thumbnail: string
+      }
     }
   }
 }
 ```
+
+**Note:** The schema is backward compatible with the old flat structure where crops were stored as direct strings.
 
 ### Listings
 ```typescript
@@ -376,12 +427,21 @@ function getFirebaseAdmin() {
 
 ## Notes
 
-- All crops are JPEG format (85% quality)
-- Max dimensions: 2868px (high quality for retina displays)
+- All crops are JPEG format (85% quality for full/og, 80% for thumbnails)
+- **Three sizes per aspect ratio:**
+  - Full: 2868px max (high quality for retina displays)
+  - OG: 1200px max (social media compliant)
+  - Thumbnail: 400px max (performance optimized)
+- **EXIF rotation correction** applied automatically before cropping
 - Crops are generated server-side for consistency
 - Original images are preserved
 - Fallback to original URL if crops not available
+- **Smart size selection:**
+  - OG metadata uses 1200px versions (social media compliant)
+  - Hero/card/preview use full size versions (high quality)
+  - Thumbnails use 400px versions (performance)
 - Social media platforms automatically use optimal crops via OG metadata
 - Platform-specific recommendations: Bluesky/Facebook/Twitter use 16:9, Threads/Instagram use 1:1
 - Uniform bucket-level access is enabled on Firebase Storage
 - Download tokens provide public access without individual file ACLs
+- **Backward compatible** with old flat crop structure
