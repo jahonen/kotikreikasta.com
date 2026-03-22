@@ -60,20 +60,26 @@ firebase deploy --only hosting:kotikreikasta
 
 ### Deploy Admin Panel
 
-The admin panel uses a separate Cloud Run service:
+The admin panel uses a separate Cloud Run service (`ssrkotikreikastaadmin`):
 
 ```bash
 # Deploy admin Cloud Run service
 cd admin
-gcloud run deploy kotikreikasta-admin \
+gcloud run deploy ssrkotikreikastaadmin \
   --source . \
   --region europe-west1 \
   --platform managed \
-  --memory 512Mi
+  --memory 512Mi \
+  --cpu 1 \
+  --concurrency 80 \
+  --timeout 60 \
+  --set-env-vars NODE_ENV=production,GCLOUD_PROJECT=kotikreikasta
 
 # Deploy Firebase Hosting for admin
 firebase deploy --only hosting:kotikreikasta-admin
 ```
+
+**Note**: The admin service includes the image upload API (`/api/upload-image-crops`) which requires Firebase Admin SDK with Application Default Credentials.
 
 ### Deploy Cloud Functions
 

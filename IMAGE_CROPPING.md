@@ -309,6 +309,71 @@ const imageUrl = extractOptimalImage(featuredImage, 'facebook'); // 16:9
 const imageUrl = extractOptimalImage(featuredImage, 'instagram'); // 1:1
 ```
 
+## Deployment
+
+The image cropping feature is deployed as part of the admin Cloud Run service.
+
+### Admin Service Deployment
+
+```bash
+# Deploy admin service with image upload API
+cd admin
+gcloud run deploy ssrkotikreikastaadmin \
+  --source . \
+  --region europe-west1 \
+  --platform managed \
+  --memory 512Mi \
+  --cpu 1 \
+  --concurrency 80 \
+  --timeout 60 \
+  --set-env-vars NODE_ENV=production,GCLOUD_PROJECT=kotikreikasta
+```
+
+### Firebase Storage Configuration
+
+The feature uses Firebase Storage with **uniform bucket-level access** enabled. Files are made publicly accessible using download tokens instead of individual file ACLs.
+
+Each uploaded file gets a unique token in its metadata:
+```
+firebaseStorageDownloadTokens: <random-hex-token>
+```
+
+URLs follow this format:
+```
+https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media&token={token}
+```
+
+## Troubleshooting
+
+### Issue: "Cannot update access control for an object when uniform bucket-level access is enabled"
+
+**Cause**: Attempting to use `makePublic()` on individual files when the bucket has uniform bucket-level access enabled.
+
+**Solution**: Use Firebase Storage download tokens instead. The API route automatically generates tokens for each uploaded file.
+
+### Issue: "extract_area: bad extract area"
+
+**Cause**: Crop coordinates are invalid (negative, out of bounds, or zero width/height).
+
+**Solution**: The API route now validates and clamps crop coordinates to ensure they're within image bounds:
+- Coordinates are clamped to `[0, imageWidth-1]` and `[0, imageHeight-1]`
+- Width and height are clamped to `[1, imageWidth-left]` and `[1, imageHeight-top]`
+
+### Issue: "The default Firebase app does not exist"
+
+**Cause**: Firebase Admin SDK not properly initialized in Cloud Run environment.
+
+**Solution**: The API route uses lazy initialization with Application Default Credentials:
+```typescript
+function getFirebaseAdmin() {
+  if (admin.apps.length > 0) return admin.app();
+  return admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+    storageBucket: 'kotikreikasta.firebasestorage.app',
+  });
+}
+```
+
 ## Notes
 
 - All crops are JPEG format (85% quality)
@@ -318,3 +383,5 @@ const imageUrl = extractOptimalImage(featuredImage, 'instagram'); // 1:1
 - Fallback to original URL if crops not available
 - Social media platforms automatically use optimal crops via OG metadata
 - Platform-specific recommendations: Bluesky/Facebook/Twitter use 16:9, Threads/Instagram use 1:1
+- Uniform bucket-level access is enabled on Firebase Storage
+- Download tokens provide public access without individual file ACLs
