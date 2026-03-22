@@ -59,13 +59,25 @@ async function extractCrop(
   maxWidth: number,
   maxHeight: number
 ): Promise<Buffer> {
+  // Get image metadata to validate crop area
+  const metadata = await sharp(imageBuffer).metadata();
+  const imageWidth = metadata.width || 0;
+  const imageHeight = metadata.height || 0;
+
+  // Validate and clamp crop coordinates
+  const left = Math.max(0, Math.min(Math.round(cropArea.x), imageWidth - 1));
+  const top = Math.max(0, Math.min(Math.round(cropArea.y), imageHeight - 1));
+  const width = Math.max(1, Math.min(Math.round(cropArea.width), imageWidth - left));
+  const height = Math.max(1, Math.min(Math.round(cropArea.height), imageHeight - top));
+
+  console.log('[EXTRACT_CROP] Validated crop area', {
+    original: cropArea,
+    validated: { left, top, width, height },
+    imageSize: { width: imageWidth, height: imageHeight },
+  });
+
   const pipeline = sharp(imageBuffer)
-    .extract({
-      left: Math.round(cropArea.x),
-      top: Math.round(cropArea.y),
-      width: Math.round(cropArea.width),
-      height: Math.round(cropArea.height),
-    })
+    .extract({ left, top, width, height })
     .resize(maxWidth, maxHeight, {
       fit: 'inside',
       withoutEnlargement: true,
