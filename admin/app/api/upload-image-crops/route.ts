@@ -2,20 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
 import sharp from 'sharp';
 
-if (!admin.apps.length) {
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    : undefined;
+// Initialize Firebase Admin SDK
+function getFirebaseAdmin() {
+  if (admin.apps.length > 0) {
+    return admin.app();
+  }
 
-  admin.initializeApp({
-    credential: serviceAccount 
-      ? admin.credential.cert(serviceAccount)
-      : admin.credential.applicationDefault(),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
+  try {
+    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
+      ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+      : undefined;
+
+    return admin.initializeApp({
+      credential: serviceAccount 
+        ? admin.credential.cert(serviceAccount)
+        : admin.credential.applicationDefault(),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app',
+    });
+  } catch (error) {
+    console.error('[FIREBASE_ADMIN] Initialization failed', error);
+    throw error;
+  }
 }
 
-const bucket = admin.storage().bucket();
+function getBucket() {
+  const app = getFirebaseAdmin();
+  return admin.storage(app).bucket();
+}
 
 interface CropArea {
   x: number;
@@ -109,6 +122,7 @@ export async function POST(request: NextRequest) {
       })
       .toBuffer();
 
+    const bucket = getBucket();
     const originalPath = `${path}/${docId}/original.jpg`;
     const originalRef = bucket.file(originalPath);
     await originalRef.save(optimizedOriginal, {
