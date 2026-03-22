@@ -53,11 +53,18 @@ const ASPECT_RATIO_DIMENSIONS = {
   '9:16': { width: 1613, height: 2868 },
 };
 
+const IMAGE_SIZES = {
+  full: { maxWidth: 2868, maxHeight: 2868, quality: 85, suffix: '' },
+  og: { maxWidth: 1200, maxHeight: 1200, quality: 85, suffix: '-og' },
+  thumbnail: { maxWidth: 400, maxHeight: 400, quality: 80, suffix: '-thumb' },
+};
+
 async function extractCrop(
   imageBuffer: Buffer,
   cropArea: CropArea,
   maxWidth: number,
-  maxHeight: number
+  maxHeight: number,
+  quality: number = 85
 ): Promise<Buffer> {
   // Get image metadata to validate crop area
   const metadata = await sharp(imageBuffer).metadata();
@@ -77,13 +84,14 @@ async function extractCrop(
   });
 
   const pipeline = sharp(imageBuffer)
+    .rotate() // Auto-rotate based on EXIF before cropping
     .extract({ left, top, width, height })
     .resize(maxWidth, maxHeight, {
       fit: 'inside',
       withoutEnlargement: true,
     })
     .jpeg({
-      quality: 85,
+      quality,
       progressive: true,
       mozjpeg: true,
     });
@@ -155,8 +163,8 @@ export async function POST(request: NextRequest) {
 
     console.log('[UPLOAD_CROPS] Original uploaded', { url: originalUrl });
 
-    // Process and upload each crop
-    const cropUrls: Record<string, string> = {};
+    // Process and upload each crop in 3 sizes
+    const cropUrls: Record<string, any> = {};
     
     for (const [ratio, cropArea] of Object.entries(crops)) {
       const dimensions = ASPECT_RATIO_DIMENSIONS[ratio as keyof typeof ASPECT_RATIO_DIMENSIONS];
@@ -167,36 +175,44 @@ export async function POST(request: NextRequest) {
         targetDimensions: dimensions,
       });
 
-      const croppedBuffer = await extractCrop(
-        originalBuffer,
-        cropArea,
-        dimensions.width,
-        dimensions.height
-      );
+      cropUrls[ratio] = {};
 
-      const cropPath = `${path}/${docId}/${ratio.replace(':', '-')}.jpg`;
-      const cropRef = bucket.file(cropPath);
-      
-      // Generate a download token for public access
-      const cropToken = require('crypto').randomBytes(32).toString('hex');
-      
-      await cropRef.save(croppedBuffer, {
-        metadata: {
-          contentType: 'image/jpeg',
+      // Generate 3 sizes for each aspect ratio
+      for (const [sizeName, sizeConfig] of Object.entries(IMAGE_SIZES)) {
+        const croppedBuffer = await extractCrop(
+          originalBuffer,
+          cropArea,
+          Math.min(dimensions.width, sizeConfig.maxWidth),
+          Math.min(dimensions.height, sizeConfig.maxHeight),
+          sizeConfig.quality
+        );
+
+        const cropPath = `${path}/${docId}/${ratio.replace(':', '-')}${sizeConfig.suffix}.jpg`;
+        const cropRef = bucket.file(cropPath);
+        
+        // Generate a download token for public access
+        const cropToken = require('crypto').randomBytes(32).toString('hex');
+        
+        await cropRef.save(croppedBuffer, {
           metadata: {
-            aspectRatio: ratio,
-            originalName: file.name,
-            firebaseStorageDownloadTokens: cropToken,
+            contentType: 'image/jpeg',
+            metadata: {
+              aspectRatio: ratio,
+              size: sizeName,
+              originalName: file.name,
+              firebaseStorageDownloadTokens: cropToken,
+            },
           },
-        },
-      });
-      
-      cropUrls[ratio] = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(cropPath)}?alt=media&token=${cropToken}`;
-      
-      console.log('[UPLOAD_CROPS] Crop uploaded', {
-        ratio,
-        url: cropUrls[ratio],
-      });
+        });
+        
+        cropUrls[ratio][sizeName] = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(cropPath)}?alt=media&token=${cropToken}`;
+        
+        console.log('[UPLOAD_CROPS] Crop uploaded', {
+          ratio,
+          size: sizeName,
+          url: cropUrls[ratio][sizeName],
+        });
+      }
     }
 
     console.log('[UPLOAD_CROPS] All crops uploaded successfully');
