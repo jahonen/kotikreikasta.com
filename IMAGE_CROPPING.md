@@ -259,6 +259,56 @@ Blog and listing pages automatically use optimal crops:
 - `sharp` - Server-side image processing
 - `firebase-admin` - Storage and Firestore access
 
+## Social Media Integration
+
+### Platform-Specific Optimal Crops
+
+The system automatically serves the best crop for each platform via OG metadata:
+
+**Bluesky**
+- Uses: 16:9 crop (landscape)
+- Why: Bluesky displays landscape images prominently in feeds
+- Implementation: OG tags use `getOptimalCrop(featuredImage, 'og')`
+
+**Threads (Instagram)**
+- Uses: 1:1 crop (square) via link preview
+- Why: Instagram-style square format native to platform
+- Implementation: Link attachment pulls OG image (16:9), but 1:1 available for future direct uploads
+
+**Facebook**
+- Uses: 16:9 crop (landscape)
+- Why: Link previews display landscape format optimally
+- Implementation: OG tags use `getOptimalCrop(featuredImage, 'og')`
+
+**Twitter/X**
+- Uses: 16:9 crop (landscape)
+- Why: Twitter cards prefer 16:9 aspect ratio
+- Implementation: Twitter-specific OG tags use `getOptimalCrop(featuredImage, 'twitter')`
+
+### Cloud Functions
+
+All social media publishing Cloud Functions (`functions/src/consumers/`) automatically benefit from optimal crops because they:
+
+1. **Scrape OG metadata** from the published URL
+2. **Extract the image** from OG tags
+3. **Upload to platform** - the image is already optimized
+
+No code changes needed in consumers - they inherit the optimal crop automatically via OG tags.
+
+### Future Direct Uploads
+
+For platforms that support direct image uploads (not just link previews), use the `image-crop-utils.ts` helper:
+
+```typescript
+import { extractOptimalImage } from '../utils/image-crop-utils';
+
+// Get optimal crop for specific platform
+const imageUrl = extractOptimalImage(featuredImage, 'bluesky'); // 16:9
+const imageUrl = extractOptimalImage(featuredImage, 'threads'); // 1:1
+const imageUrl = extractOptimalImage(featuredImage, 'facebook'); // 16:9
+const imageUrl = extractOptimalImage(featuredImage, 'instagram'); // 1:1
+```
+
 ## Notes
 
 - All crops are JPEG format (85% quality)
@@ -266,3 +316,5 @@ Blog and listing pages automatically use optimal crops:
 - Crops are generated server-side for consistency
 - Original images are preserved
 - Fallback to original URL if crops not available
+- Social media platforms automatically use optimal crops via OG metadata
+- Platform-specific recommendations: Bluesky/Facebook/Twitter use 16:9, Threads/Instagram use 1:1

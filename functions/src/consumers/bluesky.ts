@@ -280,12 +280,11 @@ function formatBlueskyPost(content: ContentItem, schedule: PlatformSchedule): Fo
   // Combine
   const finalText = `${text}\n\n${url}${hashtagText ? '\n' + hashtagText : ''}`;
   
-  // Extract image URL if featuredImage is an object
+  // Extract optimal image URL for Bluesky (16:9 landscape preferred)
   let imageUrl: string | undefined;
   if (prefs.includeImages && content.featuredImage) {
-    imageUrl = typeof content.featuredImage === 'string' 
-      ? content.featuredImage 
-      : content.featuredImage.url;
+    const { extractOptimalImage } = require('../utils/image-crop-utils');
+    imageUrl = extractOptimalImage(content.featuredImage, 'bluesky');
   }
   
   return {
