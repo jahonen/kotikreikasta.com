@@ -425,6 +425,18 @@ function getFirebaseAdmin() {
 }
 ```
 
+## Mobile Responsiveness
+
+The `ImageCropEditor` component is fully responsive and optimized for mobile devices:
+
+- **Flexible modal sizing** - Uses `min(1000px, 90vw)` for responsive width
+- **Adaptive cropper height** - 300px minimum with 50vh for better mobile fit
+- **Responsive typography** - Uses `clamp()` for scalable font sizes
+- **Compact spacing** - Reduced padding on mobile devices
+- **Touch-friendly controls** - Improved spacing and button sizing
+- **Flexible button layout** - Buttons wrap properly on narrow screens
+- **Tested and confirmed working** on mobile devices for both BlogEditor and ListingWizard
+
 ## Notes
 
 - All crops are JPEG format (85% quality for full/og, 80% for thumbnails)
