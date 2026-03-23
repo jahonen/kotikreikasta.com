@@ -147,6 +147,7 @@ export default function ImageCropEditor({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: '1rem',
       }}
     >
       <div
@@ -154,9 +155,9 @@ export default function ImageCropEditor({
           background: 'var(--background, #fff)',
           color: 'var(--text, #111)',
           borderRadius: '8px',
-          maxWidth: '90vw',
           maxHeight: '90vh',
-          width: '1000px',
+          width: '100%',
+          maxWidth: 'min(1000px, 90vw)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -165,25 +166,26 @@ export default function ImageCropEditor({
         {/* Header */}
         <div
           style={{
-            padding: '1.5rem',
+            padding: '1rem',
             borderBottom: '1px solid #e5e7eb',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            gap: '0.5rem',
           }}
         >
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 4vw, 1.25rem)', fontWeight: 600 }}>
               {title}
             </h2>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            <div style={{ fontSize: 'clamp(0.75rem, 3vw, 0.875rem)', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
               Vaihe {currentStep + 1} / {ASPECT_RATIOS.length}: {currentRatio.label}
             </div>
           </div>
           <button
             className="btn-primary"
             onClick={handleClose}
-            style={{ padding: '0.5rem 1rem' }}
+            style={{ padding: '0.5rem 1rem', flexShrink: 0 }}
           >
             Sulje
           </button>
@@ -211,7 +213,7 @@ export default function ImageCropEditor({
         </div>
 
         {/* Cropper */}
-        <div style={{ flex: 1, position: 'relative', background: '#000', minHeight: '400px' }}>
+        <div style={{ flex: 1, position: 'relative', background: '#000', minHeight: '300px', height: '50vh' }}>
           {imageSrc && (
             <Cropper
               image={imageSrc}
@@ -226,13 +228,13 @@ export default function ImageCropEditor({
         </div>
 
         {/* Controls */}
-        <div style={{ padding: '1.5rem', borderTop: '1px solid #e5e7eb' }}>
+        <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb' }}>
           <div style={{ marginBottom: '1rem' }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: 'clamp(0.75rem, 3vw, 0.875rem)', fontWeight: 600, marginBottom: '0.5rem' }}>
               {currentRatio.description}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Zoomaus</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ fontSize: 'clamp(0.75rem, 3vw, 0.875rem)', fontWeight: 500, flexShrink: 0 }}>Zoom</label>
               <input
                 type="range"
                 min={1}
@@ -240,21 +242,21 @@ export default function ImageCropEditor({
                 step={0.01}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
-                style={{ flex: 1 }}
+                style={{ flex: 1, minWidth: 0 }}
               />
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', minWidth: '3rem' }}>
+              <span style={{ fontSize: 'clamp(0.75rem, 3vw, 0.875rem)', color: 'var(--text-muted)', minWidth: '3rem', textAlign: 'right' }}>
                 {Math.round(zoom * 100)}%
               </span>
             </div>
           </div>
 
           {/* Navigation buttons */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button
               className="btn-primary"
               onClick={handlePrevious}
               disabled={currentStep === 0}
-              style={{ padding: '0.75rem 1.5rem' }}
+              style={{ padding: '0.75rem 1rem', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}
             >
               Edellinen
             </button>
@@ -264,7 +266,7 @@ export default function ImageCropEditor({
                 <button
                   className="btn-primary"
                   onClick={handleNext}
-                  style={{ padding: '0.75rem 1.5rem' }}
+                  style={{ padding: '0.75rem 1rem', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}
                 >
                   Seuraava
                 </button>
@@ -273,9 +275,9 @@ export default function ImageCropEditor({
                   className="btn-primary"
                   onClick={handleSave}
                   disabled={saving || !allCropsComplete}
-                  style={{ padding: '0.75rem 1.5rem' }}
+                  style={{ padding: '0.75rem 1rem', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}
                 >
-                  {saving ? 'Tallennetaan...' : 'Tallenna kaikki rajaukset'}
+                  {saving ? 'Tallennetaan...' : 'Tallenna'}
                 </button>
               )}
             </div>
