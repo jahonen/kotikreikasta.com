@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getAuth } from "firebase/auth";
 import { fetchAnalytics, AnalyticsData } from "./lib/analytics-client";
 import MetricCard from "./components/MetricCard";
 import ImpressionsChart from "./components/ImpressionsChart";
@@ -25,7 +26,12 @@ export default function MarketingDashboard() {
       }
       setError(null);
       
-      const result = await fetchAnalytics(period, forceRefresh);
+      // Get Firebase Auth ID token
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const idToken = user ? await user.getIdToken() : undefined;
+      
+      const result = await fetchAnalytics(period, forceRefresh, idToken);
       setData(result);
     } catch (e: any) {
       setError(e?.message || 'Analytiikan lataus epäonnistui');

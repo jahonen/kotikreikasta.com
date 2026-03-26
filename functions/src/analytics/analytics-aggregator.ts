@@ -4,6 +4,7 @@
  */
 
 import * as functions from 'firebase-functions/v1';
+import * as admin from 'firebase-admin';
 import { AggregatedMetrics, Platform, DailyMetrics, AnalyticsSnapshot } from './analytics-types';
 import { shouldFetchPlatform, updateCache, storeSnapshot, getAllSnapshots } from './utils/firestore-cache';
 import { generateProjection } from './utils/projection';
@@ -176,7 +177,7 @@ export const analyticsAggregator = functions
     // Enable CORS for admin dashboard
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
     if (req.method === 'OPTIONS') {
       res.status(204).send('');
@@ -186,6 +187,19 @@ export const analyticsAggregator = functions
     if (req.method !== 'GET') {
       res.status(405).json({ error: 'Method not allowed' });
       return;
+    }
+    
+    // Optional: Verify Firebase Auth token if provided
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const idToken = authHeader.split('Bearer ')[1];
+        await admin.auth().verifyIdToken(idToken);
+        functions.logger.info('Authenticated request');
+      } catch (error: any) {
+        functions.logger.warn('Auth verification failed', { error: error?.message });
+        // Continue anyway - admin dashboard requires login
+      }
     }
     
     try {

@@ -62,11 +62,17 @@ export interface AnalyticsResponse {
  */
 export async function fetchAnalytics(
   period: number = 30,
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
+  idToken?: string
 ): Promise<AnalyticsData> {
   const url = `https://europe-west1-kotikreikasta.cloudfunctions.net/analyticsAggregator?period=${period}${forceRefresh ? '&refresh=true' : ''}`;
   
-  const response = await fetch(url);
+  const headers: HeadersInit = {};
+  if (idToken) {
+    headers['Authorization'] = `Bearer ${idToken}`;
+  }
+  
+  const response = await fetch(url, { headers });
   
   if (!response.ok) {
     throw new Error(`Analytics fetch failed: ${response.status}`);
