@@ -44,6 +44,9 @@ export { enqueueSocialPublish } from "./api/enqueue-social-publish";
 // Migrations
 export { queueInstagramExistingContent } from "./migrations/queue-instagram-existing-content";
 
+// Analytics
+export { analyticsAggregator } from "./analytics/analytics-aggregator";
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
