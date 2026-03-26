@@ -43,6 +43,7 @@ export const onBlogPostPublished = functions
         x: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
         facebook: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
         threads: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
+        instagram: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
       };
       
       // Build metadata, filtering out undefined values
@@ -63,7 +64,7 @@ export const onBlogPostPublished = functions
       
       functions.logger.info('Blog post marked for social media publishing', {
         contentId,
-        platforms: ['bluesky', 'x', 'facebook', 'threads'],
+        platforms: ['bluesky', 'x', 'facebook', 'threads', 'instagram'],
       });
       
     } catch (error: any) {
@@ -130,6 +131,7 @@ export const onListingPublished = functions
         x: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
         facebook: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
         threads: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
+        instagram: { published: false, queued: true, queuedAt: admin.firestore.FieldValue.serverTimestamp() },
       };
       
       // Build metadata, filtering out undefined values
@@ -151,7 +153,7 @@ export const onListingPublished = functions
       
       functions.logger.info('Listing marked for social media publishing', {
         listingId,
-        platforms: ['bluesky', 'x', 'facebook', 'threads'],
+        platforms: ['bluesky', 'x', 'facebook', 'threads', 'instagram'],
       });
       
       // Trigger ISR revalidation on the public site
