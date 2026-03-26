@@ -22,16 +22,16 @@ async function fetchXCredentials(): Promise<XCredentials> {
   
   try {
     const [apiKeyVersion] = await secretClient.accessSecretVersion({
-      name: `projects/${project}/secrets/X_API_KEY/versions/latest`,
+      name: `projects/${project}/secrets/X_CONSUMER_KEY/versions/latest`,
     });
     const [apiSecretVersion] = await secretClient.accessSecretVersion({
-      name: `projects/${project}/secrets/X_API_SECRET/versions/latest`,
+      name: `projects/${project}/secrets/X_CONSUMER_SECRET/versions/latest`,
     });
     const [accessTokenVersion] = await secretClient.accessSecretVersion({
       name: `projects/${project}/secrets/X_ACCESS_TOKEN/versions/latest`,
     });
     const [accessSecretVersion] = await secretClient.accessSecretVersion({
-      name: `projects/${project}/secrets/X_ACCESS_SECRET/versions/latest`,
+      name: `projects/${project}/secrets/X_ACCESS_TOKEN_SECRET/versions/latest`,
     });
     
     const apiKey = apiKeyVersion.payload?.data?.toString() || '';

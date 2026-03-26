@@ -30,12 +30,28 @@ interface ImpressionsChartProps {
   projections?: Array<{ date: string; value: number }>;
 }
 
+// Platform brand colors with opacity for stacked areas
 const PLATFORM_COLORS = {
-  x: '#000000',
-  bluesky: '#0085ff',
-  instagram: '#E4405F',
-  facebook: '#1877F2',
-  threads: '#000000',
+  instagram: {
+    border: '#E4405F',
+    background: 'rgba(228, 64, 95, 0.7)',
+  },
+  facebook: {
+    border: '#1877F2',
+    background: 'rgba(24, 119, 242, 0.7)',
+  },
+  threads: {
+    border: '#000000',
+    background: 'rgba(0, 0, 0, 0.7)',
+  },
+  x: {
+    border: '#000000',
+    background: 'rgba(0, 0, 0, 0.5)',
+  },
+  bluesky: {
+    border: '#0085ff',
+    background: 'rgba(0, 133, 255, 0.7)',
+  },
 };
 
 export default function ImpressionsChart({ timeline, projections }: ImpressionsChartProps) {
@@ -56,44 +72,49 @@ export default function ImpressionsChart({ timeline, projections }: ImpressionsC
     labels: allLabels,
     datasets: [
       {
-        label: 'X',
-        data: timeline.map(t => t.x.impressions),
-        borderColor: PLATFORM_COLORS.x,
-        backgroundColor: PLATFORM_COLORS.x + '20',
-        fill: true,
-        tension: 0.4,
-      },
-      {
         label: 'Instagram',
         data: timeline.map(t => t.instagram.impressions),
-        borderColor: PLATFORM_COLORS.instagram,
-        backgroundColor: PLATFORM_COLORS.instagram + '20',
+        borderColor: PLATFORM_COLORS.instagram.border,
+        backgroundColor: PLATFORM_COLORS.instagram.background,
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
+        borderWidth: 0,
       },
       {
         label: 'Facebook',
         data: timeline.map(t => t.facebook.impressions),
-        borderColor: PLATFORM_COLORS.facebook,
-        backgroundColor: PLATFORM_COLORS.facebook + '20',
+        borderColor: PLATFORM_COLORS.facebook.border,
+        backgroundColor: PLATFORM_COLORS.facebook.background,
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
+        borderWidth: 0,
       },
       {
         label: 'Threads',
         data: timeline.map(t => t.threads.impressions),
-        borderColor: PLATFORM_COLORS.threads,
-        backgroundColor: PLATFORM_COLORS.threads + '10',
+        borderColor: PLATFORM_COLORS.threads.border,
+        backgroundColor: PLATFORM_COLORS.threads.background,
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
+        borderWidth: 0,
+      },
+      {
+        label: 'X',
+        data: timeline.map(t => t.x.impressions),
+        borderColor: PLATFORM_COLORS.x.border,
+        backgroundColor: PLATFORM_COLORS.x.background,
+        fill: true,
+        tension: 0.3,
+        borderWidth: 0,
       },
       {
         label: 'Bluesky',
         data: timeline.map(t => t.bluesky.impressions),
-        borderColor: PLATFORM_COLORS.bluesky,
-        backgroundColor: PLATFORM_COLORS.bluesky + '20',
+        borderColor: PLATFORM_COLORS.bluesky.border,
+        backgroundColor: PLATFORM_COLORS.bluesky.background,
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
+        borderWidth: 0,
       },
       // Projection line
       ...(projections ? [{
@@ -105,6 +126,7 @@ export default function ImpressionsChart({ timeline, projections }: ImpressionsC
         fill: false,
         tension: 0.4,
         pointRadius: 0,
+        borderWidth: 2,
       }] : []),
     ],
   };
@@ -112,6 +134,10 @@ export default function ImpressionsChart({ timeline, projections }: ImpressionsC
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: 'top' as const,
@@ -155,11 +181,13 @@ export default function ImpressionsChart({ timeline, projections }: ImpressionsC
     },
     scales: {
       x: {
+        stacked: true,
         grid: {
           display: false,
         },
       },
       y: {
+        stacked: true,
         beginAtZero: true,
         ticks: {
           callback: function(value: any) {

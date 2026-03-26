@@ -58,14 +58,14 @@ export interface AnalyticsResponse {
 }
 
 /**
- * Fetch analytics from Cloud Function
+ * Fetch analytics via admin API route (proxies to Cloud Function)
  */
 export async function fetchAnalytics(
   period: number = 30,
   forceRefresh: boolean = false,
   idToken?: string
 ): Promise<AnalyticsData> {
-  const url = `https://europe-west1-kotikreikasta.cloudfunctions.net/analyticsAggregator?period=${period}${forceRefresh ? '&refresh=true' : ''}`;
+  const url = `/api/analytics?period=${period}${forceRefresh ? '&refresh=true' : ''}`;
   
   const headers: HeadersInit = {};
   if (idToken) {

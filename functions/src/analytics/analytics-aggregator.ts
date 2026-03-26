@@ -5,6 +5,7 @@
 
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
+import * as cors from 'cors';
 import { AggregatedMetrics, Platform, DailyMetrics, AnalyticsSnapshot } from './analytics-types';
 import { shouldFetchPlatform, updateCache, storeSnapshot, getAllSnapshots } from './utils/firestore-cache';
 import { generateProjection } from './utils/projection';
@@ -165,6 +166,9 @@ function aggregateMetrics(
 /**
  * Main HTTP endpoint for analytics aggregation
  */
+// Initialize CORS middleware
+const corsHandler = cors.default({ origin: true });
+
 export const analyticsAggregator = functions
   .runWith({
     timeoutSeconds: 300,
@@ -172,22 +176,14 @@ export const analyticsAggregator = functions
   })
   .region('europe-west1')
   .https.onRequest(async (req, res) => {
-    const startTime = Date.now();
-    
-    // Enable CORS for admin dashboard
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-    
-    if (req.method !== 'GET') {
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
+    // Handle CORS
+    return corsHandler(req, res, async () => {
+      const startTime = Date.now();
+      
+      if (req.method !== 'GET') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
     
     // Optional: Verify Firebase Auth token if provided
     const authHeader = req.headers.authorization;
@@ -301,4 +297,5 @@ export const analyticsAggregator = functions
         error: error?.message || 'Internal server error',
       });
     }
+    });
   });
