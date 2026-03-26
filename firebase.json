@@ -46,7 +46,7 @@
           "source": "**",
           "run": {
             "serviceId": "ssrkotikreikastaadmin",
-            "region": "europe-west1"
+            "region": "us-central1"
           }
         }
       ]
