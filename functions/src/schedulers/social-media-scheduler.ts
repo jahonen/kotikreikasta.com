@@ -145,12 +145,14 @@ async function publishContent(platform: string, content: any): Promise<void> {
   const { xPublisher } = require('../consumers/x-pubsub');
   const { facebookPublisher } = require('../consumers/facebook-pubsub');
   const { threadsPublisher } = require('../consumers/threads-pubsub');
+  const { instagramPublisher } = require('../consumers/instagram-pubsub');
   
   const publishers: Record<string, any> = {
     bluesky: blueskyPublisher,
     x: xPublisher,
     facebook: facebookPublisher,
     threads: threadsPublisher,
+    instagram: instagramPublisher,
   };
   
   const publisher = publishers[platform];
@@ -192,12 +194,13 @@ export const socialMediaScheduler = functions
   .region('europe-west1')
   .https.onRequest(async (req, res) => {
     const startTime = Date.now();
-    const platforms = ['bluesky', 'x', 'facebook', 'threads'];
+    const platforms = ['bluesky', 'x', 'facebook', 'threads', 'instagram'];
     const secretNames = {
       bluesky: 'BSKY_SCHEDULE',
       x: 'X_SCHEDULE',
       facebook: 'FACEBOOK_SCHEDULE',
       threads: 'THREADS_SCHEDULE',
+      instagram: 'INSTAGRAM_SCHEDULE',
     };
     
     try {

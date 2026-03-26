@@ -8,7 +8,7 @@ export type ContentType = 'listing' | 'blog';
 /**
  * Social media platform
  */
-export type SocialPlatform = 'bluesky' | 'x' | 'facebook' | 'threads';
+export type SocialPlatform = 'bluesky' | 'x' | 'facebook' | 'threads' | 'instagram';
 
 /**
  * Platform-specific character limits (including link)
@@ -18,6 +18,7 @@ export const PLATFORM_LIMITS: Record<SocialPlatform, number> = {
   x: 280, // Reserve 23 chars for t.co link
   facebook: 5000,
   threads: 500,
+  instagram: 2200, // Instagram caption limit
 };
 
 /**

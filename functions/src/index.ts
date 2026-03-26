@@ -22,12 +22,14 @@ export { testXPost } from "./consumers/x-test";
 export { testFacebookPost } from "./consumers/facebook-test";
 export { testThreadsPost } from "./consumers/threads-test";
 export { refreshThreadsToken } from "./consumers/threads-token-refresh";
+export { refreshInstagramToken } from "./consumers/instagram-token-refresh";
 
 // Social media publishers (Pub/Sub-based)
 export { blueskyPublisher } from "./consumers/bluesky-pubsub";
 export { xPublisher } from "./consumers/x-pubsub";
 export { facebookPublisher } from "./consumers/facebook-pubsub";
 export { threadsPublisher } from "./consumers/threads-pubsub";
+export { instagramPublisher } from "./consumers/instagram-pubsub";
 export { testContentGeneration } from './test-content-generation';
 
 // Firestore triggers for auto-publishing

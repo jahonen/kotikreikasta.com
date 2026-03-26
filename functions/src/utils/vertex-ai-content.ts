@@ -112,6 +112,18 @@ ${metadataText}
    - Threads: Vapaamuotoinen, henkilökohtainen
    - Bluesky: Pohdiskeleva, keskusteleva
    - Facebook: Pidempi, käytännöllinen
+   - Instagram: Visuaalinen, 1-3 hashtagia, CTA "Linkki biossa" tai "Lue lisää biosta"
+
+${platform === 'instagram' ? `
+## INSTAGRAM-ERITYISVAATIMUKSET
+
+- ÄLÄ sisällytä URL-osoitetta tekstiin
+- Käytä CTA:na "Linkki biossa!" tai "Lue lisää biosta!"
+- Lisää 1-3 relevanttia hashtagia (ei enempää)
+- Suositellut hashtagit: #Kreikka #LomaAsunto #Kiinteistöt
+- Emoji sopii hyvin alkuun (🏝️ ☀️ 🏡 📖)
+- Kohderyhmä: Suomalaiset, varakkaat, keski-ikäiset, harkitsevat loma-asuntoa Kreikasta
+` : ''}
 
 Tuota nyt julkaisu.`;
 }
