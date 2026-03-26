@@ -41,6 +41,9 @@ export { socialMediaScheduler } from "./schedulers/social-media-scheduler";
 // API endpoints
 export { enqueueSocialPublish } from "./api/enqueue-social-publish";
 
+// Migrations
+export { queueInstagramExistingContent } from "./migrations/queue-instagram-existing-content";
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
