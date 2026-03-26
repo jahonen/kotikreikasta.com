@@ -327,7 +327,12 @@ gcloud functions logs read instagramPublisher \
 - [x] Email notifications configured
 - [x] Testing documentation created
 - [x] Deployment documentation created
-- [ ] First test post published successfully
+- [x] Azure blue border feature implemented and deployed
+- [x] Auto-publishing triggers updated to include Instagram
+- [x] 9 existing blog posts queued for Instagram
+- [x] Migration script created and executed
+- [x] Token has full access to insights and messages
+- [ ] First test post published successfully (awaiting scheduler)
 - [ ] Token refresh verified (tomorrow at 2 AM)
 - [ ] Schedule configuration optimized
 - [ ] Monitoring dashboard set up (optional)

@@ -42,6 +42,7 @@ Kotikreikasta.com is a comprehensive real estate platform connecting Finnish buy
 - X (Twitter)
 - Facebook
 - Threads
+- Instagram
 
 ### Project Structure
 
@@ -108,6 +109,7 @@ kotikreikasta.com/
 - **X:** 280 chars (t.co link shortening)
 - **Facebook:** 5000 chars (OG tag previews)
 - **Threads:** 500 chars (two-step publish process)
+- **Instagram:** 2200 chars (1-3 hashtags, "Linkki biossa" CTA, azure blue border)
 
 ### 📊 Analytics & Tracking
 - **UTM parameters:** Source, medium, campaign, content
@@ -194,12 +196,17 @@ gcloud secrets create FACEBOOK_PAGE_ID --data-file=- < fb_page_id.txt
 gcloud secrets create META_SYSTEM_TOKEN --data-file=- < meta_token.txt
 gcloud secrets create THREADS_USER_ID --data-file=- < threads_id.txt
 gcloud secrets create THREADS_ACCESS_TOKEN --data-file=- < threads_token.txt
+gcloud secrets create INSTAGRAM_ACCESS_TOKEN --data-file=- < instagram_token.txt
+gcloud secrets create INSTAGRAM_APP_ID --data-file=- < instagram_app_id.txt
+gcloud secrets create INSTAGRAM_APP_SECRET --data-file=- < instagram_secret.txt
 
 # Posting schedules (see samplecode/schedule_template_*.json)
 gcloud secrets create BSKY_SCHEDULE --data-file=samplecode/schedule_template_bluesky.json
 gcloud secrets create X_SCHEDULE --data-file=samplecode/schedule_template_x.json
 gcloud secrets create FACEBOOK_SCHEDULE --data-file=samplecode/schedule_template_facebook.json
 gcloud secrets create THREADS_SCHEDULE --data-file=samplecode/schedule_template_threads.json
+gcloud secrets create INSTAGRAM_SCHEDULE --data-file=samplecode/schedule_template_instagram.json
+gcloud secrets create INSTAGRAM_IMAGE_BORDER_CONFIG --data-file=- <<< '{"borderColor":"#0078D4","borderWidth":50,"enabled":true}'
 
 # Content generation
 gcloud secrets create SOCIAL_MEDIA_LLM_GUIDE --data-file=- < llm_guide.txt
@@ -284,6 +291,7 @@ Detailed setup guides for each platform:
 - [X (Twitter) Setup](X_SETUP_INSTRUCTIONS.md)
 - [Facebook Setup](FACEBOOK_SETUP_INSTRUCTIONS.md)
 - [Threads Setup](THREADS_SETUP_INSTRUCTIONS.md)
+- [Instagram Setup](INSTAGRAM_DEPLOYMENT.md)
 
 ### Architecture Documentation
 
@@ -309,6 +317,11 @@ See [SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE.md](SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE
 - `xPublisher` - Posts to X
 - `facebookPublisher` - Posts to Facebook
 - `threadsPublisher` - Posts to Threads
+- `instagramPublisher` - Posts to Instagram (with azure blue border)
+
+**Token Management:**
+- `refreshThreadsToken` - Refreshes Threads access token (daily at 2 AM)
+- `refreshInstagramToken` - Refreshes Instagram access token (daily at 2 AM)
 
 **Cloud Scheduler Job:**
 ```bash
@@ -386,7 +399,7 @@ gcloud scheduler jobs create http bluesky-hourly-check \
 **`socialShares`** - Share tracking per content item
 ```typescript
 {
-  platform: 'bluesky' | 'x' | 'facebook' | 'threads';
+  platform: 'bluesky' | 'x' | 'facebook' | 'threads' | 'instagram';
   sharedAt: Timestamp;
   postId: string;
   postUrl: string;
@@ -569,6 +582,9 @@ npm test
 - [X_SETUP_INSTRUCTIONS.md](X_SETUP_INSTRUCTIONS.md) - X/Twitter setup
 - [FACEBOOK_SETUP_INSTRUCTIONS.md](FACEBOOK_SETUP_INSTRUCTIONS.md) - Facebook setup
 - [THREADS_SETUP_INSTRUCTIONS.md](THREADS_SETUP_INSTRUCTIONS.md) - Threads setup
+- [INSTAGRAM_DEPLOYMENT.md](INSTAGRAM_DEPLOYMENT.md) - Instagram setup and deployment
+- [INSTAGRAM_PUBLISHER_PLAN.md](INSTAGRAM_PUBLISHER_PLAN.md) - Instagram implementation plan
+- [INSTAGRAM_TESTING.md](INSTAGRAM_TESTING.md) - Instagram testing guide
 
 ### Implementation Plans
 - [CONTENT_MARKETING_IMPLEMENTATION_PLAN.md](CONTENT_MARKETING_IMPLEMENTATION_PLAN.md)
@@ -597,4 +613,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Built with ❤️ for Finnish buyers seeking their dream home in Greece**
 
-*Last updated: March 19, 2026*
+*Last updated: March 26, 2026*
