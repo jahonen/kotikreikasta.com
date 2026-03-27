@@ -64,15 +64,36 @@ function isTimeInWindow(now: Date, window: TimeWindow): boolean {
   const [startStr, endStr] = window.window.split('–').map(s => s.trim());
   
   // Convert current time to target timezone
+  // EET = UTC+2 (Eastern European Time)
   // EEST = UTC+3 (Eastern European Summer Time)
-  const tzOffset = window.tz === 'EEST' ? 3 : 0;
+  // Handle both "EEST", "EET", and "EET/EEST" formats
+  let tzOffset = 0;
+  if (window.tz.includes('EEST')) {
+    tzOffset = 3; // Summer time (late March to late October)
+  } else if (window.tz.includes('EET')) {
+    tzOffset = 2; // Winter time
+  }
+  
   const nowUTC = now.getUTCHours() * 60 + now.getUTCMinutes();
   const nowInTz = (nowUTC + (tzOffset * 60)) % (24 * 60);
   
   const windowStart = parseTimeToMinutes(startStr);
   const windowEnd = parseTimeToMinutes(endStr);
   
-  return nowInTz >= windowStart && nowInTz <= windowEnd;
+  const isInWindow = nowInTz >= windowStart && nowInTz <= windowEnd;
+  
+  functions.logger.info('Time window check', {
+    window: window.window,
+    tz: window.tz,
+    tzOffset,
+    nowUTC: `${Math.floor(nowUTC / 60)}:${String(nowUTC % 60).padStart(2, '0')}`,
+    nowInTz: `${Math.floor(nowInTz / 60)}:${String(nowInTz % 60).padStart(2, '0')}`,
+    windowStart: `${Math.floor(windowStart / 60)}:${String(windowStart % 60).padStart(2, '0')}`,
+    windowEnd: `${Math.floor(windowEnd / 60)}:${String(windowEnd % 60).padStart(2, '0')}`,
+    isInWindow,
+  });
+  
+  return isInWindow;
 }
 
 /**
@@ -210,8 +231,11 @@ export const socialMediaScheduler = functions
       
       const results: Record<string, string> = {};
       
+      functions.logger.info('Processing platforms', { platforms });
+      
       // Check each platform's schedule
       for (const platform of platforms) {
+        functions.logger.info(`Processing platform: ${platform}`);
         const secretName = secretNames[platform as keyof typeof secretNames];
         const schedule = await fetchSchedule(secretName);
         

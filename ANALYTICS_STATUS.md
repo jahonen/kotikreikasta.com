@@ -84,6 +84,16 @@
 - CORS Configuration
 - IAM Permissions
 
+## Related Work
+
+### Social Media Scheduler Fix (March 27, 2026)
+While investigating Instagram publishing issues, fixed critical bugs in the social media scheduler:
+- Fixed timezone calculation to support `EET/EEST` format (was only checking exact `EEST` match)
+- Fixed Instagram schedule secret (removed invalid `json` prefix from JSON)
+- Granted IAM permissions for Instagram schedule secret access
+
+See `INSTAGRAM_PUBLISHING_FIX.md` for details.
+
 ### 2. Fix Instagram Metrics (API Research Required)
 
 The Instagram Graph API has changed. Need to:
