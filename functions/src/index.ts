@@ -47,6 +47,9 @@ export { queueInstagramExistingContent } from "./migrations/queue-instagram-exis
 // Analytics
 export { analyticsAggregator } from "./analytics/analytics-aggregator";
 
+// Notifications
+export { blueskyNotificationsFetcher } from "./notifications/bluesky-notifications";
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
