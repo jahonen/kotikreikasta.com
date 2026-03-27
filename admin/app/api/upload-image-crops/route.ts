@@ -13,11 +13,15 @@ function getFirebaseAdmin() {
       ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
       : undefined;
 
+    const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app';
+    console.log('[FIREBASE_ADMIN] Initializing with storageBucket:', storageBucket);
+    console.log('[FIREBASE_ADMIN] NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET env var:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+
     return admin.initializeApp({
       credential: serviceAccount 
         ? admin.credential.cert(serviceAccount)
         : admin.credential.applicationDefault(),
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app',
+      storageBucket,
     });
   } catch (error) {
     console.error('[FIREBASE_ADMIN] Initialization failed', error);
@@ -27,7 +31,9 @@ function getFirebaseAdmin() {
 
 function getBucket() {
   const app = getFirebaseAdmin();
-  return admin.storage(app).bucket();
+  const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app';
+  console.log('[FIREBASE_ADMIN] Getting bucket with name:', bucketName);
+  return admin.storage(app).bucket(bucketName);
 }
 
 interface CropArea {

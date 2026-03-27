@@ -2,20 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
 import { optimizeImage } from '../../../lib/image-optimizer';
 
-if (!admin.apps.length) {
+function getFirebaseAdmin() {
+  if (admin.apps.length > 0) {
+    return admin.app();
+  }
+
   const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
     ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
     : undefined;
 
-  admin.initializeApp({
+  return admin.initializeApp({
     credential: serviceAccount 
       ? admin.credential.cert(serviceAccount)
       : admin.credential.applicationDefault(),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app',
   });
 }
-
-const bucket = admin.storage().bucket();
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,6 +64,9 @@ export async function POST(request: NextRequest) {
     const fullPath = `${path}/${fileName}`;
 
     // Upload to Firebase Storage
+    const app = getFirebaseAdmin();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app';
+    const bucket = admin.storage(app).bucket(bucketName);
     const fileRef = bucket.file(fullPath);
     await fileRef.save(optimized.buffer, {
       metadata: {
