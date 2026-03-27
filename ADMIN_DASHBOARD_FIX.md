@@ -91,3 +91,44 @@ March 27, 2026
 - **10:24 UTC**: Increased Cloud Run memory limit to 512MB to fix image uploads
 - **10:25 UTC**: Second image upload issue - Firebase Admin SDK initialization error
 - **10:26 UTC**: Fixed Firebase initialization by moving bucket creation inside request handler
+- **10:49 UTC**: Third image upload issue - "Bucket name not specified or invalid" error
+- **11:18 UTC**: Root cause identified - Firebase Admin SDK already initialized by Firebase Frameworks without storageBucket config
+- **11:18 UTC**: Final fix - Explicitly pass bucket name to `bucket()` method instead of relying on initialization config
+- **11:20 UTC**: Blog publishing issue - Vertex AI API error "RESOURCE_PROJECT_INVALID"
+- **11:22 UTC**: Fixed by adding `GCLOUD_PROJECT=kotikreikasta` environment variable to Cloud Run
+- **11:22 UTC**: All issues resolved - Image upload and blog publishing working
+
+## Storage Bucket Fix Details
+
+### Problem
+The Firebase Admin SDK was already initialized by Firebase Frameworks middleware without the `storageBucket` configuration. When our code called `getFirebaseAdmin()`, it returned the existing app (due to the `if (admin.apps.length > 0)` check), so our `storageBucket` initialization parameter was never used.
+
+### Solution
+Instead of relying on the initialization config, explicitly pass the bucket name to the `bucket()` method:
+
+```typescript
+// Before (didn't work)
+const bucket = admin.storage(app).bucket();
+
+// After (works)
+const bucketName = 'kotikreikasta.firebasestorage.app';
+const bucket = admin.storage(app).bucket(bucketName);
+```
+
+### Files Modified
+- `admin/app/api/upload-image-crops/route.ts` - Updated `getBucket()` function
+- `admin/app/api/upload-image/route.ts` - Updated bucket initialization
+- `admin/.env` - Created with `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` for build-time config
+
+## Vertex AI Fix Details
+
+### Problem
+The blog publishing API was calling Vertex AI's Gemini model for SEO generation, but the `GCLOUD_PROJECT` environment variable was missing from Cloud Run, causing the API URL to be constructed with an empty project ID.
+
+### Solution
+Added the required environment variable to Cloud Run:
+```bash
+gcloud run services update ssrkotikreikastaadmin \
+  --region=us-central1 \
+  --set-env-vars="GCLOUD_PROJECT=kotikreikasta"
+```
