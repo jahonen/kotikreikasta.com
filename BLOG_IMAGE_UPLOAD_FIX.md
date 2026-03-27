@@ -21,24 +21,34 @@ SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
 **Solution:** Added `sharp ^0.33.5` as explicit dependency in `admin/package.json`
 
 ### 2. Missing IAM Permissions
-**Problem:** Cloud Run service account lacked `roles/serviceusage.serviceUsageConsumer` role
+**Problem:** Cloud Run service account lacked multiple required IAM roles
 
 **Impact:**
 - Firebase Admin SDK couldn't access Firebase services (Identity Toolkit, Storage)
 - All Firebase operations failed with 403 PERMISSION_DENIED
 - Image upload and authentication both failed
 
-**Error Message:**
+**Error Messages:**
 ```
 Caller does not have required permission to use project kotikreikasta. 
 Grant the caller the roles/serviceusage.serviceUsageConsumer role
 ```
+```
+Permission 'iam.serviceAccounts.signBlob' denied on resource (or it may not exist).
+Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens
+```
 
-**Solution:** Granted permission to Cloud Run service account:
+**Solution:** Granted permissions to Cloud Run service account:
 ```bash
+# Allow access to Firebase services
 gcloud projects add-iam-policy-binding kotikreikasta \
   --member="serviceAccount:854585552743-compute@developer.gserviceaccount.com" \
   --role="roles/serviceusage.serviceUsageConsumer"
+
+# Allow creating Firebase Auth custom tokens
+gcloud iam service-accounts add-iam-policy-binding 854585552743-compute@developer.gserviceaccount.com \
+  --member="serviceAccount:854585552743-compute@developer.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountTokenCreator"
 ```
 
 ## Service Account Permissions
