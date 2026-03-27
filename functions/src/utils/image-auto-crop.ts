@@ -123,14 +123,20 @@ export async function ensureSquareCrop(
   });
   
   try {
-    // Fetch original image
-    const response = await fetch(originalUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch original image: ${response.status}`);
+    // Extract storage path from URL
+    // URL format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=...
+    const urlMatch = originalUrl.match(/\/o\/([^?]+)/);
+    if (!urlMatch) {
+      throw new Error('Invalid Firebase Storage URL format');
     }
     
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const storagePath = decodeURIComponent(urlMatch[1]);
+    functions.logger.info('Downloading image from Storage', { contentId, storagePath });
+    
+    // Download image using Firebase Admin SDK
+    const storageBucket = admin.storage().bucket();
+    const storageFile = storageBucket.file(storagePath);
+    const [buffer] = await storageFile.download();
     
     // Get image dimensions
     const metadata = await sharp(buffer).metadata();

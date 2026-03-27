@@ -92,27 +92,6 @@ function isTimeInWindow(now: Date, window: TimeWindow): boolean {
   return nowInTz >= windowStart && nowInTz <= windowEnd;
 }
 
-function isWithinPostingWindow(schedule: PlatformSchedule): boolean {
-  const now = new Date();
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const currentDay = dayNames[now.getUTCDay()];
-  
-  const todaySchedule = schedule.schedule.find(s => s.day === currentDay);
-  if (!todaySchedule) {
-    return false;
-  }
-  
-  if (isTimeInWindow(now, todaySchedule.primary)) {
-    return true;
-  }
-  
-  if (todaySchedule.secondary && isTimeInWindow(now, todaySchedule.secondary)) {
-    return true;
-  }
-  
-  return false;
-}
-
 /**
  * Check if we've already posted in this window (enforce maxPostsPerWindow)
  */
@@ -175,7 +154,7 @@ async function fetchInstagramCredentials(): Promise<InstagramCredentials> {
   
   try {
     const [userIdVersion] = await secretClient.accessSecretVersion({
-      name: `projects/${project}/secrets/INSTAGRAM_APP_ID/versions/latest`,
+      name: `projects/${project}/secrets/INSTAGRAM_ACCOUNT_ID/versions/latest`,
     });
     const [accessTokenVersion] = await secretClient.accessSecretVersion({
       name: `projects/${project}/secrets/INSTAGRAM_ACCESS_TOKEN/versions/latest`,
@@ -243,6 +222,10 @@ async function postToInstagram(
   
   functions.logger.info('Instagram container created', { containerId });
   
+  // Wait for Instagram to process the image (typically takes 10-30 seconds)
+  functions.logger.info('Waiting for Instagram to process image...', { waitSeconds: 20 });
+  await new Promise(resolve => setTimeout(resolve, 20000));
+  
   // Step 2: Publish the container
   const publishResponse = await fetch(
     `https://graph.instagram.com/v18.0/${credentials.userId}/media_publish`,
@@ -292,15 +275,6 @@ export const instagramPublisher = functions
     const startTime = Date.now();
     
     try {
-      // Check schedule first
-      const schedule = await fetchSchedule();
-      if (schedule && !isWithinPostingWindow(schedule)) {
-        functions.logger.info('Instagram: Outside posting window, skipping', {
-          currentTime: new Date().toISOString(),
-        });
-        return;
-      }
-      
       // Parse message data
       const messageData = message.json as PublishMessage;
       
@@ -330,6 +304,10 @@ export const instagramPublisher = functions
         functions.logger.error('Invalid content collection', { contentCollection });
         throw new Error('invalid_content_collection');
       }
+      
+      // Fetch schedule for window limit check
+      // Note: Time window check is handled by the scheduler, not here
+      const schedule = await fetchSchedule();
       
       // Check window limit (enforce maxPostsPerWindow)
       if (schedule) {

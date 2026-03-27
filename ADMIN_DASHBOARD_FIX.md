@@ -132,3 +132,116 @@ gcloud run services update ssrkotikreikastaadmin \
   --region=us-central1 \
   --set-env-vars="GCLOUD_PROJECT=kotikreikasta"
 ```
+
+## Instagram Publisher Fix Details
+
+### Problem
+The Instagram publisher was failing to publish posts even when the social media scheduler indicated success. Multiple issues were discovered:
+
+1. **Duplicate Time Window Check** - The Instagram publisher had its own time window validation that conflicted with the scheduler's validation, causing posts to be rejected even when the scheduler determined they were within the posting window.
+
+2. **Missing Firestore Indexes** - Three composite indexes were missing:
+   - `blog_posts` collection: Required for querying Instagram-eligible blog posts
+   - `listings` collection: Required for querying Instagram-eligible listings
+   - `socialShares` collection: Required for window limit tracking (maxPostsPerWindow enforcement)
+
+3. **Image Access Error (403)** - The auto-crop feature was using HTTP `fetch()` to download images from Firebase Storage, which failed with 403 errors due to expired tokens or CORS restrictions.
+
+4. **Wrong Instagram Account ID** - The code was reading `INSTAGRAM_APP_ID` secret which contained the Facebook App ID (`1279297020790292`) instead of the Instagram Business Account ID.
+
+5. **Instagram API Timing Issue** - Instagram's Graph API requires time between creating a media container and publishing it. The publisher was attempting to publish immediately after container creation, resulting in error 9007 subcode 2207027 ("Media ID is not available").
+
+### Solution
+
+#### 1. Removed Duplicate Time Window Check
+Modified `functions/src/consumers/instagram-pubsub.ts` to remove the redundant `isWithinPostingWindow()` check and function. The scheduler already validates time windows before calling the publisher.
+
+```typescript
+// REMOVED: Duplicate time window validation
+// if (schedule && !isWithinPostingWindow(schedule)) {
+//   return;
+// }
+
+// KEPT: Window limit check (maxPostsPerWindow)
+const schedule = await fetchSchedule();
+if (schedule) {
+  const withinLimit = await checkWindowLimit(schedule, contentCollection);
+  if (!withinLimit) {
+    return;
+  }
+}
+```
+
+#### 2. Created Missing Firestore Indexes
+Created three composite indexes via Firebase Console:
+- `blog_posts`: Fields: platform, socialMediaStatus.instagram.published, socialMediaStatus.instagram.queued, publishedAt
+- `listings`: Fields: platform, socialMediaStatus.instagram.published, socialMediaStatus.instagram.queued, publishedAt
+- `socialShares`: Fields: platform, success, sharedAt, __name__
+
+#### 3. Fixed Image Access with Firebase Admin SDK
+Modified `functions/src/utils/image-auto-crop.ts` to use Firebase Admin SDK instead of HTTP fetch:
+
+```typescript
+// Before (failed with 403)
+const response = await fetch(originalUrl);
+const buffer = Buffer.from(await response.arrayBuffer());
+
+// After (works)
+const urlMatch = originalUrl.match(/\/o\/([^?]+)/);
+const storagePath = decodeURIComponent(urlMatch[1]);
+const storageBucket = admin.storage().bucket();
+const storageFile = storageBucket.file(storagePath);
+const [buffer] = await storageFile.download();
+```
+
+#### 4. Updated Instagram Account ID Secret
+- Created new secret: `INSTAGRAM_ACCOUNT_ID` with the correct Instagram Business Account ID (17-digit number)
+- Updated `fetchInstagramCredentials()` to read from `INSTAGRAM_ACCOUNT_ID` instead of `INSTAGRAM_APP_ID`
+
+#### 5. Added Processing Delay
+Added 20-second delay between container creation and publishing to allow Instagram to process the uploaded image:
+
+```typescript
+functions.logger.info('Instagram container created', { containerId });
+
+// Wait for Instagram to process the image (typically takes 10-30 seconds)
+functions.logger.info('Waiting for Instagram to process image...', { waitSeconds: 20 });
+await new Promise(resolve => setTimeout(resolve, 20000));
+
+// Step 2: Publish the container
+const publishResponse = await fetch(...);
+```
+
+### Files Modified
+- `functions/src/consumers/instagram-pubsub.ts` - Removed duplicate time window check, updated credential fetching, added 20-second processing delay
+- `functions/src/utils/image-auto-crop.ts` - Changed image download from HTTP fetch to Firebase Admin SDK
+
+### Secrets Updated
+- Created: `INSTAGRAM_ACCOUNT_ID` - Contains Instagram Business Account ID (17-digit number starting with "17")
+- Note: `INSTAGRAM_APP_ID` still exists but contains Facebook App ID - should be deprecated
+
+### Verification
+After all fixes were deployed, manual testing confirmed:
+```
+14:52:40 UTC - Instagram container created (ID: 18046108946556548)
+14:52:40 UTC - Waiting for Instagram to process image... (20 seconds)
+14:53:02 UTC - Posted to Instagram
+14:53:03 UTC - Social share tracked
+14:53:03 UTC - Instagram publish successful
+```
+
+### Timeline
+- **14:23 UTC**: Identified duplicate time window check issue
+- **14:24 UTC**: Deployed fix for duplicate time window check
+- **14:26 UTC**: Discovered missing `socialShares` Firestore index
+- **14:30 UTC**: Index created, discovered image access 403 error
+- **14:34 UTC**: Deployed Firebase Admin SDK image download fix
+- **14:42 UTC**: Identified wrong Instagram Account ID (was using Facebook App ID)
+- **14:46 UTC**: Updated code to use new `INSTAGRAM_ACCOUNT_ID` secret
+- **14:49 UTC**: Discovered Instagram API timing issue (error 9007/2207027)
+- **14:51 UTC**: Deployed 20-second processing delay fix
+- **14:53 UTC**: ✅ Instagram publishing fully operational
+
+### Date
+March 27, 2026
+```
