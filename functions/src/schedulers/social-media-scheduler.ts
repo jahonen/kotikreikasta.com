@@ -159,27 +159,11 @@ async function fetchUnpublishedContent(platform: string, limit: number = 1): Pro
 }
 
 /**
- * Call publisher function directly with content
+ * Publish content to platform via Pub/Sub topic
  */
 async function publishContent(platform: string, content: any): Promise<void> {
-  const { blueskyPublisher } = require('../consumers/bluesky-pubsub');
-  const { xPublisher } = require('../consumers/x-pubsub');
-  const { facebookPublisher } = require('../consumers/facebook-pubsub');
-  const { threadsPublisher } = require('../consumers/threads-pubsub');
-  const { instagramPublisher } = require('../consumers/instagram-pubsub');
-  
-  const publishers: Record<string, any> = {
-    bluesky: blueskyPublisher,
-    x: xPublisher,
-    facebook: facebookPublisher,
-    threads: threadsPublisher,
-    instagram: instagramPublisher,
-  };
-  
-  const publisher = publishers[platform];
-  if (!publisher) {
-    throw new Error(`Unknown platform: ${platform}`);
-  }
+  const { PubSub } = require('@google-cloud/pubsub');
+  const pubsub = new PubSub();
   
   // Build message data
   const messageData = {
@@ -192,15 +176,33 @@ async function publishContent(platform: string, content: any): Promise<void> {
     metadata: content.data.socialMediaMetadata || {},
   };
   
-  // Create mock Pub/Sub message
-  const mockMessage = {
-    json: messageData,
-    data: Buffer.from(JSON.stringify(messageData)),
-    attributes: {},
-  };
+  // Publish to Pub/Sub topic (all platforms use the same topic)
+  const topicName = 'social-media-publishing';
   
-  // Call publisher
-  await publisher(mockMessage, {});
+  functions.logger.info(`Publishing to ${topicName}`, {
+    platform,
+    contentId: content.id,
+    messageData,
+  });
+  
+  try {
+    const dataBuffer = Buffer.from(JSON.stringify(messageData));
+    const messageId = await pubsub.topic(topicName).publish(dataBuffer);
+    
+    functions.logger.info(`Successfully published message to ${topicName}`, {
+      platform,
+      contentId: content.id,
+      messageId,
+    });
+  } catch (error: any) {
+    functions.logger.error(`Failed to publish to ${topicName}`, {
+      platform,
+      contentId: content.id,
+      error: error?.message,
+      stack: error?.stack,
+    });
+    throw error;
+  }
 }
 
 /**
