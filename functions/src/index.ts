@@ -37,6 +37,10 @@ export { onBlogPostPublished, onListingPublished } from "./triggers/content-publ
 
 // Schedulers
 export { socialMediaScheduler } from "./schedulers/social-media-scheduler";
+export { socialMediaSchedulerV2 } from "./schedulers/social-media-scheduler-v2";
+
+// Publishers
+export { socialMediaPublisher } from "./publishers/social-media-publisher";
 
 // API endpoints
 export { enqueueSocialPublish } from "./api/enqueue-social-publish";
