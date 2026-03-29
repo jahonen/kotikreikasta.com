@@ -269,8 +269,8 @@ export const socialMediaScheduler = functions
           // Publish the single content item
           try {
             await publishContent(platform, content);
-            results[platform] = `published_${content.id}`;
-            functions.logger.info(`${platform}: Successfully published ${content.id}`);
+            results[platform] = `queued_${content.id}`;
+            functions.logger.info(`${platform}: Queued for publishing ${content.id}`);
           } catch (error: any) {
             functions.logger.error(`${platform}: Failed to publish ${content.id}`, {
               error: error?.message,
