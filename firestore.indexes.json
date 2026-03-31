@@ -94,6 +94,24 @@
         { "fieldPath": "socialMediaStatus.threads.queued", "order": "ASCENDING" },
         { "fieldPath": "socialMediaStatus.threads.queuedAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "socialShares",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "platform", "order": "ASCENDING" },
+        { "fieldPath": "success", "order": "ASCENDING" },
+        { "fieldPath": "sharedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "socialShares",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "platform", "order": "ASCENDING" },
+        { "fieldPath": "success", "order": "ASCENDING" },
+        { "fieldPath": "sharedAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

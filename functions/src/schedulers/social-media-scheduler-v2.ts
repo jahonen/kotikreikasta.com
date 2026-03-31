@@ -200,10 +200,10 @@ async function fetchUnpublishedContent(
     excludeCount: excludeIds.length,
   });
   
-  // Query blog posts
+  // Query blog posts - use same fields as old scheduler (socialMediaStatus)
   let blogQuery = db.collection('blog_posts')
-    .where(`socialMediaMetadata.platforms.${platform}`, '==', true)
-    .where('status', '==', 'published');
+    .where(`socialMediaStatus.${platform}.queued`, '==', true)
+    .where(`socialMediaStatus.${platform}.published`, '==', false);
   
   // Firestore 'not-in' supports max 10 values
   if (excludeIds.length > 0 && excludeIds.length <= 10) {
@@ -211,21 +211,21 @@ async function fetchUnpublishedContent(
   }
   
   const blogPosts = await blogQuery
-    .orderBy('publishedAt', 'desc')
+    .orderBy(`socialMediaStatus.${platform}.queuedAt`, 'asc')
     .limit(10)
     .get();
   
-  // Query listings
+  // Query listings - use same fields as old scheduler (socialMediaStatus)
   let listingQuery = db.collection('listings')
-    .where(`socialMediaMetadata.platforms.${platform}`, '==', true)
-    .where('status', '==', 'published');
+    .where(`socialMediaStatus.${platform}.queued`, '==', true)
+    .where(`socialMediaStatus.${platform}.published`, '==', false);
   
   if (excludeIds.length > 0 && excludeIds.length <= 10) {
     listingQuery = listingQuery.where(admin.firestore.FieldPath.documentId(), 'not-in', excludeIds);
   }
   
   const listings = await listingQuery
-    .orderBy('publishedAt', 'desc')
+    .orderBy(`socialMediaStatus.${platform}.queuedAt`, 'asc')
     .limit(10)
     .get();
   
