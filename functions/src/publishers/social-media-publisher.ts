@@ -127,7 +127,7 @@ export const socialMediaPublisher = functions
  */
 async function publishToFacebook(payload: PublishRequest): Promise<any> {
   // Import the existing Facebook publisher logic
-  const { publishToFacebookInternal } = require('../consumers/facebook-pubsub');
+  const { publishToFacebookInternal } = require('./internal-publishers');
   
   // Create a mock Pub/Sub message for compatibility
   const mockMessage = {
@@ -145,7 +145,7 @@ async function publishToFacebook(payload: PublishRequest): Promise<any> {
  * Publish to Instagram
  */
 async function publishToInstagram(payload: PublishRequest): Promise<any> {
-  const { publishToInstagramInternal } = require('../consumers/instagram-pubsub');
+  const { publishToInstagramInternal } = require('./internal-publishers');
   
   const mockMessage = {
     json: {
@@ -162,7 +162,7 @@ async function publishToInstagram(payload: PublishRequest): Promise<any> {
  * Publish to X (Twitter)
  */
 async function publishToX(payload: PublishRequest): Promise<any> {
-  const { publishToXInternal } = require('../consumers/x-pubsub');
+  const { publishToXInternal } = require('./internal-publishers');
   
   const mockMessage = {
     json: {
@@ -179,7 +179,7 @@ async function publishToX(payload: PublishRequest): Promise<any> {
  * Publish to Bluesky
  */
 async function publishToBluesky(payload: PublishRequest): Promise<any> {
-  const { publishToBlueskyInternal } = require('../consumers/bluesky-pubsub');
+  const { publishToBlueskyInternal } = require('./internal-publishers');
   
   const mockMessage = {
     json: {
@@ -196,7 +196,7 @@ async function publishToBluesky(payload: PublishRequest): Promise<any> {
  * Publish to Threads
  */
 async function publishToThreads(payload: PublishRequest): Promise<any> {
-  const { publishToThreadsInternal } = require('../consumers/threads-pubsub');
+  const { publishToThreadsInternal } = require('./internal-publishers');
   
   const mockMessage = {
     json: {

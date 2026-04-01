@@ -35,7 +35,8 @@ Kotikreikasta.com is a comprehensive real estate platform connecting Finnish buy
 **AI & Automation:**
 - Vertex AI (Gemini 1.5 Pro/Flash for content generation)
 - Cloud Scheduler (automated publishing)
-- Pub/Sub (event-driven architecture)
+- Cloud Tasks (deduplication and scheduled execution)
+- Pub/Sub (legacy, being phased out)
 
 **Social Media Platforms:**
 - Bluesky
@@ -87,22 +88,25 @@ kotikreikasta.com/
 
 ### 🤖 Automated Social Media Publishing
 
-**Architecture:** Scheduler-based with Firestore queue management
+**Architecture:** Cloud Tasks-based with atomic deduplication
 
 **Flow:**
-1. Content published → Firestore trigger marks for social media
-2. Status tracking: `queued: true, published: false` per platform
-3. Scheduler runs every 83 minutes → checks posting windows
-4. Within window → fetches oldest unpublished content (FIFO)
-5. Publisher generates Finnish content via Vertex AI → posts → marks published
+1. Scheduler runs hourly → checks posting windows for each platform
+2. Verifies time constraints (minMinutesBetweenPosts, maxPostsPerWindow)
+3. Selects next unpublished content (excludes recently posted)
+4. Creates Cloud Task with unique name (deduplication)
+5. Task executes at randomized time within window
+6. Publisher generates Finnish content via Vertex AI → posts → tracks in socialShares
 
 **Features:**
-- ✅ One post per platform per posting window
-- ✅ FIFO queue (oldest content first)
-- ✅ Platform-specific schedules (different posting times)
-- ✅ AI-generated Finnish content optimized for each platform
-- ✅ UTM tracking for analytics
-- ✅ Firestore status tracking with post IDs and URLs
+- ✅ **Zero duplicate posts** via Cloud Tasks task name deduplication
+- ✅ **Time constraints:** Minimum minutes between posts (e.g., 180 min for Facebook)
+- ✅ **Window limits:** Maximum posts per posting window (e.g., 2 for Instagram)
+- ✅ **Content recycling:** Respects minDaysBetweenShares (e.g., 90 days for Bluesky)
+- ✅ **Platform-specific schedules** with primary/secondary windows
+- ✅ **AI-generated Finnish content** optimized for each platform
+- ✅ **UTM tracking** for analytics
+- ✅ **Atomic tracking** in socialShares subcollection
 
 **Platforms & Character Limits:**
 - **Bluesky:** 300 chars (rich text facets for links)
@@ -305,31 +309,35 @@ See [SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE.md](SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE
 
 ### Cloud Functions
 
-**Firestore Triggers:**
-- `onBlogPostPublished` - Marks blog posts for social media
-- `onListingPublished` - Marks listings for social media
+**Scheduler (V2 - Cloud Tasks):**
+- `socialMediaSchedulerV2` - Runs hourly, creates Cloud Tasks for each platform
+  - Checks posting windows (primary/secondary)
+  - Enforces minMinutesBetweenPosts and maxPostsPerWindow
+  - Excludes recently posted content (minDaysBetweenShares)
+  - Creates tasks with unique names for deduplication
 
-**Scheduler:**
-- `socialMediaScheduler` - Runs every 83 minutes, publishes during posting windows
+**Publisher (Unified):**
+- `socialMediaPublisher` - Single HTTP function handling all platforms
+  - Routes to platform-specific handlers (Facebook, Instagram, X, Bluesky, Threads)
+  - Idempotency check via socialShares collection
+  - Vertex AI content generation
+  - Atomic status tracking
 
-**Publishers:**
-- `blueskyPublisher` - Posts to Bluesky
-- `xPublisher` - Posts to X
-- `facebookPublisher` - Posts to Facebook
-- `threadsPublisher` - Posts to Threads
-- `instagramPublisher` - Posts to Instagram (with azure blue border)
+**Legacy Functions (Deprecated):**
+- `socialMediaScheduler` - Old Pub/Sub-based scheduler (being phased out)
+- `blueskyPublisher`, `xPublisher`, `facebookPublisher`, `threadsPublisher`, `instagramPublisher` - Old Pub/Sub publishers
 
 **Token Management:**
 - `refreshThreadsToken` - Refreshes Threads access token (daily at 2 AM)
 - `refreshInstagramToken` - Refreshes Instagram access token (daily at 2 AM)
 
-**Cloud Scheduler Job:**
+**Cloud Tasks Queue:**
 ```bash
-gcloud scheduler jobs create http bluesky-hourly-check \
-  --schedule="0,23,46 * * * *" \
-  --uri="https://europe-west1-kotikreikasta.cloudfunctions.net/socialMediaScheduler" \
-  --http-method=GET \
-  --location=europe-west1
+gcloud tasks queues create social-media-publishing \
+  --location=europe-west1 \
+  --max-dispatches-per-second=1 \
+  --max-concurrent-dispatches=5 \
+  --max-attempts=3
 ```
 
 ## Firestore Collections
@@ -396,17 +404,27 @@ gcloud scheduler jobs create http bluesky-hourly-check \
 
 ### Subcollections
 
-**`socialShares`** - Share tracking per content item
+**`socialShares`** - Share tracking per content item (subcollection)
 ```typescript
 {
   platform: 'bluesky' | 'x' | 'facebook' | 'threads' | 'instagram';
   sharedAt: Timestamp;
-  postId: string;
-  postUrl: string;
-  text: string;
-  characterCount: number;
   success: boolean;
-  error?: string;
+  postId: string | null;
+  postUrl: string | null;
+  error: string | null;
+  windowStart: Timestamp;  // For deduplication
+  windowEnd: Timestamp;
+  contentSnapshot: {
+    title: string;
+    type: 'blog' | 'listing';
+    url: string;
+  };
+  metadata: {
+    characterCount?: number;
+    imageCount?: number;
+    hashtagCount?: number;
+  };
 }
 ```
 
@@ -577,7 +595,9 @@ npm test
 - [integration.md](integration.md) - External integrations
 
 ### Social Media
-- [SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE.md](SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE.md) - Complete architecture
+- [CLOUD_TASKS_REFACTOR.md](CLOUD_TASKS_REFACTOR.md) - **NEW:** Cloud Tasks architecture and migration plan
+- [DEPLOYMENT_NEXT_STEPS.md](DEPLOYMENT_NEXT_STEPS.md) - **NEW:** Deployment status and next steps
+- [SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE.md](SOCIAL_MEDIA_PUBLISHER_ARCHITECTURE.md) - Complete architecture (legacy)
 - [SOCIAL_DEPLOYMENT.md](SOCIAL_DEPLOYMENT.md) - Deployment guide
 - [X_SETUP_INSTRUCTIONS.md](X_SETUP_INSTRUCTIONS.md) - X/Twitter setup
 - [FACEBOOK_SETUP_INSTRUCTIONS.md](FACEBOOK_SETUP_INSTRUCTIONS.md) - Facebook setup
@@ -613,4 +633,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Built with ❤️ for Finnish buyers seeking their dream home in Greece**
 
-*Last updated: March 26, 2026*
+*Last updated: March 29, 2026*
