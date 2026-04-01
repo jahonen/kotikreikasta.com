@@ -110,7 +110,7 @@ function isWithinPostingWindow(schedule: PlatformSchedule): boolean {
   return false;
 }
 
-async function fetchThreadsCredentials(): Promise<ThreadsCredentials> {
+export async function fetchThreadsCredentials(): Promise<ThreadsCredentials> {
   const project = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   
   try {
@@ -135,7 +135,7 @@ async function fetchThreadsCredentials(): Promise<ThreadsCredentials> {
   }
 }
 
-async function postToThreads(
+export async function postToThreads(
   text: string,
   link: string,
   credentials: ThreadsCredentials

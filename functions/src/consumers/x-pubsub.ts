@@ -113,7 +113,7 @@ function isWithinPostingWindow(schedule: PlatformSchedule): boolean {
   return false;
 }
 
-async function fetchXCredentials(): Promise<XCredentials> {
+export async function fetchXCredentials(): Promise<XCredentials> {
   const project = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   
   try {
@@ -146,7 +146,7 @@ async function fetchXCredentials(): Promise<XCredentials> {
   }
 }
 
-async function postToX(
+export async function postToX(
   text: string,
   credentials: XCredentials
 ): Promise<{ postId: string; postUrl?: string }> {

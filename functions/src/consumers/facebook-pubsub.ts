@@ -110,7 +110,7 @@ function isWithinPostingWindow(schedule: PlatformSchedule): boolean {
   return false;
 }
 
-async function fetchFacebookCredentials(): Promise<FacebookCredentials> {
+export async function fetchFacebookCredentials(): Promise<FacebookCredentials> {
   const project = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   
   try {
@@ -135,7 +135,7 @@ async function fetchFacebookCredentials(): Promise<FacebookCredentials> {
   }
 }
 
-async function getPageAccessToken(pageId: string, systemToken: string): Promise<string> {
+export async function getPageAccessToken(pageId: string, systemToken: string): Promise<string> {
   const response = await fetch(
     `https://graph.facebook.com/v18.0/${pageId}?fields=access_token&access_token=${systemToken}`
   );
@@ -159,7 +159,7 @@ async function getPageAccessToken(pageId: string, systemToken: string): Promise<
   return pageAccessToken;
 }
 
-async function postToFacebook(
+export async function postToFacebook(
   text: string,
   link: string,
   pageId: string,

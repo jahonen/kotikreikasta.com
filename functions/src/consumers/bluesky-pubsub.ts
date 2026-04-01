@@ -130,7 +130,7 @@ function isWithinPostingWindow(schedule: PlatformSchedule): boolean {
 /**
  * Fetch Bluesky credentials from Secret Manager
  */
-async function fetchBlueskyCredentials(): Promise<BlueskyCredentials> {
+export async function fetchBlueskyCredentials(): Promise<BlueskyCredentials> {
   const project = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   
   try {
@@ -158,7 +158,7 @@ async function fetchBlueskyCredentials(): Promise<BlueskyCredentials> {
 /**
  * Create Bluesky session
  */
-async function createSession(credentials: BlueskyCredentials): Promise<string> {
+export async function createSession(credentials: BlueskyCredentials): Promise<string> {
   const response = await fetch('https://bsky.social/xrpc/com.atproto.server.createSession', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -356,7 +356,7 @@ async function uploadImageBlob(
 /**
  * Post to Bluesky with rich text facets and embed card
  */
-async function postToBluesky(
+export async function postToBluesky(
   text: string,
   url: string,
   accessToken: string,

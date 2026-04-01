@@ -149,7 +149,7 @@ async function checkWindowLimit(
   return count < maxPosts;
 }
 
-async function fetchInstagramCredentials(): Promise<InstagramCredentials> {
+export async function fetchInstagramCredentials(): Promise<InstagramCredentials> {
   const project = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   
   try {
@@ -178,7 +178,7 @@ async function fetchInstagramCredentials(): Promise<InstagramCredentials> {
  * Post to Instagram via Graph API
  * Two-step process: create container, then publish
  */
-async function postToInstagram(
+export async function postToInstagram(
   caption: string,
   imageUrl: string,
   credentials: InstagramCredentials
