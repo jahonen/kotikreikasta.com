@@ -47,11 +47,12 @@ async function generateSeoForMarkdown(md: string, title: string, imageUrl?: stri
   const project = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || '';
   const guide = (process.env.BLOG_LLM_GUIDE as string) || await readSecret('BLOG_LLM_GUIDE').catch(() => '');
   const model = (process.env.GEMINI_QUALITY_MODEL as string) || await readSecret('GEMINI_QUALITY_MODEL').catch(() => 'gemini-1.5-pro-002');
-  const location = 'europe-west1';
+  const location = 'global';
   const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
   const client = await auth.getClient();
   const token = await (client as any).getAccessToken();
-  const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${encodeURIComponent(model)}:generateContent`;
+  const host = location === 'global' ? 'aiplatform.googleapis.com' : `${location}-aiplatform.googleapis.com`;
+  const url = `https://${host}/v1/projects/${project}/locations/${location}/publishers/google/models/${encodeURIComponent(model)}:generateContent`;
   const sys = `You are an expert Finnish SEO editor. Follow the writing guide for tone and terminology. Respond with STRICT JSON only. No markdown, no comments, no code fences.\n\nWriting guide (for context):\n${guide}`;
   const usr = `Given the following blog post in Markdown, generate high-quality SEO metadata in Finnish.\n\nReturn JSON with keys: metaTitle, metaDescription, keywords (array of 5-12), ogTitle, ogDescription, imageAlt.\n\nArticle Title: ${title}\nImage URL (if any): ${imageUrl || ''}\n\nMarkdown content:\n${md}`;
   const body = {
@@ -112,11 +113,11 @@ export async function POST(req: NextRequest) {
       email = (decoded as any).email || '';
     } catch {}
   }
+  let body: any = {};
+  try { body = await req.json(); } catch {}
+
   if (!uid) {
-    let token = getBearerToken(req);
-    if (!token) {
-      try { const b: any = await req.json(); token = b?.token; } catch {}
-    }
+    const token = getBearerToken(req) || body?.token;
     if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     try {
       const decoded = await admin.auth(app).verifyIdToken(token);
@@ -127,9 +128,6 @@ export async function POST(req: NextRequest) {
     }
   }
   if (!/@kotikreikasta\.com$/i.test(email)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
-
-  let body: any = {};
-  try { body = await req.json(); } catch {}
   const id: string = (body?.id || '').trim();
   const title: string = (body?.title || '').trim();
   const contentMd: string = (body?.contentMd || '').trim();

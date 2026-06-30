@@ -7,20 +7,42 @@ function getFirebaseAdmin() {
     return admin.app();
   }
 
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    : undefined;
-
   return admin.initializeApp({
-    credential: serviceAccount 
-      ? admin.credential.cert(serviceAccount)
-      : admin.credential.applicationDefault(),
+    credential: admin.credential.applicationDefault(),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app',
   });
 }
 
+const ALLOWED_PATH_PREFIXES = ['media/public/', 'media/admin/', 'blog/', 'blog-images/', 'listings/'];
+
+function getBearerToken(req: NextRequest): string | null {
+  const alt = req.headers.get('x-firebase-auth');
+  if (alt) return alt;
+  const h = req.headers.get('authorization') || req.headers.get('Authorization');
+  if (!h) return null;
+  const m = h.match(/^Bearer\s+(.+)$/i);
+  return m ? m[1] : null;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const app = getFirebaseAdmin();
+
+    const token = getBearerToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+    let email = '';
+    try {
+      const decoded = await admin.auth(app).verifyIdToken(token);
+      email = (decoded as any).email || '';
+    } catch (e: any) {
+      return NextResponse.json({ error: 'invalid_token', detail: e?.message || String(e) }, { status: 401 });
+    }
+    if (!/@kotikreikasta\.com$/i.test(email)) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const path = formData.get('path') as string;
@@ -32,6 +54,11 @@ export async function POST(request: NextRequest) {
 
     if (!path) {
       return NextResponse.json({ error: 'No path provided' }, { status: 400 });
+    }
+
+    const normalizedPath = path.replace(/^\/+/, '');
+    if (normalizedPath.includes('..') || !ALLOWED_PATH_PREFIXES.some((p) => normalizedPath.startsWith(p) || `${normalizedPath}/`.startsWith(p))) {
+      return NextResponse.json({ error: 'invalid_path', allowed: ALLOWED_PATH_PREFIXES }, { status: 400 });
     }
 
     console.log('[UPLOAD] Processing image', {
@@ -61,10 +88,9 @@ export async function POST(request: NextRequest) {
     // Determine file extension based on optimized format
     const ext = optimized.format === 'jpeg' ? 'jpg' : optimized.format;
     const fileName = `${Date.now()}-${file.name.replace(/\.[^.]+$/, '')}.${ext}`;
-    const fullPath = `${path}/${fileName}`;
+    const fullPath = `${normalizedPath}/${fileName}`;
 
     // Upload to Firebase Storage
-    const app = getFirebaseAdmin();
     const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app';
     const bucket = admin.storage(app).bucket(bucketName);
     const fileRef = bucket.file(fullPath);

@@ -65,6 +65,10 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
 Uploads an image and generates all 5 aspect ratio crops.
 
+**Authentication:** Requires a valid Firebase ID token in the `Authorization: Bearer <token>` or `x-firebase-auth: <token>` header, and the token must belong to a `@kotikreikasta.com` user.
+
+**Allowed path prefixes:** `media/public/`, `media/admin/`, `blog/`, `blog-images/`, `listings/`. Requests to other storage paths are rejected with `400 invalid_path`. Path traversal (`..`) is also rejected.
+
 **Request:**
 ```typescript
 FormData {

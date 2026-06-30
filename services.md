@@ -233,19 +233,24 @@
 - Purpose: Generate Finnish blog drafts and SEO metadata using Vertex AI (Gemini) from a short description and an internal writing guide.
 
 ### Implementation
-- Draft API: `hosting/app/api/blogs/draft/route.ts`
+- Draft API: `admin/app/api/blogs/draft/route.ts`
   - Auth: Firebase session cookie (`__session`) or ID token via `x-firebase-auth`/Bearer.
   - Reads `BLOG_LLM_GUIDE` (GSM) and `GEMINI_COSTOPTIMIZED_MODEL` (GSM, default `gemini-1.5-flash-002`).
-  - Calls Vertex AI (EU region) to generate Markdown; extracts H1 as title.
+  - Calls Vertex AI (global location) to generate Markdown; extracts H1 as title.
   - Persists draft in Firestore `blog_posts` with `{ title, contentMd, urlStub, status: 'draft' }`.
 
-- Publish API: `hosting/app/api/blogs/publish/route.ts`
+- Publish API: `admin/app/api/blogs/publish/route.ts`
   - Auth: same as above; restricts to `@kotikreikasta.com` editors.
   - Reads `BLOG_LLM_GUIDE` and `GEMINI_QUALITY_MODEL` (GSM, default `gemini-1.5-pro-002`).
   - Generates SEO JSON: `{ metaTitle, metaDescription, keywords[], ogTitle, ogDescription, imageAlt }`.
-  - Updates the blog document, sets `status: 'queued'`, writes `seo`, sets `publishedAt`, and enqueues to `publication_queue`.
+  - Updates the blog document, sets `status: 'published'`, writes `seo`, sets `publishedAt`, and enqueues to `publication_queue`.
 
-- Admin UI: `hosting/components/admin/BlogEditor.tsx`
+- Image upload APIs: `admin/app/api/upload-image/route.ts` and `admin/app/api/upload-image-crops/route.ts`
+  - Auth: verifies Firebase ID token from `Authorization: Bearer` or `x-firebase-auth` header; restricts to `@kotikreikasta.com` users.
+  - Allowed storage path prefixes: `media/public/`, `media/admin/`, `blog/`, `blog-images/`, `listings/`.
+  - Path traversal (`..`) and unknown prefixes are rejected with `400 invalid_path`.
+
+- Admin UI: `admin/components/admin/BlogEditor.tsx`
   - Step 1: Editor enters description and creates draft (AI). Receives editable `title` and `contentMd`.
   - Step 2: Uploads feature image to Firebase Storage under `blog-images/{blogId}/...`.
   - Step 3: Saves draft or publishes; publish triggers SEO generation and queue write.

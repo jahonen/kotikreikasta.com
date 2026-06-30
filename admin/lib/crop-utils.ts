@@ -2,6 +2,8 @@
  * Utility functions for image cropping
  */
 
+import { getAuthClient } from './firebase-client';
+
 interface CropArea {
   x: number;
   y: number;
@@ -78,8 +80,12 @@ export async function uploadImageWithCrops(
   formData.append('path', path);
   formData.append('docId', docId);
 
+  const auth = await getAuthClient();
+  const token = await auth?.currentUser?.getIdToken();
+
   const response = await fetch('/api/upload-image-crops', {
     method: 'POST',
+    headers: token ? { 'x-firebase-auth': token } : undefined,
     body: formData,
     credentials: 'include',
   });

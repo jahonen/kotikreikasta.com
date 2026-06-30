@@ -146,7 +146,7 @@ export const onLeadCreated = functions
     } catch {}
 
     // Trigger Novu event
-    (async () => {
+    const novuTask = (async () => {
       try {
         const NOVU_API_KEY = await accessSecret('NOVU_API_KEY');
         if (!NOVU_API_KEY) return;
@@ -172,7 +172,7 @@ export const onLeadCreated = functions
     })();
 
     // SendGrid email to admin alias or admin emails
-    (async () => {
+    const emailTask = (async () => {
       try {
         const SENDGRID_API_KEY = await accessSecret('SENDGRID_API_KEY');
         if (!SENDGRID_API_KEY) return;
@@ -206,6 +206,8 @@ export const onLeadCreated = functions
         functions.logger.warn('onLeadCreated:email_failed', { id, error: e?.message || String(e) });
       }
     })();
+
+    await Promise.all([novuTask, emailTask]);
 
     functions.logger.info("onLeadCreated:done", { id });
   });

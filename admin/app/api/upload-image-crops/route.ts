@@ -9,18 +9,11 @@ function getFirebaseAdmin() {
   }
 
   try {
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
-      ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-      : undefined;
-
     const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app';
     console.log('[FIREBASE_ADMIN] Initializing with storageBucket:', storageBucket);
-    console.log('[FIREBASE_ADMIN] NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET env var:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
 
     return admin.initializeApp({
-      credential: serviceAccount 
-        ? admin.credential.cert(serviceAccount)
-        : admin.credential.applicationDefault(),
+      credential: admin.credential.applicationDefault(),
       storageBucket,
     });
   } catch (error) {
@@ -34,6 +27,17 @@ function getBucket() {
   const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'kotikreikasta.firebasestorage.app';
   console.log('[FIREBASE_ADMIN] Getting bucket with name:', bucketName);
   return admin.storage(app).bucket(bucketName);
+}
+
+const ALLOWED_PATH_PREFIXES = ['media/public/', 'media/admin/', 'blog/', 'blog-images/', 'listings/'];
+
+function getBearerToken(req: NextRequest): string | null {
+  const alt = req.headers.get('x-firebase-auth');
+  if (alt) return alt;
+  const h = req.headers.get('authorization') || req.headers.get('Authorization');
+  if (!h) return null;
+  const m = h.match(/^Bearer\s+(.+)$/i);
+  return m ? m[1] : null;
 }
 
 interface CropArea {
@@ -107,6 +111,21 @@ async function extractCrop(
 
 export async function POST(request: NextRequest) {
   try {
+    const token = getBearerToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+    let email = '';
+    try {
+      const decoded = await admin.auth(getFirebaseAdmin()).verifyIdToken(token);
+      email = (decoded as any).email || '';
+    } catch (e: any) {
+      return NextResponse.json({ error: 'invalid_token', detail: e?.message || String(e) }, { status: 401 });
+    }
+    if (!/@kotikreikasta\.com$/i.test(email)) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const cropsJson = formData.get('crops') as string;
@@ -123,6 +142,12 @@ export async function POST(request: NextRequest) {
 
     if (!path || !docId) {
       return NextResponse.json({ error: 'Path and docId required' }, { status: 400 });
+    }
+
+    const normalizedPath = path.replace(/^\/+/, '');
+    if (normalizedPath.includes('..') || docId.includes('..') || docId.includes('/') ||
+        !ALLOWED_PATH_PREFIXES.some((p) => normalizedPath.startsWith(p) || `${normalizedPath}/`.startsWith(p))) {
+      return NextResponse.json({ error: 'invalid_path', allowed: ALLOWED_PATH_PREFIXES }, { status: 400 });
     }
 
     const crops: CropCoordinates = JSON.parse(cropsJson);
@@ -149,7 +174,7 @@ export async function POST(request: NextRequest) {
       .toBuffer();
 
     const bucket = getBucket();
-    const originalPath = `${path}/${docId}/original.jpg`;
+    const originalPath = `${normalizedPath}/${docId}/original.jpg`;
     const originalRef = bucket.file(originalPath);
     
     // Generate a download token for public access
@@ -193,7 +218,7 @@ export async function POST(request: NextRequest) {
           sizeConfig.quality
         );
 
-        const cropPath = `${path}/${docId}/${ratio.replace(':', '-')}${sizeConfig.suffix}.jpg`;
+        const cropPath = `${normalizedPath}/${docId}/${ratio.replace(':', '-')}${sizeConfig.suffix}.jpg`;
         const cropRef = bucket.file(cropPath);
         
         // Generate a download token for public access

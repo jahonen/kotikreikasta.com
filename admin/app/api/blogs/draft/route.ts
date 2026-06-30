@@ -69,11 +69,12 @@ function extractTitleFromMarkdown(md: string): string {
   return '';
 }
 
-async function generateMarkdown(description: string, guide: string, model: string, project: string, location = 'europe-west1'): Promise<string> {
+async function generateMarkdown(description: string, guide: string, model: string, project: string, location = 'global'): Promise<string> {
   const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
   const client = await auth.getClient();
   const token = await (client as any).getAccessToken();
-  const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${encodeURIComponent(model)}:generateContent`;
+  const host = location === 'global' ? 'aiplatform.googleapis.com' : `${location}-aiplatform.googleapis.com`;
+  const url = `https://${host}/v1/projects/${project}/locations/${location}/publishers/google/models/${encodeURIComponent(model)}:generateContent`;
   const system = `You are an expert Finnish real-estate content writer. Follow the writing guide strictly. Output valid GitHub-flavored Markdown only, with a single H1 title, well-structured sections, and no frontmatter.\n\nWriting guide:\n${guide}`;
   const user = `Write a blog article in Finnish based on this description. Audience: Finnish property buyers interested in Greece. Keep it factual, warm, and persuasive when appropriate.\n\nDescription:\n${description}`;
   const body = {
@@ -115,11 +116,11 @@ export async function POST(req: NextRequest) {
       email = (decoded as any).email || '';
     } catch {}
   }
+  let body: any = {};
+  try { body = await req.json(); } catch {}
+
   if (!uid) {
-    let token = getBearerToken(req);
-    if (!token) {
-      try { const b: any = await req.json(); token = b?.token; } catch {}
-    }
+    const token = getBearerToken(req) || body?.token;
     if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     try {
       const decoded = await admin.auth(app).verifyIdToken(token);
@@ -130,9 +131,6 @@ export async function POST(req: NextRequest) {
     }
   }
   if (!/@kotikreikasta\.com$/i.test(email)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
-
-  let body: any = {};
-  try { body = await req.json(); } catch {}
   const description: string = (body?.description || '').trim();
   if (!description) return NextResponse.json({ error: 'missing_description' }, { status: 400 });
 
@@ -151,7 +149,16 @@ export async function POST(req: NextRequest) {
     console.log('[DRAFT] Extracted title:', title);
 
     const db = admin.firestore(app);
-    let urlStub = (title || 'artikkeli').toLowerCase().normalize('NFKD').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 80) || 'artikkeli';
+    const slugRaw = (title || 'artikkeli')
+      .toLowerCase()
+      .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/å/g, 'a').replace(/é/g, 'e').replace(/è/g, 'e').replace(/ü/g, 'u')
+      .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '').trim()
+      .replace(/[\s_]+/g, '-').replace(/-+/g, '-');
+    const slugTruncated = slugRaw.length > 80
+      ? slugRaw.slice(0, 80).replace(/-[^-]*$/, '')
+      : slugRaw;
+    let urlStub = slugTruncated || 'artikkeli';
     let finalStub = urlStub;
     const coll = db.collection('blog_posts');
     const existing = await coll.where('urlStub', '==', finalStub).limit(1).get();
