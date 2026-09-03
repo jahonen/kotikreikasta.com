@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import Link from "next/link";
 import { getDbClient } from "../../lib/firebase-client";
 import ListingWizard from "../../components/admin/ListingWizard";
 
@@ -77,9 +78,21 @@ export default function ListingsPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id}>
-                  <td style={{ padding: 10, borderBottom: '1px solid #f0f0f0' }}>{r.title}</td>
-                  <td style={{ padding: 10, borderBottom: '1px solid #f0f0f0' }}>{r.status}</td>
+                <tr key={r.id} style={{ cursor: 'pointer' }}>
+                  <td style={{ padding: 10, borderBottom: '1px solid #f0f0f0' }}>
+                    <Link href={`/listings/${r.id}`} style={{ color: '#0B3D6B', textDecoration: 'none', fontWeight: 500 }}>
+                      {r.title}
+                    </Link>
+                  </td>
+                  <td style={{ padding: 10, borderBottom: '1px solid #f0f0f0' }}>
+                    <span style={{
+                      padding: '2px 8px', borderRadius: 10, fontSize: 12, fontWeight: 600,
+                      background: r.status === 'published' ? '#dcfce7' : r.status === 'sold' ? '#fee2e2' : '#f3f4f6',
+                      color: r.status === 'published' ? '#166534' : r.status === 'sold' ? '#b91c1c' : '#374151',
+                    }}>
+                      {r.status === 'published' ? 'Julkaistu' : r.status === 'sold' ? 'Myyty' : r.status === 'archived' ? 'Arkistoitu' : 'Luonnos'}
+                    </span>
+                  </td>
                   <td style={{ padding: 10, borderBottom: '1px solid #f0f0f0' }}>{r.updatedAt}</td>
                 </tr>
               ))}

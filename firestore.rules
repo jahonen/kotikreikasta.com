@@ -6,6 +6,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == "admin";
     }
+    function isVerifiedApp() { return request.app != null; }
 
     // Listings: public read when published; admin can manage
     match /listings/{doc} {
@@ -24,15 +25,16 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // Newsletter subscriptions: anyone can create; admin can read/manage
+    // Newsletter subscriptions: anyone can create (App Check required); admin can read/manage
     match /newsletterSubscriptions/{doc} {
-      allow create: if request.resource.data.email is string && request.resource.data.consent == true;
+      allow create: if isVerifiedApp() && request.resource.data.email is string && request.resource.data.consent == true;
       allow read, update, delete: if isAdmin();
     }
 
-    // Leads: public create with minimal validation; admin can manage
+    // Leads: public create with minimal validation (App Check required); admin can manage
     match /leads/{doc} {
       allow create: if (
+        isVerifiedApp() &&
         request.resource.data.message is string &&
         (
           (request.resource.data.contact.email is string && request.resource.data.contact.email.size() > 0) ||
@@ -43,16 +45,14 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
-    // Inquiries: anyone can create; admin can read/manage
+    // Inquiries: admin-only until frontend inquiry flow is implemented
     match /inquiries/{doc} {
-      allow create: if request.resource.data.message is string;
-      allow read, update, delete: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
-    // Referral logs: public create (from redirect or forms); admin manage
+    // Referral logs: admin-only until referral tracking frontend is implemented
     match /user_referrals/{doc} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     // Users: allow each signed-in user to create/read/update their own document; admin can manage all
@@ -87,8 +87,7 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
-    match /{document=**} {
-      allow read, write: if isAdmin();
-    }
+    // All other collections: deny by default.
+    // New collections must be explicitly added above before they can be accessed.
   }
 }

@@ -132,17 +132,35 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
   const human = slug.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
   const url = `https://kotikreikasta.com/blog/${encodeURIComponent(slug)}`;
   
+  // Bug 1 fix: always derive description from plain text body, not raw seo field which may contain Markdown
+  const plainDescription = post
+    ? (post.seo?.metaDescription && !post.seo.metaDescription.startsWith('#')
+        ? post.seo.metaDescription
+        : extractDescription(post.contentMd || '', 155))
+    : '';
+
+  // Bug 4 fix: derive keywords from article title words when no explicit keywords stored
+  const articleKeywords = post
+    ? (post.seo?.keywords && post.seo.keywords.length > 0
+        ? post.seo.keywords.join(', ')
+        : post.title
+            .split(/[\s,–-]+/)
+            .filter((w: string) => w.length > 3)
+            .slice(0, 6)
+            .join(', '))
+    : '';
+
   // Generate JSON-LD structured data for SEO
   const jsonLd = post ? {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
-    description: post.seo?.metaDescription || '',
+    description: plainDescription,
     image: {
       '@type': 'ImageObject',
-      url: post.featuredImage?.url || 'https://kotikreikasta.com/og-image.jpg',
-      width: post.featuredImage?.width || 1200,
-      height: post.featuredImage?.height || 630,
+      url: getOptimalCrop(post.featuredImage, 'og') || post.featuredImage?.url || 'https://kotikreikasta.com/og-image.jpg',
+      width: 1200,
+      height: 675,
       caption: post.featuredImage?.alt || post.title,
     },
     datePublished: post.publishedAt?.toISOString(),
@@ -169,18 +187,24 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
       '@type': 'WebPage',
       '@id': url,
     },
-    keywords: (post.seo?.keywords && post.seo.keywords.length > 0) ? post.seo.keywords.join(', ') : 'Kreikka, kiinteistöt, asunnot, ostoprosessi',
+    keywords: articleKeywords,
     inLanguage: 'fi-FI',
     isPartOf: {
       '@type': 'Blog',
       '@id': 'https://kotikreikasta.com/blog',
       name: 'Kotikreikasta Blogi',
     },
-    about: {
-      '@type': 'Thing',
-      name: 'Kreikan kiinteistöt',
-      description: 'Asiantuntija-artikkelit Kreikan kiinteistömarkkinoista',
-    },
+  } : null;
+
+  // Bug 3 fix: BreadcrumbList JSON-LD
+  const breadcrumbLd = post ? {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Etusivu', item: 'https://kotikreikasta.com' },
+      { '@type': 'ListItem', position: 2, name: 'Blogi', item: 'https://kotikreikasta.com/blog' },
+      { '@type': 'ListItem', position: 3, name: post.title, item: url },
+    ],
   } : null;
 
   return (
@@ -189,6 +213,12 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      {breadcrumbLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
         />
       )}
       <NavBar />
@@ -224,7 +254,7 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
                     marginBottom: 'var(--space-xl)' 
                   }}>
                     <img 
-                      src={post.featuredImage.url} 
+                      src={(post.featuredImage as any).crops?.['16:9']?.full || post.featuredImage.url} 
                       alt={post.featuredImage.alt || ''} 
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                     />

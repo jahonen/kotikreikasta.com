@@ -10,6 +10,11 @@ export default function Footer() {
           <p style={{ color: 'rgba(255,255,255,0.45)' }}>
             Löydä kotisi auringon maasta – asiantuntevasti ja suomen kielellä.
           </p>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: '0.75rem' }}>
+            Kotikreikasta.com-tavaramerkin ja liiketoiminnan omistaa ja sitä ylläpitää{' '}
+            <a href="https://cvpe.dev" target="_blank" rel="noopener noreferrer">CVPE Development Oy</a>
+            {' '}(Y-tunnus 3651473-2, kotipaikka Lohja).
+          </p>
         </div>
         <div className="footer-col">
           <h4>Palvelut</h4>
@@ -18,7 +23,7 @@ export default function Footer() {
             <li><Link href="/alueet">Alueet</Link></li>
             <li><Link href="/tasmahaku">Täsmähaku</Link></li>
             <li><Link href="/konsierge">Konsierge</Link></li>
-            <li><a href="#listings">Kohteet</a></li>
+            <li><Link href="/listings">Kohteet</Link></li>
           </ul>
         </div>
         <div className="footer-col">
@@ -26,7 +31,7 @@ export default function Footer() {
           <ul>
             <li><Link href="/privacy">Tietosuoja</Link></li>
             <li><Link href="/palveluehdot">Palveluehdot</Link></li>
-            <li><a href="#latest-blogs">Blogi</a></li>
+            <li><Link href="/blog">Blogi</Link></li>
             <li><Link href="/synergates">For Partners</Link></li>
           </ul>
         </div>
@@ -55,14 +60,17 @@ export default function Footer() {
                 <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>Ateena, Kreikka</span>
               </a>
             </li>
-            <li style={{ marginTop: '1rem' }}>
-              <a href="mailto:info@kotikreikasta.com">info@kotikreikasta.com</a>
-            </li>
+            <li
+              style={{ marginTop: '1rem' }}
+              dangerouslySetInnerHTML={{
+                __html: '<!--email_off--><a href="mailto:info@kotikreikasta.com">info@kotikreikasta.com</a><!--/email_off-->',
+              }}
+            />
           </ul>
         </div>
       </div>
       <div className="footer-bottom container">
-        <div className="footer-copy">© {new Date().getFullYear()} Kotikreikasta</div>
+        <div className="footer-copy">© {new Date().getFullYear()} CVPE Development Oy</div>
         <div className="footer-legal" style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
           <a
             href="https://bsky.app/profile/kotikreikasta.com"

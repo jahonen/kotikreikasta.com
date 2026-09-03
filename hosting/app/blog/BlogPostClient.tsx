@@ -172,7 +172,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
           marginBottom: 'var(--space-xl)' 
         }}>
           <img 
-            src={post.featuredImage.url} 
+            src={(post.featuredImage as any).crops?.['16:9']?.full || post.featuredImage.url} 
             alt={post.featuredImage.alt || ''} 
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
           />

@@ -29,6 +29,7 @@ docs/
 .next/trace
 .next/cache
 
-# Keep these - they're needed for runtime
-!.next/
-!node_modules/
+# Exclude build artifacts - Cloud Build regenerates these
+.next/
+.next/cache/
+.next/trace

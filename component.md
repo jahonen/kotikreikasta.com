@@ -725,3 +725,61 @@
 - Test with curl to verify all listings in HTML
 - Verify grid layout responsiveness
 - Test with various numbers of listings
+
+## Footer (stable)
+- Lifecycle tag: stable
+- Description: Site-wide footer containing navigation, contact details, social links, and the legal ownership notice for Kotikreikasta.com.
+
+### Interface (required)
+- Inputs
+  - none
+- Outputs
+  - Renders navigation, contact links, CVPE Development Oy ownership details, business ID, domicile, and a link to `cvpe.dev`
+- Side effects
+  - Uses the current year in the copyright notice
+
+### Dependencies
+- Next.js Link
+- React Icons
+
+### Testing
+- Verify ownership details and legal links render on all pages using the shared footer
+- Visual review at desktop and mobile breakpoints
+
+## Privacy Page (stable)
+- Lifecycle tag: stable
+- Description: Public privacy notice identifying CVPE Development Oy as the data controller and documenting personal-data processing and data-subject rights.
+
+### Interface (required)
+- Inputs
+  - none
+- Outputs
+  - Renders the data controller's legal name, business ID, domicile, website, and `dpo@cvpe.dev` privacy contact
+- Side effects
+  - Displays the build date as the notice update date
+
+### Dependencies
+- None
+
+### Testing
+- Verify all controller details and privacy contact links render correctly
+- Review the static page for accessibility and responsive layout
+
+## Terms of Service Page (stable)
+- Lifecycle tag: stable
+- Description: Public terms identifying CVPE Development Oy as the provider and owner/operator of the Kotikreikasta service and trademark.
+
+### Interface (required)
+- Inputs
+  - none
+- Outputs
+  - Renders basic service terms, provider details, and a link to `cvpe.dev`
+- Side effects
+  - Displays the render date as the terms update date
+
+### Dependencies
+- NavBar
+- Footer
+
+### Testing
+- Verify provider details and external company link render correctly

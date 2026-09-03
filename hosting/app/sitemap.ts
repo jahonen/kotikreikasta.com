@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getFirestore } from "../lib/firebase-admin-server";
 
+export const dynamic = 'force-dynamic';
+
 const BASE_URL = "https://kotikreikasta.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

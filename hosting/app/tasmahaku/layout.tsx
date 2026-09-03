@@ -1,38 +1,50 @@
 import type { Metadata } from "next";
 
+const OG_TITLE = 'Täsmähaku Kreikassa – räätälöity kiinteistönetsintä suomalaisille | Kotikreikasta.com';
+const OG_DESC = 'Löydämme sinulle unelmiesi lomakodin Kreikasta – myös piilomarkkinoilta. Räätälöity täsmähakupalvelu suomalaisille ostajille, kattaen koko ostoprosessin.';
+const OG_IMAGE = 'https://kotikreikasta.com/etuovi_kreikkaan.jpg';
+
 export const metadata: Metadata = {
-  title: "Täsmähaku",
-  description: "Löydämme sinulle unelmiesi lomakodin Kreikasta. Räätälöity täsmähakupalvelu suomalaisille ostajille. Pääsy piilomarkkinoilla oleviin kiinteistöihin.",
-  keywords: [
-    "täsmähaku kreikka",
-    "kiinteistönetsintä kreikka",
-    "off-market kiinteistöt kreikka",
-    "henkilökohtainen kiinteistöpalvelu",
-    "räätälöity kiinteistöhaku",
-    "eksklusiiviset kiinteistöt kreikka"
-  ],
+  title: OG_TITLE,
+  description: OG_DESC,
+  authors: [{ name: 'Kotikreikasta' }],
+  alternates: {
+    canonical: 'https://kotikreikasta.com/tasmahaku'
+  },
   openGraph: {
-    title: "Täsmähaku – Kotikreikasta.com",
-    description: "Löydämme sinulle unelmiesi lomakodin Kreikasta. Räätälöity täsmähakupalvelu suomalaisille ostajille.",
-    url: "https://kotikreikasta.com/tasmahaku",
-    type: "website",
+    title: OG_TITLE,
+    description: OG_DESC,
+    url: 'https://kotikreikasta.com/tasmahaku',
+    siteName: 'Kotikreikasta',
+    type: 'website',
+    locale: 'fi_FI',
     images: [
       {
-        url: "/etuovi_kreikkaan.jpg",
+        url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: "Täsmähaku – Kotikreikasta.com"
+        alt: 'Täsmähaku – Kotikreikasta.com'
       }
     ]
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Täsmähaku – Kotikreikasta.com",
-    description: "Löydämme sinulle unelmiesi lomakodin Kreikasta. Räätälöity täsmähakupalvelu suomalaisille ostajille.",
-    images: ["/etuovi_kreikkaan.jpg"]
+    card: 'summary_large_image',
+    site: '@kotikreikasta',
+    creator: '@kotikreikasta',
+    title: OG_TITLE,
+    description: OG_DESC,
+    images: [OG_IMAGE]
   },
-  alternates: {
-    canonical: "https://kotikreikasta.com/tasmahaku"
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1
+    }
   }
 };
 

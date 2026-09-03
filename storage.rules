@@ -19,9 +19,7 @@ service firebase.storage {
       allow read, write: if isKotikreikastaAdmin();
     }
 
-    // Catch-all: admins have full access to storage
-    match /{allPaths=**} {
-      allow read, write: if isKotikreikastaAdmin();
-    }
+    // All other paths: deny by default.
+    // New storage paths must be explicitly added above before they can be accessed.
   }
 }

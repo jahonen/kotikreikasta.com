@@ -1,23 +1,28 @@
 import type { Metadata } from 'next';
 
+const OG_TITLE = 'Konsierge-palvelu Kreikassa – suomenkielinen kiinteistönhoito | Kotikreikasta.com';
+const OG_DESC = 'Kerro tarpeesi suomeksi – löydämme luotettavan paikallisen ammattilaisen ja varmistamme, että työ tulee tehdyksi oikein. Ensimmäiset 12 kuukautta veloituksetta ostajille.';
+const OG_IMAGE = 'https://kotikreikasta.com/etuovi_kreikkaan.jpg';
+
 export const metadata: Metadata = {
-  title: 'Konsierge-palvelu – Kotikreikasta',
-  description: 'Kerro meille tarpeesi suomeksi. Selvitämme tilanteen, löydämme luotettavan paikallisen ammattilaisen ja varmistamme, että työ tulee tehdyksi oikein. Ensimmäiset 12 kuukautta veloituksetta ostajille.',
-  keywords: 'konsierge, concierge, kiinteistönhoito, korjauspalvelut, Kreikka, suomenkielinen palvelu, paikallinen ammattilainen, kiinteistöpalvelut',
+  title: OG_TITLE,
+  description: OG_DESC,
   authors: [{ name: 'Kotikreikasta' }],
   publisher: 'Kotikreikasta',
   alternates: {
     canonical: 'https://kotikreikasta.com/konsierge'
   },
   openGraph: {
-    title: 'Konsierge-palvelu – Kotikreikasta',
-    description: 'Kerro meille tarpeesi suomeksi. Selvitämme tilanteen, löydämme luotettavan paikallisen ammattilaisen ja varmistamme, että työ tulee tehdyksi oikein.',
+    title: OG_TITLE,
+    description: OG_DESC,
     url: 'https://kotikreikasta.com/konsierge',
     siteName: 'Kotikreikasta',
     images: [
       {
-        url: 'https://kotikreikasta.com/og-image.jpg',
-        alt: 'Kotikreikasta Konsierge-palvelu'
+        url: OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'Kotikreikasta – Konsierge-palvelu Kreikassa'
       }
     ],
     locale: 'fi_FI',
@@ -25,9 +30,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Konsierge-palvelu – Kotikreikasta',
-    description: 'Kerro meille tarpeesi suomeksi. Selvitämme tilanteen, löydämme luotettavan paikallisen ammattilaisen ja varmistamme, että työ tulee tehdyksi oikein.',
-    images: ['https://kotikreikasta.com/og-image.jpg']
+    site: '@kotikreikasta',
+    creator: '@kotikreikasta',
+    title: OG_TITLE,
+    description: OG_DESC,
+    images: [OG_IMAGE]
   },
   robots: {
     index: true,

@@ -8,8 +8,18 @@ export default function PrivacyPage() {
 
       <section style={{ marginTop: '1rem' }}>
         <h2 className="section-title" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>1. Rekisterinpitäjä</h2>
-        <p>Kotikreikasta</p>
-        <p>Sähköposti: info@kotikreikasta.com</p>
+        <p>CVPE Development Oy</p>
+        <p>Y-tunnus: 3651473-2</p>
+        <p>Kotipaikka: Lohja</p>
+        <p>Verkkosivusto: <a href="https://cvpe.dev" target="_blank" rel="noopener noreferrer">cvpe.dev</a></p>
+        <p>
+          Tietosuoja-asioiden yhteystiedot:{' '}
+          <span
+            dangerouslySetInnerHTML={{
+              __html: '<!--email_off--><a href="mailto:dpo@cvpe.dev">dpo@cvpe.dev</a><!--/email_off-->',
+            }}
+          />
+        </p>
       </section>
 
       <section style={{ marginTop: '1.5rem' }}>
@@ -52,7 +62,14 @@ export default function PrivacyPage() {
 
       <section style={{ marginTop: '1.5rem' }}>
         <h2 className="section-title" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>7. Yhteydenotot</h2>
-        <p>Pyynnöt ja kysymykset: <a href="mailto:info@kotikreikasta.com">info@kotikreikasta.com</a></p>
+        <p>
+          Tietosuojaa koskevat pyynnöt ja kysymykset:{' '}
+          <span
+            dangerouslySetInnerHTML={{
+              __html: '<!--email_off--><a href="mailto:dpo@cvpe.dev">dpo@cvpe.dev</a><!--/email_off-->',
+            }}
+          />
+        </p>
       </section>
     </main>
   );

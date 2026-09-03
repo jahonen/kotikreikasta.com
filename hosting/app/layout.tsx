@@ -7,20 +7,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://kotikreikasta.com'),
   title: {
     default: "Kotikreikasta.com – Suomenkielinen kiinteistöpalvelu Kreikassa",
-    template: "%s – Kotikreikasta.com"
+    template: "%s"
   },
   description:
     "Suomenkielinen kiinteistöpalvelu Kreikassa. Löydä koti auringon maasta – turvallisesti ja asiantuntevasti. Ostoprosessi, alueopas ja täsmähaku.",
-  keywords: [
-    "kreikka kiinteistö",
-    "lomakoti kreikka",
-    "asunto kreikka",
-    "kreikka ostoprosessi",
-    "suomenkielinen palvelu kreikka",
-    "kreetan kiinteistöt",
-    "korfun kiinteistöt",
-    "kreikka sijoituskiinteistö"
-  ],
   authors: [{ name: "Kotikreikasta.com" }],
   creator: "Kotikreikasta.com",
   publisher: "Kotikreikasta.com",

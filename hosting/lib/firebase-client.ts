@@ -3,6 +3,7 @@ import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
 import { getFirestore, initializeFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAuth as _getAuth, type Auth } from "firebase/auth";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 // Client-side lazy initialization supporting Firebase Hosting injected config
 const envConfig = {
@@ -17,7 +18,22 @@ const envConfig = {
 const hasEnvConfig = Boolean(envConfig.apiKey && envConfig.appId && envConfig.projectId);
 
 let appInstance: FirebaseApp | null = null;
-let initPromise: Promise<boolean> | null = null;
+let appCheckInitialized = false;
+
+function initAppCheck(app: FirebaseApp) {
+  if (appCheckInitialized || typeof window === 'undefined') return;
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  if (!siteKey) return;
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(siteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+    appCheckInitialized = true;
+  } catch {
+    // ignore if already initialized
+  }
+}
 
 function ensureFirestoreInitialized(app: FirebaseApp) {
   try {
@@ -39,28 +55,13 @@ async function initIfNeeded(): Promise<boolean> {
     ensureFirestoreInitialized(appInstance);
     return true;
   }
-  // Prefer Hosting-injected config when available
-  if (!initPromise) {
-    initPromise = fetch('/__/firebase/init.json')
-      .then((r) => {
-        if (!r.ok) throw new Error(`init.json ${r.status}`);
-        return r.json();
-      })
-      .then((cfg) => {
-        appInstance = initializeApp(cfg);
-        ensureFirestoreInitialized(appInstance!);
-        return true;
-      })
-      .catch(() => {
-        if (hasEnvConfig) {
-          appInstance = initializeApp(envConfig as any);
-          ensureFirestoreInitialized(appInstance!);
-          return true;
-        }
-        return false;
-      });
+  if (hasEnvConfig) {
+    appInstance = initializeApp(envConfig as any);
+    ensureFirestoreInitialized(appInstance!);
+    initAppCheck(appInstance!);
+    return true;
   }
-  return initPromise;
+  return false;
 }
 
 export async function getFirebaseApp(): Promise<FirebaseApp | null> {

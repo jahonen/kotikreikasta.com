@@ -3,34 +3,65 @@ import Link from "next/link";
 import NavBar from "../../components/nav-bar";
 import Footer from "../../components/Footer";
 import { getFirestore } from "../../lib/firebase-admin-server";
+import { getOptimalCrop } from "../../lib/image-utils";
 
-// ISR: Revalidate every 1800 seconds (30 minutes)
-export const revalidate = 1800;
+export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: "Blogi — Asiantuntija-artikkelit Kreikan kiinteistöistä | Kotikreikasta",
-  description: "Lue asiantuntija-artikkelit Kreikan kiinteistömarkkinoista, ostoprosessista, verotuksesta ja asumisesta. Kattava opas suomalaisille Kreikan kiinteistöjen ostajille.",
-  keywords: "Kreikka kiinteistöt blogi, Kreikka asuntomarkkinat, Kreikka ostoprosessi, Kreikka verotus, Kreikka asuminen",
-  alternates: {
-    canonical: "https://kotikreikasta.com/blog",
-  },
-  openGraph: {
-    title: "Blogi — Asiantuntija-artikkelit Kreikan kiinteistöistä",
-    description: "Lue asiantuntija-artikkelit Kreikan kiinteistömarkkinoista, ostoprosessista, verotuksesta ja asumisesta.",
-    url: "https://kotikreikasta.com/blog",
-    siteName: "Kotikreikasta",
-    locale: "fi_FI",
-    type: "website",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+const BLOG_TITLE_BASE = "Blogi — Asiantuntija-artikkelit Kreikan kiinteistöistä";
+const BLOG_DESCRIPTION = "Lue asiantuntija-artikkelit Kreikan kiinteistömarkkinoista, ostoprosessista, verotuksesta ja asumisesta. Kattava opas suomalaisille Kreikan kiinteistöjen ostajille.";
+const BLOG_OG_IMAGE = "https://kotikreikasta.com/etuovi_kreikkaan.jpg";
+const BLOG_BASE_URL = "https://kotikreikasta.com/blog";
+
+export async function generateMetadata(
+  { searchParams }: { searchParams: Promise<{ page?: string; q?: string }> }
+): Promise<Metadata> {
+  const params = await searchParams;
+  const page = parseInt(params.page || '1', 10);
+  const canonical = page > 1 ? `${BLOG_BASE_URL}?page=${page}` : BLOG_BASE_URL;
+  const title = page > 1
+    ? `${BLOG_TITLE_BASE}, sivu ${page} | Kotikreikasta.com`
+    : `${BLOG_TITLE_BASE} | Kotikreikasta.com`;
+
+  return {
+    title,
+    description: BLOG_DESCRIPTION,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title: BLOG_TITLE_BASE,
+      description: BLOG_DESCRIPTION,
+      url: canonical,
+      siteName: "Kotikreikasta",
+      locale: "fi_FI",
+      type: "website",
+      images: [
+        {
+          url: BLOG_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: "Kotikreikasta — Blogi",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@kotikreikasta",
+      creator: "@kotikreikasta",
+      title: BLOG_TITLE_BASE,
+      description: BLOG_DESCRIPTION,
+      images: [BLOG_OG_IMAGE],
+    },
+    robots: {
       index: true,
       follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
     },
-  },
-};
+  };
+}
 
 type BlogPost = {
   id: string;
@@ -133,7 +164,7 @@ export default async function BlogListingPage({
       url: `https://kotikreikasta.com/blog/${post.urlStub}`,
       datePublished: post.publishedAt?.toISOString(),
       dateModified: post.updatedAt?.toISOString(),
-      image: post.featuredImage?.url || "https://kotikreikasta.com/og-image.jpg",
+      image: getOptimalCrop(post.featuredImage, 'og') || post.featuredImage?.url || "https://kotikreikasta.com/og-image.jpg",
     })),
   };
 
@@ -300,7 +331,7 @@ export default async function BlogListingPage({
                             }}
                           >
                             <img
-                              src={post.featuredImage.url}
+                              src={getOptimalCrop(post.featuredImage, 'card') || post.featuredImage.url}
                               alt={post.featuredImage.alt || ""}
                               style={{
                                 width: "100%",

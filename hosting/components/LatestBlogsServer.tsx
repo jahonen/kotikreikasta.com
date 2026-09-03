@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { getFirestore } from "../lib/firebase-admin-server";
+import { getOptimalCrop } from "../lib/image-utils";
 
 type BlogPost = {
   id: string;
   title: string;
   urlStub: string;
   excerpt: string;
-  featuredImage: { url: string; alt?: string } | null;
+  featuredImage: { url: string; alt?: string; crops?: any } | null;
   publishedAt: Date | null;
 };
 
@@ -110,7 +111,7 @@ export default async function LatestBlogsServer({ count = 3 }: { count?: number 
                       }}
                     >
                       <img
-                        src={blog.featuredImage.url}
+                        src={getOptimalCrop(blog.featuredImage, 'card') || blog.featuredImage.url}
                         alt={blog.featuredImage.alt || ""}
                         style={{
                           width: "100%",

@@ -210,7 +210,13 @@ export default function ListingWizard({ open, onClose, onSaved }: Props) {
         const qy = query(rolesColl, where('role', '==', 'admin'));
         const snap = await getDocs(qy);
         if (!active) return;
-        const opts = snap.docs.map((d) => ({ uid: d.id, label: d.id }));
+        const opts = snap.docs.map((d) => {
+          const data = d.data();
+          const email = data?.email || '';
+          const name = data?.displayName || data?.name || '';
+          const label = name && email ? `${name} (${email})` : name || email || d.id;
+          return { uid: d.id, label };
+        });
         setAdminOptions(opts);
       } catch {}
     })();

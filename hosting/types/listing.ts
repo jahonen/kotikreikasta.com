@@ -35,28 +35,41 @@ export interface ListingAttributes {
   appliancesList?: string[];
 }
 
+export interface ImageCrops {
+  '16:9'?: { full: string; og: string; thumbnail: string };
+  '4:3'?:  { full: string; og: string; thumbnail: string };
+  '1:1'?:  { full: string; og: string; thumbnail: string };
+  '3:4'?:  { full: string; og: string; thumbnail: string };
+  '9:16'?: { full: string; og: string; thumbnail: string };
+}
+
+export interface GalleryItem {
+  url: string;
+  alt?: string;
+  caption?: string;
+  sortOrder: number;
+  crops?: ImageCrops;
+}
+
+export type VideoProvider = 'youtube' | 'vimeo' | 'upload';
+
+export interface VideoItem {
+  type: VideoProvider;
+  url: string;
+  thumbnailUrl?: string;
+  caption?: string;
+  sortOrder: number;
+}
+
 export interface ListingMedia {
   featured?: {
     url: string;
-    crops?: {
-      '16:9'?: string;
-      '4:3'?: string;
-      '1:1'?: string;
-      '3:4'?: string;
-      '9:16'?: string;
-    };
+    alt?: string;
+    crops?: ImageCrops;
   };
-  gallery?: Array<{
-    url: string;
-    caption?: string;
-    crops?: {
-      '1:1'?: string;
-    };
-  }>;
-  images?: Array<{
-    url: string;
-    caption?: string;
-  }>;
+  gallery?: GalleryItem[];
+  videos?: VideoItem[];
+  streetViewUrl?: string;
 }
 
 export interface Listing {

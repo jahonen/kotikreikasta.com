@@ -1,9 +1,37 @@
 /* Simple Cloud Run service to proxy Google Places API (New) nearby search */
 const express = require('express');
 
+const ALLOWED_ORIGINS = [
+  'https://kotikreikasta.com',
+  'https://www.kotikreikasta.com',
+  'https://kotikreikasta.web.app',
+  'https://kotikreikasta.firebaseapp.com',
+  'https://kotikreikasta-hosting-46sdi6q5sa-ew.a.run.app',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  if (req.path === '/healthz') return next();
+  const allowed =
+    ALLOWED_ORIGINS.includes(origin) ||
+    /^https:\/\/[\w-]+-kotikreikasta-[a-z0-9]+-ew\.a\.run\.app$/.test(origin) ||
+    /^https:\/\/[\w-]+-kotikreikasta-[a-z0-9]+-uc\.a\.run\.app$/.test(origin);
+  if (!allowed) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+  next();
+});
 
 let cachedProjectId = null;
 async function getProjectId() {

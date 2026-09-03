@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   serverExternalPackages: [
     "firebase-admin",
     "@google-cloud/secret-manager",

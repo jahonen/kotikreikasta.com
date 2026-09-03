@@ -26,10 +26,5 @@ samplecode/
 *.swp
 *.swo
 
-# Ignore build artifacts that will be regenerated
-.next/trace
-.next/cache
-
-# Keep these - they're needed for runtime
-!.next/
-!node_modules/
+# Ignore build artifacts - Cloud Build regenerates these
+.next/

@@ -6,6 +6,8 @@ import { getFirestore } from '../../lib/firebase-admin-server';
 import { Listing } from '../../types/listing';
 import './listings.scss';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Kohteet - Kotikreikasta',
   description: 'Valikoituja kiinteistökohteita Kreikasta. Löydä unelmiesi koti auringon maasta.',

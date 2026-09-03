@@ -185,17 +185,24 @@ export const analyticsAggregator = functions
         return;
       }
     
-    // Optional: Verify Firebase Auth token if provided
+    // Require Firebase Auth token - reject unauthenticated requests
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const idToken = authHeader.split('Bearer ')[1];
-        await admin.auth().verifyIdToken(idToken);
-        functions.logger.info('Authenticated request');
-      } catch (error: any) {
-        functions.logger.warn('Auth verification failed', { error: error?.message });
-        // Continue anyway - admin dashboard requires login
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    try {
+      const idToken = authHeader.split('Bearer ')[1];
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      if (!decoded.email?.endsWith('@kotikreikasta.com')) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
       }
+      functions.logger.info('Authenticated request', { email: decoded.email });
+    } catch (error: any) {
+      functions.logger.warn('Auth verification failed', { error: error?.message });
+      res.status(401).json({ error: 'Invalid token' });
+      return;
     }
     
     try {

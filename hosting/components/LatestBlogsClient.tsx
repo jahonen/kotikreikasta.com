@@ -8,6 +8,7 @@ type Blog = {
   id: string;
   title: string;
   date: string;
+  crops?: any;
   excerpt: string;
   imageUrl: string | null;
   urlStub?: string | null;
@@ -67,6 +68,7 @@ export default function LatestBlogsClient({ count = 3 }: { count?: number }) {
             date: ts ? new Date(ts).toLocaleDateString("fi-FI") : "",
             excerpt,
             imageUrl: data.featuredImage?.url || null,
+            crops: data.featuredImage?.crops || null,
             urlStub: data.urlStub || null,
           };
         });
@@ -136,7 +138,7 @@ export default function LatestBlogsClient({ count = 3 }: { count?: number }) {
                     background: 'var(--sand)' 
                   }}>
                     <img 
-                      src={b.imageUrl} 
+                      src={b.crops?.['4:3']?.full || b.crops?.['16:9']?.full || b.imageUrl} 
                       alt="" 
                       style={{ 
                         width: '100%', 

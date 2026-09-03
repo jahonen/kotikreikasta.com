@@ -4,6 +4,7 @@ import NavBar from "../../../components/nav-bar";
 import Footer from "../../../components/Footer";
 import ContactForm from "../../../components/ContactForm";
 import ListingMap from "../../../components/ListingMap";
+import ListingGallery from "../../../components/ListingGallery";
 import { getFirestore } from "../../../lib/firebase-admin-server";
 import { Listing } from "../../../types/listing";
 import { getOptimalCrop } from "../../../lib/image-utils";
@@ -121,7 +122,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
         <div className="listing-hero">
           {listing.media.featured?.url && (
             <div className="listing-hero-image">
-              <img src={listing.media.featured.url} alt={listing.title} />
+              <img src={getOptimalCrop(listing.media.featured, 'hero') || listing.media.featured.url} alt={listing.title} />
               <div className="listing-hero-overlay">
                 <div className="listing-hero-content container">
                   <div className="listing-hero-badges">
@@ -209,6 +210,12 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
             </div>
           )}
           
+          <ListingGallery
+            gallery={listing.media.gallery}
+            videos={listing.media.videos}
+            title={listing.title}
+          />
+
           <div className="listing-location-section">
             <h2 className="section-title">Sijainti</h2>
             <div className="location-details">

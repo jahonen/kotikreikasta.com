@@ -1,3 +1,219 @@
+// ── Gallery ────────────────────────────────────────────────────────────────
+
+.listing-gallery {
+  margin: var(--space-2xl) 0;
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+
+    @media (max-width: 600px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .gallery-thumb-btn {
+    appearance: none;
+    border: none;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+  }
+
+  .gallery-thumb {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--sand);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover img { transform: scale(1.04); }
+  }
+
+  .gallery-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    background: var(--sand);
+  }
+
+  .gallery-play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.25);
+    transition: background 0.2s;
+
+    &:hover { background: rgba(0, 0, 0, 0.4); }
+  }
+
+  .gallery-play-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #111;
+    padding-left: 3px;
+  }
+
+  .gallery-more-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .gallery-show-all {
+    margin-top: 16px;
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--navy);
+    transition: background 0.2s;
+
+    &:hover { background: var(--sand); }
+  }
+}
+
+// ── Lightbox ────────────────────────────────────────────────────────────────
+
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-container {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 60px;
+
+  @media (max-width: 600px) { padding: 0 40px; }
+}
+
+.lightbox-media {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 4px;
+    display: block;
+  }
+
+  iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 70vh;
+    border: none;
+    border-radius: 4px;
+  }
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  opacity: 0.8;
+
+  &:hover { opacity: 1; }
+}
+
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+  z-index: 1;
+
+  &:hover { background: rgba(255, 255, 255, 0.3); }
+}
+
+.lightbox-prev { left: 8px; }
+.lightbox-next { right: 8px; }
+
+.lightbox-footer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+.lightbox-caption {
+  color: #e5e7eb;
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.lightbox-counter {
+  color: #9ca3af;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+// ── End gallery ─────────────────────────────────────────────────────────────
+
 .listing-detail-page {
   min-height: 100vh;
   display: flex;

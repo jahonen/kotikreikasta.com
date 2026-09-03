@@ -34,7 +34,7 @@ export function mdToHtml(md: string): string {
     const line = raw.trimEnd();
     if (/^\s*$/.test(line)) { flushPara(); flushList(); continue; }
     const h = /^(#{1,6})\s+(.+)$/.exec(line);
-    if (h) { flushPara(); flushList(); const level = Math.min(h[1].length + 1, 6); out.push(`<h${level}>${h[2]}</h${level}>`); continue; }
+    if (h) { flushPara(); flushList(); const level = Math.min(h[1].length, 6); out.push(`<h${level}>${h[2]}</h${level}>`); continue; }
     const ol = /^\s*\d+\.\s+(.+)$/.exec(line);
     if (ol) { flushPara(); if (listType && listType !== 'ol') flushList(); listType = 'ol'; listItems.push(ol[1]); continue; }
     const ul = /^\s*[-*+]\s+(.+)$/.exec(line);

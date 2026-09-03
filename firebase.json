@@ -37,19 +37,6 @@
           ]
         }
       ]
-    },
-    {
-      "source": "admin",
-      "site": "kotikreikasta-admin",
-      "rewrites": [
-        {
-          "source": "**",
-          "run": {
-            "serviceId": "ssrkotikreikastaadmin",
-            "region": "us-central1"
-          }
-        }
-      ]
     }
   ],
   "functions": [

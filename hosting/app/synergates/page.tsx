@@ -166,9 +166,11 @@ export default function SynergatesPage() {
                 <p>
                   Για περισσότερες πληροφορίες σχετικά με τη συνεργασία, παρακαλούμε επικοινωνήστε με την υπεύθυνη συνεργασιών μας.
                 </p>
-                <a href="mailto:anna@kotikreikasta.com" className={styles.contactButton}>
-                  anna@kotikreikasta.com
-                </a>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: `<!--email_off--><a class="${styles.contactButton}" href="mailto:anna@kotikreikasta.com">anna@kotikreikasta.com</a><!--/email_off-->`,
+                  }}
+                />
               </div>
             </section>
           </div>

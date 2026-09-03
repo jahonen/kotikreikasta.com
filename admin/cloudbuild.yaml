@@ -21,21 +21,21 @@ steps:
           --build-arg NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="$$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID" \
           --build-arg NEXT_PUBLIC_RECAPTCHA_SITE_KEY="$$NEXT_PUBLIC_RECAPTCHA_SITE_KEY" \
           --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="$$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY" \
-          -t europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA \
-          -t europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:latest \
+          -t europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ssradmin:$SHORT_SHA \
+          -t europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ssradmin:latest \
           .
-    dir: 'hosting'
+    dir: 'admin'
 
   # Push the Docker image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ssradmin:$SHORT_SHA'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:latest'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ssradmin:latest'
 
   # Deploy to Cloud Run (private — Firebase Hosting provides invoker identity)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -43,9 +43,9 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'kotikreikasta-hosting'
+      - 'ssradmin'
       - '--image'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ssradmin:$SHORT_SHA'
       - '--region'
       - 'europe-west1'
       - '--platform'
@@ -68,11 +68,11 @@ steps:
 
 availableSecrets:
   secretManager:
-    - versionName: projects/$PROJECT_ID/secrets/FIREBASE_WEB_API_KEY_PUBLIC/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/FIREBASE_WEB_API_KEY_ADMIN/versions/latest
       env: 'NEXT_PUBLIC_FIREBASE_API_KEY'
-    - versionName: projects/$PROJECT_ID/secrets/FIREBASE_APP_ID_PUBLIC/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/FIREBASE_APP_ID_ADMIN/versions/latest
       env: 'NEXT_PUBLIC_FIREBASE_APP_ID'
-    - versionName: projects/$PROJECT_ID/secrets/FIREBASE_MEASUREMENT_ID_PUBLIC/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/FIREBASE_MEASUREMENT_ID_ADMIN/versions/latest
       env: 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID'
     - versionName: projects/$PROJECT_ID/secrets/RECAPTCHA_ENTERPRISE_SITE_KEY/versions/latest
       env: 'NEXT_PUBLIC_RECAPTCHA_SITE_KEY'
@@ -80,8 +80,8 @@ availableSecrets:
       env: 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY'
 
 images:
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:$SHORT_SHA'
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/kotikreikasta-hosting:latest'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ssradmin:$SHORT_SHA'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/ssradmin:latest'
 
 options:
   machineType: 'E2_HIGHCPU_8'

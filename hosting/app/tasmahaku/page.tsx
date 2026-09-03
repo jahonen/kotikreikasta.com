@@ -3,8 +3,125 @@ import Footer from "../../components/Footer";
 import ContactForm from "../../components/ContactForm";
 
 export default function TasmahakuPage() {
+  const serviceLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'Täsmähaku-palvelu',
+    alternateName: 'Räätälöity kiinteistönetsintä Kreikasta',
+    description: 'Löydämme sinulle unelmiesi lomakodin Kreikasta – myös piilomarkkinoilta. Räätälöity täsmähakupalvelu suomalaisille ostajille, kattaen koko ostoprosessin.',
+    url: 'https://kotikreikasta.com/tasmahaku',
+    provider: {
+      '@type': 'Organization',
+      name: 'Kotikreikasta',
+      url: 'https://kotikreikasta.com'
+    },
+    areaServed: { '@type': 'Country', name: 'Greece' },
+    availableLanguage: ['Finnish', 'Greek', 'English'],
+    serviceType: 'Kiinteistönetsintäpalvelu',
+    audience: { '@type': 'Audience', audienceType: 'Suomalaiset kiinteistönostajat' }
+  };
+
+  const howToLd = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'Miten Täsmähaku toimii?',
+    description: 'Viisi vaihetta unelmiesi lomakodin löytämiseen Kreikasta Kotikreikasta.comin Täsmähaku-palvelun avulla.',
+    step: [
+      {
+        '@type': 'HowToStep',
+        position: 1,
+        name: 'Toiveiden kartoitus',
+        text: 'Kerro meille, millainen lomakoti sinua kiinnostaa – sijainti, koko, budjetti, palvelut ja vuokrausmahdollisuudet.'
+      },
+      {
+        '@type': 'HowToStep',
+        position: 2,
+        name: 'Ammattitaitoinen etsintä',
+        text: 'Hyödynnämme laajaa paikallista verkostoamme ja etsimme myös off-market-kiinteistöjä, joita et löydä itse.'
+      },
+      {
+        '@type': 'HowToStep',
+        position: 3,
+        name: 'Laadukkaat ehdokkaat',
+        text: 'Valitsemme sopivimmat kohteet, tarkistamme omistusoikeuden, kiinteistön kunnon sekä paikalliset rakennusmääräykset.'
+      },
+      {
+        '@type': 'HowToStep',
+        position: 4,
+        name: 'Henkilökohtainen esittely',
+        text: 'Järjestämme virtuaaliset tai paikan päällä tapahtuvat kierrokset suomenkielisen asiantuntijan kanssa.'
+      },
+      {
+        '@type': 'HowToStep',
+        position: 5,
+        name: 'Turvallinen ostoprosessi',
+        text: 'Hoidamme kaiken byrokratian – kreikkalaisen verotunnuksen hankinta, sopimukset, notaari, rekisteröinti ja liittymät.'
+      }
+    ]
+  };
+
+  const faqLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Mitä Täsmähaku-palvelu tarkoittaa käytännössä?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Täsmähaku on räätälöity kiinteistönetsintäpalvelu, jossa Kotikreikasta.com etsii puolestasi sopivat kohteet Kreikasta – myös julkisesti listaamattomilta markkinoilta. Palvelu kattaa koko ostoprosessin toiveiden kartoituksesta kauppakirjan allekirjoitukseen.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Löydättekö myös piilomarkkinoilla olevia kiinteistöjä?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Kyllä. Meillä on pääsy eksklusiivisiin off-market-tarjouksiin paikallisen verkostomme kautta. Monet parhaat kohteet eivät koskaan tule julkisille kiinteistösivustoille.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Paljonko Täsmähaku-palvelu maksaa?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Täsmähaku on erillinen toimeksianto ja sen ehdot sovitaan tapauskohtaisesti. Ota yhteyttä ja kerro tarpeesi, niin sovitaan yksityiskohdista.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Toimiiko palvelu koko Kreikassa?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Kyllä. Palvelu kattaa koko Kreikan – mantereen ja kaikki saaret. Verkostomme ulottuu myös syrjäisemmille alueille.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Tarvitseeko minun osata kreikkaa?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ei. Koko palvelu tapahtuu suomeksi. Huolehdimme viestinnästä paikallisten ammattilaisten kanssa puolestasi.'
+        }
+      }
+    ]
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Etusivu', item: 'https://kotikreikasta.com' },
+      { '@type': 'ListItem', position: 2, name: 'Täsmähaku-palvelu', item: 'https://kotikreikasta.com/tasmahaku' }
+    ]
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <NavBar />
       
       <section style={{ 

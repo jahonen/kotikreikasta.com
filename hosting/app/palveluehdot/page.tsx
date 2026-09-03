@@ -12,6 +12,11 @@ export default function PalveluehdotPage() {
         <p style={{ color: 'var(--text-muted)' }}>Päivitetty: {new Date().toLocaleDateString('fi-FI')}</p>
         <section style={{ lineHeight: 1.7 }}>
           <p>
+            Kotikreikasta-palvelun tarjoaa CVPE Development Oy (Y-tunnus 3651473-2, kotipaikka Lohja).
+            Kotikreikasta.com-tavaramerkin ja liiketoiminnan omistaa ja sitä ylläpitää CVPE Development Oy.
+            Lisätietoja yhtiöstä: <a href="https://cvpe.dev" target="_blank" rel="noopener noreferrer">cvpe.dev</a>.
+          </p>
+          <p>
             Tervetuloa käyttämään Kotikreikasta-palvelua. Nämä ehdot kuvaavat palvelun
             peruskäyttöä. Lähettämällä yhteydenottopyynnön vahvistat antamiesi tietojen oikeellisuuden
             ja suostut siihen, että voimme olla sinuun yhteydessä yhteydenottoon vastaamiseksi.
@@ -26,7 +31,12 @@ export default function PalveluehdotPage() {
             Palvelua käytetään Suomen lain mukaisesti.
           </p>
           <p>
-            Lisätiedot ja yhteydenotot: info@kotikreikasta.com
+            Lisätiedot ja yhteydenotot:{' '}
+            <span
+              dangerouslySetInnerHTML={{
+                __html: '<!--email_off-->info@kotikreikasta.com<!--/email_off-->',
+              }}
+            />
           </p>
         </section>
       </main>

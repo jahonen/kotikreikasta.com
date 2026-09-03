@@ -3,6 +3,9 @@ import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAuth as _getAuth, type Auth } from 'firebase/auth';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+
+const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 const envConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,8 +19,6 @@ const envConfig = {
 const hasEnvConfig = Boolean(envConfig.apiKey && envConfig.appId && envConfig.projectId);
 
 let appInstance: FirebaseApp | null = null;
-let initPromise: Promise<boolean> | null = null;
-
 async function initIfNeeded(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
   if (appInstance) return true;
@@ -27,32 +28,15 @@ async function initIfNeeded(): Promise<boolean> {
   }
   if (hasEnvConfig) {
     appInstance = initializeApp(envConfig as any);
+    if (siteKey) {
+      initializeAppCheck(appInstance, {
+        provider: new ReCaptchaEnterpriseProvider(siteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    }
     return true;
   }
-  if (!initPromise) {
-    initPromise = (async () => {
-      // Try local Hosting-injected config first (not available in Next dev)
-      try {
-        const r = await fetch('/__/firebase/init.json');
-        if (r.ok) {
-          const cfg = await r.json();
-          appInstance = initializeApp(cfg);
-          return true;
-        }
-      } catch {}
-      // Dev fallback: fetch project config from the deployed public site
-      try {
-        const r2 = await fetch('https://kotikreikasta.web.app/__/firebase/init.json', { cache: 'no-store' });
-        if (r2.ok) {
-          const cfg2 = await r2.json();
-          appInstance = initializeApp(cfg2);
-          return true;
-        }
-      } catch {}
-      return false;
-    })();
-  }
-  return initPromise;
+  return false;
 }
 
 export async function getFirebaseApp(): Promise<FirebaseApp | null> {

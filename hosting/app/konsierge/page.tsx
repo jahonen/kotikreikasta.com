@@ -3,29 +3,107 @@ import Footer from "../../components/Footer";
 import ContactForm from "../../components/ContactForm";
 
 export default function KonsiergePage() {
-  const jsonLd = {
+  const serviceLd = {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'Konsierge-palvelu',
+    name: 'Konsierge-palvelu Kreikassa',
     description: 'Kerro meille tarpeesi suomeksi. Selvitämme tilanteen, löydämme luotettavan paikallisen ammattilaisen ja varmistamme, että työ tulee tehdyksi oikein.',
+    url: 'https://kotikreikasta.com/konsierge',
     provider: {
       '@type': 'Organization',
       name: 'Kotikreikasta',
       url: 'https://kotikreikasta.com'
     },
-    areaServed: {
-      '@type': 'Country',
-      name: 'Greece'
-    },
-    availableLanguage: ['Finnish', 'Greek', 'English']
+    areaServed: { '@type': 'Country', name: 'Greece' },
+    availableLanguage: ['Finnish', 'Greek', 'English'],
+    offers: [
+      {
+        '@type': 'Offer',
+        name: 'Tervetuloa kotiin – ostajille',
+        description: 'Kaikki palvelualueet käytössä, 12 ensimmäistä kuukautta veloituksetta kiinteistön ostajille.',
+        price: '0',
+        priceCurrency: 'EUR',
+        eligibleDuration: { '@type': 'QuantitativeValue', value: 12, unitCode: 'MON' },
+        availability: 'https://schema.org/InStock'
+      },
+      {
+        '@type': 'Offer',
+        name: 'Jatkuva tuki – palvelusopimus',
+        description: 'Kaikki palvelualueet käytössä, hätätilanteet, rajaton määrä pyyntöjä. Sitoutumaton kuukausisopimus.',
+        price: '39',
+        priceCurrency: 'EUR',
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: '39',
+          priceCurrency: 'EUR',
+          unitCode: 'MON'
+        },
+        availability: 'https://schema.org/InStock'
+      }
+    ]
+  };
+
+  const faqLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Mitä konsierge-palvelu tarkoittaa käytännössä?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Kerrot meille tarpeesi suomeksi – esimerkiksi putkirikon, korjaustarpeen tai viranomaiskysymyksen. Me selvitämme tilanteen, löydämme luotettavan paikallisen ammattilaisen ja varmistamme, että työ tulee tehdyksi oikein.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Maksan suoraan ammattilaiselle – mitä te saatte siitä?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ansaitsemme kuukausimaksulla, emme välityspalkkioilla ammattilaisilta. Tämä tarkoittaa, että suosituksemme perustuvat aina sinun etuusi, ei omaan ansaintaamme.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Kuinka paljon konsierge-palvelu maksaa?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Kiinteistön kautta meiltä ostaneille palvelu on veloitukseton 12 ensimmäistä kuukautta. Jatkuva palvelusopimus on 39 €/kk ilman sitoutumista. Emme peri välityspalkkioita ammattilaisilta.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Toimiiko palvelu koko Kreikassa?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Kyllä. Palvelu toimii koko Kreikassa, myös syrjäisemmillä alueilla joille paikallisen ammattilaisen löytäminen on haastavaa.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Mitä tapahtuu hätätilanteessa?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Palvelusopimuksella olevat asiakkaat voivat tavoittaa meidät myös normaalin aukioloajan ulkopuolella kiireellisissä tilanteissa kuten vesivuodoissa tai sähkökatkoissa.'
+        }
+      }
+    ]
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Etusivu', item: 'https://kotikreikasta.com' },
+      { '@type': 'ListItem', position: 2, name: 'Konsierge-palvelu', item: 'https://kotikreikasta.com/konsierge' }
+    ]
   };
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <NavBar />
 
       {/* Hero */}
@@ -660,9 +738,12 @@ export default function KonsiergePage() {
                     color: 'var(--text-muted)',
                     marginBottom: '0.15rem'
                   }}>Sähköposti</div>
-                  <div style={{ fontSize: '0.88rem', color: 'var(--text)', fontWeight: 500 }}>
-                    info@kotikreikasta.com
-                  </div>
+                  <div
+                    style={{ fontSize: '0.88rem', color: 'var(--text)', fontWeight: 500 }}
+                    dangerouslySetInnerHTML={{
+                      __html: '<!--email_off-->info@kotikreikasta.com<!--/email_off-->',
+                    }}
+                  />
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                     Vastaus arkisin 24h sisällä
                   </div>
